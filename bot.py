@@ -196,19 +196,24 @@ ai_client = GroqClient()
 
 @bot.event
 async def on_ready():
-    print(f'?? {bot.user} est connect? et pr?t!')
-    print(f'?? Connect? ? {len(bot.guilds)} serveur(s)')
-    print(f'?? Mod?le IA: {AI_MODEL}')
-    print(f'? Personnalit?s disponibles: {len(PERSONALITIES)}')
+    print("="*60)
+    print(f"BOT READY - Version avec logs debug")
+    print(f"Bot user: {bot.user}")
+    print(f"Guilds: {len(bot.guilds)}")
+    print(f"AI_MODEL: {AI_MODEL}")
+    print(f"GROQ_API_KEY defined: {GROQ_API_KEY is not None and len(GROQ_API_KEY) > 0}")
+    print(f"GROQ_API_KEY length: {len(GROQ_API_KEY) if GROQ_API_KEY else 0}")
+    print(f"Personalities: {len(PERSONALITIES)}")
+    print("="*60)
     
     # Synchroniser les commandes slash
     try:
         synced = await bot.tree.sync()
-        print(f'? {len(synced)} commandes slash synchronis?es!')
+        print(f"[SUCCESS] {len(synced)} slash commands synced")
     except Exception as e:
-        print(f'? Erreur lors de la synchronisation des commandes: {e}')
+        print(f"[ERROR] Sync error: {e}")
     
-    # D?finir le statut du bot
+    # Definir le statut du bot
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
@@ -230,15 +235,18 @@ async def on_message(message):
     if not bot_active_channels[channel_id]:
         return
     
-    # V?rifier si le bot est mentionn? ou si le message est dans un thread priv?
+    # Verifier si le bot est mentionne ou si le message est dans un thread prive
     bot_mentioned = bot.user in message.mentions
     is_dm = isinstance(message.channel, discord.DMChannel)
     is_reply_to_bot = (message.reference and 
                        message.reference.resolved and 
                        message.reference.resolved.author == bot.user)
     
-    # R?pondre si mentionn?, en DM, ou en r?ponse au bot
+    print(f"[INFO] bot_mentioned={bot_mentioned}, is_dm={is_dm}, is_reply_to_bot={is_reply_to_bot}")
+    
+    # Repondre si mentionne, en DM, ou en reponse au bot
     if bot_mentioned or is_dm or is_reply_to_bot:
+        print(f"[INFO] Bot should respond to this message")
         # Rate limiting
         user_id = message.author.id
         current_time = time.time()
@@ -266,14 +274,17 @@ async def on_message(message):
             if len(conversation_history[channel_id]) > MAX_HISTORY:
                 conversation_history[channel_id] = conversation_history[channel_id][-MAX_HISTORY:]
             
-            # Obtenir la personnalit? du canal
+            # Obtenir la personnalite du canal
             personality = channel_personalities[channel_id]
+            print(f"[INFO] Using personality: {personality}")
             
-            # G?n?rer la r?ponse
+            # Generer la reponse
+            print(f"[INFO] Calling ai_client.generate_response...")
             response = await ai_client.generate_response(
                 conversation_history[channel_id],
                 personality=personality
             )
+            print(f"[INFO] Response received: {response[:100] if response else 'None'}")
             
             # Ajouter la r?ponse ? l'historique
             conversation_history[channel_id].append({
