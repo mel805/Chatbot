@@ -51,7 +51,7 @@ Utilisez l'URL OAuth2 depuis le portail Discord Developer
 ### 2. Activer le bot (ADMIN UNIQUEMENT)
 Sur Discord, dans un canal:
 ```
-!start
+/start
 ```
 
 ### 3. Tester
@@ -61,7 +61,7 @@ Sur Discord, dans un canal:
 
 ### 4. Changer de personnalit?
 ```
-!personality seducteur
+/personality seducteur
 ```
 
 ---
@@ -70,14 +70,14 @@ Sur Discord, dans un canal:
 
 | Commande | Personnalit? |
 |----------|--------------|
-| `!personality amical` | ?? Sympathique (d?faut) |
-| `!personality seducteur` | ?? Charmant et flirteur |
-| `!personality coquin` | ?? Os? et provocateur |
-| `!personality romantique` | ?? Doux et passionn? |
-| `!personality dominant` | ?? Confiant et autoritaire |
-| `!personality soumis` | ?? Respectueux et d?vou? |
-| `!personality joueur` | ?? Fun et gamer |
-| `!personality intellectuel` | ?? Cultiv? et profond |
+| `/personality amical` | ?? Sympathique (d?faut) |
+| `/personality seducteur` | ?? Charmant et flirteur |
+| `/personality coquin` | ?? Os? et provocateur |
+| `/personality romantique` | ?? Doux et passionn? |
+| `/personality dominant` | ?? Confiant et autoritaire |
+| `/personality soumis` | ?? Respectueux et d?vou? |
+| `/personality joueur` | ?? Fun et gamer |
+| `/personality intellectuel` | ?? Cultiv? et profond |
 
 ---
 
@@ -85,17 +85,17 @@ Sur Discord, dans un canal:
 
 ### Admin uniquement
 ```
-!start              ? Active le bot dans ce canal
-!stop               ? D?sactive le bot
-!personality        ? Liste les personnalit?s
-!personality <nom>  ? Change de personnalit?
-!reset              ? R?initialise l'historique
-!status             ? Affiche le statut
+/start              ? Active le bot dans ce canal
+/stop               ? D?sactive le bot
+/personality        ? Liste les personnalit?s
+/personality <nom>  ? Change de personnalit?
+/reset              ? R?initialise l'historique
+/status             ? Affiche le statut
 ```
 
 ### Tout le monde
 ```
-!help_bot           ? Affiche l'aide
+/help           ? Affiche l'aide
 ```
 
 ---
@@ -151,17 +151,17 @@ Pour garder votre bot en ligne en permanence:
 
 ### D?sactiver temporairement
 ```
-!stop
+/stop
 ```
 
 ### Effacer l'historique
 ```
-!reset
+/reset
 ```
 
 ### V?rifier le statut
 ```
-!status
+/status
 ```
 
 ### Mod?le plus rapide
@@ -180,7 +180,7 @@ AI_MODEL=llama-3.2-90b-text-preview
 ## ? Probl?mes Courants
 
 ### "Le bot ne r?pond pas"
-1. Avez-vous fait `!start`? (admin uniquement)
+1. Avez-vous fait `/start`? (admin uniquement)
 2. L'avez-vous mentionn?? `@Bot`
 3. Message Content Intent activ? sur Discord?
 

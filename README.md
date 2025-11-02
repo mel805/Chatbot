@@ -104,7 +104,7 @@ python bot.py
 Le bot ne r?pond PAS automatiquement. Un administrateur doit l'activer dans chaque canal:
 
 ```
-!start
+/start
 ```
 
 Le bot est maintenant actif dans ce canal!
@@ -122,18 +122,18 @@ Une fois activ?, vous pouvez:
 Toutes ces commandes n?cessitent les permissions d'administrateur:
 
 ```
-!start                     ? Active le bot dans le canal actuel
-!stop                      ? D?sactive le bot dans le canal actuel
-!personality               ? Affiche toutes les personnalit?s disponibles
-!personality <nom>         ? Change la personnalit? du bot
-!reset                     ? R?initialise l'historique de conversation
-!status                    ? Affiche le statut du bot dans ce canal
+/start                     ? Active le bot dans le canal actuel
+/stop                      ? D?sactive le bot dans le canal actuel
+/personality               ? Affiche toutes les personnalit?s disponibles
+/personality <nom>         ? Change la personnalit? du bot
+/reset                     ? R?initialise l'historique de conversation
+/status                    ? Affiche le statut du bot dans ce canal
 ```
 
 ### ?? Commandes G?n?rales
 
 ```
-!help_bot                  ? Affiche l'aide compl?te
+/help                  ? Affiche l'aide compl?te
 ```
 
 ## ?? Personnalit?s Disponibles
@@ -154,7 +154,7 @@ Le bot dispose de **8 personnalit?s** pr?d?finies, adapt?es aux serveurs adultes
 ### Changer de personnalit?
 
 ```
-!personality seducteur
+/personality seducteur
 ```
 
 Le bot adopte imm?diatement la nouvelle personnalit?! L'historique est automatiquement r?initialis?.
@@ -162,10 +162,10 @@ Le bot adopte imm?diatement la nouvelle personnalit?! L'historique est automatiq
 ### Exemple d'utilisation
 
 ```
-Admin: !start
+Admin: /start
 Bot: ? Bot Activ? avec la personnalit? Amical ??
 
-Admin: !personality coquin
+Admin: /personality coquin
 Bot: ? Personnalit? chang?e! Nouvelle personnalit?: Coquin ??
 
 User: @Bot Salut toi! ??
@@ -275,7 +275,7 @@ Bot: Haha j'imagine le chaos! Vous gagnez au moins? ??
 
 ### Le bot ne r?pond pas
 
-- ? V?rifiez que vous avez fait `!start` dans le canal (admin uniquement)
+- ? V?rifiez que vous avez fait `/start` dans le canal (admin uniquement)
 - ? V?rifiez que "Message Content Intent" est activ? sur Discord
 - ? V?rifiez que votre cl? Groq est valide
 - ? Mentionnez le bot ou r?pondez ? ses messages
@@ -300,8 +300,8 @@ Le bot fonctionne sur tous les serveurs o? il est invit?. Chaque canal peut avoi
 
 ### Le bot dit des choses inappropri?es
 
-- Changez de personnalit? avec `!personality amical`
-- R?initialisez avec `!reset`
+- Changez de personnalit? avec `/personality amical`
+- R?initialisez avec `/reset`
 - Les mod?les IA peuvent parfois g?n?rer du contenu inattendu
 
 ### Limites de l'API Groq gratuite
@@ -322,15 +322,15 @@ Cr?ez un compte sur https://console.groq.com et obtenez une cl? API gratuite.
 
 ### Le bot r?pond ? tout le monde
 
-Normal! Une fois activ? avec `!start`, le bot r?pond quand on le mentionne ou qu'on r?pond ? ses messages.
+Normal! Une fois activ? avec `/start`, le bot r?pond quand on le mentionne ou qu'on r?pond ? ses messages.
 
 ### D?sactiver temporairement
 
 ```
-!stop
+/stop
 ```
 
-Le bot arr?te de r?pondre dans ce canal jusqu'au prochain `!start`.
+Le bot arr?te de r?pondre dans ce canal jusqu'au prochain `/start`.
 
 ## ?? Structure du projet
 

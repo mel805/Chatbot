@@ -78,7 +78,7 @@ python bot.py
 Le bot ne r?pond PAS automatiquement. Un **admin** doit l'activer:
 
 ```
-!start
+/start
 ```
 
 ### Ensuite, interagissez:
@@ -114,7 +114,7 @@ Le bot a **8 personnalit?s** diff?rentes:
 ### Changer de personnalit? (admin)
 
 ```
-!personality coquin
+/personality coquin
 ```
 
 ---
@@ -122,13 +122,13 @@ Le bot a **8 personnalit?s** diff?rentes:
 ## ?? Commandes Admin
 
 ```
-!start                    ? Active le bot dans ce canal
-!stop                     ? D?sactive le bot
-!personality              ? Liste les personnalit?s
-!personality <nom>        ? Change de personnalit?
-!reset                    ? R?initialise l'historique
-!status                   ? Affiche le statut
-!help_bot                 ? Aide compl?te
+/start                    ? Active le bot dans ce canal
+/stop                     ? D?sactive le bot
+/personality              ? Liste les personnalit?s
+/personality <nom>        ? Change de personnalit?
+/reset                    ? R?initialise l'historique
+/status                   ? Affiche le statut
+/help                 ? Aide compl?te
 ```
 
 ---
@@ -182,7 +182,7 @@ AI_MODEL=mixtral-8x7b-32768
 ## ?? Probl?mes courants
 
 **Le bot ne r?pond pas?**
-1. Avez-vous fait `!start`? (admin uniquement)
+1. Avez-vous fait `/start`? (admin uniquement)
 2. V?rifiez que "Message Content Intent" est activ?
 3. Mentionnez le bot ou r?pondez ? ses messages
 
@@ -197,7 +197,7 @@ AI_MODEL=mixtral-8x7b-32768
 
 **Le bot parle ? tout le monde?**
 - Normal! Une fois activ?, il r?pond quand on le mentionne
-- Utilisez `!stop` pour le d?sactiver dans un canal
+- Utilisez `/stop` pour le d?sactiver dans un canal
 
 ---
 
@@ -214,19 +214,19 @@ Pour plus de d?tails:
 ## ?? Exemple rapide
 
 ```
-Admin: !start
+Admin: /start
 Bot: ? Bot Activ? avec la personnalit? Amical ??
 
 User: @Bot Hey!
 Bot: Salut! Ravi de pouvoir discuter avec vous! ??
 
-Admin: !personality seducteur
+Admin: /personality seducteur
 Bot: ? Personnalit? chang?e! Nouvelle personnalit?: S?ducteur ??
 
 User: @Bot Toujours l??
 Bot: Bien s?r... *te regarde avec un sourire charmeur* Comment pourrais-je partir alors que la conversation devient int?ressante? ??
 
-Admin: !stop
+Admin: /stop
 Bot: ?? Bot d?sactiv? dans ce canal.
 ```
 

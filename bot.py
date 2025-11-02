@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 import os
 import asyncio
@@ -21,7 +22,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='/', intents=intents)
 
 # Historique des conversations par canal
 conversation_history = defaultdict(list)
@@ -180,11 +181,18 @@ async def on_ready():
     print(f'?? Mod?le IA: {AI_MODEL}')
     print(f'? Personnalit?s disponibles: {len(PERSONALITIES)}')
     
+    # Synchroniser les commandes slash
+    try:
+        synced = await bot.tree.sync()
+        print(f'? {len(synced)} commandes slash synchronis?es!')
+    except Exception as e:
+        print(f'? Erreur lors de la synchronisation des commandes: {e}')
+    
     # D?finir le statut du bot
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
-            name="En attente d'activation | !start"
+            name="En attente | /start pour activer"
         )
     )
 
@@ -261,18 +269,31 @@ async def on_message(message):
             else:
                 await message.reply(response, mention_author=False)
 
-# ============ COMMANDES ADMIN ============
+# ============ COMMANDES SLASH ============
 
-@bot.command(name='start')
-async def start_bot(ctx):
-    """Active le bot dans ce canal (admin uniquement)"""
-    if not ctx.author.guild_permissions.administrator:
-        await ctx.send("? Seuls les administrateurs peuvent activer le bot.")
-        return
+def is_admin():
+    """V?rifie si l'utilisateur est administrateur"""
+    async def predicate(interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(
+                "? Seuls les administrateurs peuvent utiliser cette commande.",
+                ephemeral=True
+            )
+            return False
+        return True
+    return app_commands.check(predicate)
+
+@bot.tree.command(name="start", description="Active le bot dans ce canal (admin uniquement)")
+@is_admin()
+async def start_bot(interaction: discord.Interaction):
+    """Active le bot dans ce canal"""
+    channel_id = interaction.channel_id
     
-    channel_id = ctx.channel.id
     if bot_active_channels[channel_id]:
-        await ctx.send("?? Le bot est d?j? actif dans ce canal!")
+        await interaction.response.send_message(
+            "?? Le bot est d?j? actif dans ce canal!",
+            ephemeral=True
+        )
         return
     
     bot_active_channels[channel_id] = True
@@ -289,30 +310,32 @@ async def start_bot(ctx):
         value="? Mentionnez-moi (@bot)\n? R?pondez ? mes messages\n? En message priv?",
         inline=False
     )
-    await ctx.send(embed=embed)
+    await interaction.response.send_message(embed=embed)
     
     # Mettre ? jour le statut
+    active_count = len([c for c in bot_active_channels.values() if c])
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
-            name=f"{len([c for c in bot_active_channels.values() if c])} canaux actifs"
+            name=f"{active_count} canal{'aux' if active_count > 1 else ''} actif{'s' if active_count > 1 else ''}"
         )
     )
 
-@bot.command(name='stop')
-async def stop_bot(ctx):
-    """D?sactive le bot dans ce canal (admin uniquement)"""
-    if not ctx.author.guild_permissions.administrator:
-        await ctx.send("? Seuls les administrateurs peuvent d?sactiver le bot.")
-        return
+@bot.tree.command(name="stop", description="D?sactive le bot dans ce canal (admin uniquement)")
+@is_admin()
+async def stop_bot(interaction: discord.Interaction):
+    """D?sactive le bot dans ce canal"""
+    channel_id = interaction.channel_id
     
-    channel_id = ctx.channel.id
     if not bot_active_channels[channel_id]:
-        await ctx.send("?? Le bot est d?j? inactif dans ce canal!")
+        await interaction.response.send_message(
+            "?? Le bot est d?j? inactif dans ce canal!",
+            ephemeral=True
+        )
         return
     
     bot_active_channels[channel_id] = False
-    await ctx.send("?? Bot d?sactiv? dans ce canal. Utilisez `!start` pour le r?activer.")
+    await interaction.response.send_message("?? Bot d?sactiv? dans ce canal. Utilisez `/start` pour le r?activer.")
     
     # Mettre ? jour le statut
     active_count = len([c for c in bot_active_channels.values() if c])
@@ -320,55 +343,39 @@ async def stop_bot(ctx):
         await bot.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching,
-                name="En attente d'activation | !start"
+                name="En attente | /start pour activer"
             )
         )
     else:
         await bot.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching,
-                name=f"{active_count} canaux actifs"
+                name=f"{active_count} canal{'aux' if active_count > 1 else ''} actif{'s' if active_count > 1 else ''}"
             )
         )
 
-@bot.command(name='personality', aliases=['perso'])
-async def change_personality(ctx, personality_name: str = None):
-    """Change la personnalit? du bot (admin uniquement)"""
-    if not ctx.author.guild_permissions.administrator:
-        await ctx.send("? Seuls les administrateurs peuvent changer la personnalit? du bot.")
-        return
-    
-    channel_id = ctx.channel.id
-    
-    # Si aucun nom fourni, afficher les personnalit?s disponibles
-    if not personality_name:
-        embed = discord.Embed(
-            title="?? Personnalit?s Disponibles",
-            description="Utilisez `!personality <nom>` pour changer",
-            color=discord.Color.purple()
-        )
-        
-        current = channel_personalities[channel_id]
-        for key, info in PERSONALITIES.items():
-            status = "? **ACTIVE**" if key == current else ""
-            embed.add_field(
-                name=f"{info['name']} - `{key}`",
-                value=f"{status}\n{info['prompt'][:100]}...",
-                inline=False
-            )
-        
-        await ctx.send(embed=embed)
-        return
-    
-    # V?rifier si la personnalit? existe
-    personality_name = personality_name.lower()
-    if personality_name not in PERSONALITIES:
-        await ctx.send(f"? Personnalit? inconnue. Utilisez `!personality` pour voir la liste.")
-        return
+@bot.tree.command(name="personality", description="Change la personnalit? du bot (admin uniquement)")
+@app_commands.describe(
+    personnalite="Choisissez une personnalit?"
+)
+@app_commands.choices(personnalite=[
+    app_commands.Choice(name="?? Amical - Sympathique et ouvert", value="amical"),
+    app_commands.Choice(name="?? S?ducteur - Charmant et flirteur", value="seducteur"),
+    app_commands.Choice(name="?? Coquin - Os? et provocateur", value="coquin"),
+    app_commands.Choice(name="?? Romantique - Doux et passionn?", value="romantique"),
+    app_commands.Choice(name="?? Dominant - Confiant et autoritaire", value="dominant"),
+    app_commands.Choice(name="?? Soumis - Respectueux et d?vou?", value="soumis"),
+    app_commands.Choice(name="?? Joueur - Fun et gamer", value="joueur"),
+    app_commands.Choice(name="?? Intellectuel - Cultiv? et profond", value="intellectuel")
+])
+@is_admin()
+async def change_personality(interaction: discord.Interaction, personnalite: str):
+    """Change la personnalit? du bot"""
+    channel_id = interaction.channel_id
     
     # Changer la personnalit?
-    channel_personalities[channel_id] = personality_name
-    personality_info = PERSONALITIES[personality_name]
+    channel_personalities[channel_id] = personnalite
+    personality_info = PERSONALITIES[personnalite]
     
     # R?initialiser l'historique pour appliquer la nouvelle personnalit?
     conversation_history[channel_id].clear()
@@ -380,29 +387,27 @@ async def change_personality(ctx, personality_name: str = None):
     )
     embed.add_field(
         name="Description",
-        value=personality_info['prompt'][:500] + "...",
+        value=personality_info['prompt'][:500] + "..." if len(personality_info['prompt']) > 500 else personality_info['prompt'],
         inline=False
     )
-    await ctx.send(embed=embed)
+    await interaction.response.send_message(embed=embed)
 
-@bot.command(name='reset')
-async def reset_conversation(ctx):
-    """R?initialise l'historique de conversation du canal (admin uniquement)"""
-    if not ctx.author.guild_permissions.administrator:
-        await ctx.send("? Seuls les administrateurs peuvent r?initialiser l'historique.")
-        return
+@bot.tree.command(name="reset", description="R?initialise l'historique de conversation (admin uniquement)")
+@is_admin()
+async def reset_conversation(interaction: discord.Interaction):
+    """R?initialise l'historique de conversation du canal"""
+    channel_id = interaction.channel_id
     
-    channel_id = ctx.channel.id
-    if channel_id in conversation_history:
+    if channel_id in conversation_history and len(conversation_history[channel_id]) > 0:
         conversation_history[channel_id].clear()
-        await ctx.send("? Historique de conversation r?initialis? pour ce canal!")
+        await interaction.response.send_message("? Historique de conversation r?initialis? pour ce canal!")
     else:
-        await ctx.send("?? Aucun historique ? r?initialiser.")
+        await interaction.response.send_message("?? Aucun historique ? r?initialiser.", ephemeral=True)
 
-@bot.command(name='status')
-async def show_status(ctx):
+@bot.tree.command(name="status", description="Affiche le statut du bot dans ce canal")
+async def show_status(interaction: discord.Interaction):
     """Affiche le statut du bot dans ce canal"""
-    channel_id = ctx.channel.id
+    channel_id = interaction.channel_id
     is_active = bot_active_channels[channel_id]
     personality = channel_personalities[channel_id]
     personality_info = PERSONALITIES[personality]
@@ -418,10 +423,10 @@ async def show_status(ctx):
     embed.add_field(name="Messages en m?moire", value=str(history_count), inline=True)
     embed.add_field(name="Mod?le IA", value=AI_MODEL, inline=False)
     
-    await ctx.send(embed=embed)
+    await interaction.response.send_message(embed=embed)
 
-@bot.command(name='help_bot', aliases=['help', 'aide'])
-async def help_command(ctx):
+@bot.tree.command(name="help", description="Affiche l'aide du bot")
+async def help_command(interaction: discord.Interaction):
     """Affiche l'aide du bot"""
     embed = discord.Embed(
         title="?? Aide du Bot IA",
@@ -431,11 +436,17 @@ async def help_command(ctx):
     
     embed.add_field(
         name="?? Commandes Admin",
-        value="? `!start` - Active le bot dans ce canal\n"
-              "? `!stop` - D?sactive le bot dans ce canal\n"
-              "? `!personality [nom]` - Change/liste les personnalit?s\n"
-              "? `!reset` - R?initialise l'historique\n"
-              "? `!status` - Affiche le statut du bot",
+        value="? `/start` - Active le bot dans ce canal\n"
+              "? `/stop` - D?sactive le bot dans ce canal\n"
+              "? `/personality` - Change la personnalit?\n"
+              "? `/reset` - R?initialise l'historique",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="?? Commandes G?n?rales",
+        value="? `/status` - Affiche le statut du bot\n"
+              "? `/help` - Affiche cette aide",
         inline=False
     )
     
@@ -444,27 +455,17 @@ async def help_command(ctx):
         value="? Mentionnez-moi (@bot) dans un message\n"
               "? R?pondez ? un de mes messages\n"
               "? Envoyez-moi un message priv?\n\n"
-              "?? Le bot doit ?tre activ? avec `!start` d'abord!",
+              "?? Le bot doit ?tre activ? avec `/start` d'abord! (admin)",
         inline=False
     )
     
     embed.add_field(
         name="?? Personnalit?s",
-        value=f"{len(PERSONALITIES)} personnalit?s disponibles! Utilisez `!personality` pour les voir.",
+        value=f"{len(PERSONALITIES)} personnalit?s disponibles! Utilisez `/personality` pour changer.",
         inline=False
     )
     
-    await ctx.send(embed=embed)
-
-@bot.event
-async def on_command_error(ctx, error):
-    """Gestion des erreurs de commandes"""
-    if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(f"? Argument manquant. Utilisez `!help_bot` pour voir la syntaxe.")
-    elif isinstance(error, commands.CommandNotFound):
-        pass  # Ignorer les commandes inconnues
-    else:
-        print(f"Erreur: {error}")
+    await interaction.response.send_message(embed=embed)
 
 def main():
     """Fonction principale pour d?marrer le bot"""
@@ -481,6 +482,7 @@ def main():
     print("?? D?marrage du bot Discord IA avec Groq...")
     print(f"?? Mod?le: {AI_MODEL}")
     print(f"?? Personnalit?s: {len(PERSONALITIES)}")
+    print("? Commandes Slash activ?es!")
     
     try:
         bot.run(DISCORD_TOKEN)
