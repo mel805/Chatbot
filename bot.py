@@ -18,7 +18,7 @@ load_dotenv()  # Optionnel, ne fait rien si .env n'existe pas
 # Configuration
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-AI_MODEL = os.getenv('AI_MODEL', 'llama-3.1-70b-versatile')
+AI_MODEL = os.getenv('AI_MODEL', 'llama-3.1-8b-instant')
 
 # Configuration du bot
 intents = discord.Intents.default()
@@ -287,19 +287,19 @@ def is_admin():
     return app_commands.check(predicate)
 
 class PersonalitySelect(discord.ui.Select):
-    """Menu déroulant pour sélectionner la personnalité"""
+    """Menu d?roulant pour s?lectionner la personnalit?"""
     def __init__(self):
         options = [
-            discord.SelectOption(label="Amical", description="Sympathique et ouvert d'esprit", emoji="😊", value="amical"),
-            discord.SelectOption(label="Séducteur", description="Charmant et flirteur", emoji="😏", value="seducteur"),
-            discord.SelectOption(label="Coquin", description="Osé et provocateur", emoji="🔥", value="coquin"),
-            discord.SelectOption(label="Romantique", description="Doux et passionné", emoji="💕", value="romantique"),
-            discord.SelectOption(label="Dominant", description="Confiant et autoritaire", emoji="👑", value="dominant"),
-            discord.SelectOption(label="Soumis", description="Respectueux et dévoué", emoji="🙇", value="soumis"),
-            discord.SelectOption(label="Joueur", description="Fun et gamer", emoji="🎮", value="joueur"),
-            discord.SelectOption(label="Intellectuel", description="Cultivé et profond", emoji="🧠", value="intellectuel")
+            discord.SelectOption(label="Amical", description="Sympathique et ouvert d'esprit", emoji="??", value="amical"),
+            discord.SelectOption(label="S?ducteur", description="Charmant et flirteur", emoji="??", value="seducteur"),
+            discord.SelectOption(label="Coquin", description="Os? et provocateur", emoji="??", value="coquin"),
+            discord.SelectOption(label="Romantique", description="Doux et passionn?", emoji="??", value="romantique"),
+            discord.SelectOption(label="Dominant", description="Confiant et autoritaire", emoji="??", value="dominant"),
+            discord.SelectOption(label="Soumis", description="Respectueux et d?vou?", emoji="??", value="soumis"),
+            discord.SelectOption(label="Joueur", description="Fun et gamer", emoji="??", value="joueur"),
+            discord.SelectOption(label="Intellectuel", description="Cultiv? et profond", emoji="??", value="intellectuel")
         ]
-        super().__init__(placeholder="🎭 Choisissez une personnalité...", min_values=1, max_values=1, options=options)
+        super().__init__(placeholder="?? Choisissez une personnalit?...", min_values=1, max_values=1, options=options)
     
     async def callback(self, interaction: discord.Interaction):
         selected_personality = self.values[0]
@@ -310,12 +310,12 @@ class PersonalitySelect(discord.ui.Select):
         conversation_history[channel_id].clear()
         
         embed = discord.Embed(
-            title="✅ Bot Activé!",
-            description=f"Je suis maintenant actif avec la personnalité **{personality_info['name']}**",
+            title="? Bot Activ?!",
+            description=f"Je suis maintenant actif avec la personnalit? **{personality_info['name']}**",
             color=discord.Color.green()
         )
-        embed.add_field(name="💬 Comment interagir?", value="• Mentionnez-moi (@bot)\n• Répondez à mes messages\n• En message privé", inline=False)
-        embed.add_field(name="🎭 Personnalité", value=f"{personality_info['name']}", inline=False)
+        embed.add_field(name="?? Comment interagir?", value="? Mentionnez-moi (@bot)\n? R?pondez ? mes messages\n? En message priv?", inline=False)
+        embed.add_field(name="?? Personnalit?", value=f"{personality_info['name']}", inline=False)
         
         await interaction.response.edit_message(embed=embed, view=None)
         
@@ -327,16 +327,16 @@ class PersonalityView(discord.ui.View):
         super().__init__(timeout=60)
         self.add_item(PersonalitySelect())
 
-@bot.tree.command(name="start", description="Active le bot avec choix de personnalité (admin)")
+@bot.tree.command(name="start", description="Active le bot avec choix de personnalit? (admin)")
 @is_admin()
 async def start_bot(interaction: discord.Interaction):
     channel_id = interaction.channel_id
     if bot_active_channels[channel_id]:
-        await interaction.response.send_message("ℹ️ Le bot est déjà actif! Utilisez /stop puis /start pour réactiver.", ephemeral=True)
+        await interaction.response.send_message("?? Le bot est d?j? actif! Utilisez /stop puis /start pour r?activer.", ephemeral=True)
         return
     
-    embed = discord.Embed(title="🤖 Activation du Bot", description="Choisissez la personnalité du bot:", color=discord.Color.blue())
-    embed.add_field(name="🎭 Personnalités", value="Sélectionnez dans le menu ci-dessous", inline=False)
+    embed = discord.Embed(title="?? Activation du Bot", description="Choisissez la personnalit? du bot:", color=discord.Color.blue())
+    embed.add_field(name="?? Personnalit?s", value="S?lectionnez dans le menu ci-dessous", inline=False)
     view = PersonalityView()
     await interaction.response.send_message(embed=embed, view=view)
 
