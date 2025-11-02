@@ -349,27 +349,37 @@ class PersonalityView(discord.ui.View):
 @is_admin()
 async def start_bot(interaction: discord.Interaction):
     try:
+        print(f"?? DEBUG /start appel? par {interaction.user}")
         channel_id = interaction.channel_id
+        print(f"?? DEBUG channel_id: {channel_id}")
+        
         if bot_active_channels[channel_id]:
+            print(f"?? DEBUG bot d?j? actif")
             await interaction.response.send_message("?? Le bot est d?j? actif! Utilisez /stop puis /start pour r?activer.", ephemeral=True)
             return
         
+        print(f"?? DEBUG cr?ation embed...")
         embed = discord.Embed(
             title="?? Activation du Bot", 
             description="Choisissez la personnalit? du bot:",
             color=discord.Color.blue()
         )
         embed.add_field(name="?? Personnalit?s", value="S?lectionnez dans le menu ci-dessous", inline=False)
+        
+        print(f"?? DEBUG cr?ation view...")
         view = PersonalityView()
         
-        # Envoyer imm?diatement sans op?ration lente
+        print(f"?? DEBUG envoi message...")
         await interaction.response.send_message(embed=embed, view=view)
+        print(f"? DEBUG /start r?ussi!")
     except Exception as e:
-        print(f"? Erreur /start: {e}")
+        print(f"? ERREUR /start: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         try:
             await interaction.response.send_message("? Erreur lors de l'affichage du menu. R?essayez.", ephemeral=True)
-        except:
-            pass
+        except Exception as e2:
+            print(f"? Impossible d'envoyer message erreur: {e2}")
 
 @bot.tree.command(name="stop", description="D?sactive le bot dans ce canal (admin uniquement)")
 @is_admin()
