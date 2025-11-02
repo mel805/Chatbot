@@ -1,5 +1,8 @@
 # Fichiers de configuration sensibles
 .env
+.env.local
+.env.*.local
+*.env
 
 # Cache Python
 __pycache__/
