@@ -283,22 +283,19 @@ def is_admin():
     return app_commands.check(predicate)
 
 class PersonalitySelect(discord.ui.Select):
-    """Menu d?roulant pour s?lectionner la personnalit?"""
+    """Menu deroulant pour selectionner la personnalite"""
     def __init__(self):
-        print(f"?? DEBUG PersonalitySelect.__init__")
         options = [
-            discord.SelectOption(label="Amical", description="Sympathique et ouvert", emoji="??", value="amical"),
-            discord.SelectOption(label="Seducteur", description="Charmant et flirteur", emoji="??", value="seducteur"),
-            discord.SelectOption(label="Coquin", description="Ose et provocateur", emoji="??", value="coquin"),
-            discord.SelectOption(label="Romantique", description="Doux et passionne", emoji="??", value="romantique"),
-            discord.SelectOption(label="Dominant", description="Confiant et autoritaire", emoji="??", value="dominant"),
-            discord.SelectOption(label="Soumis", description="Respectueux et devoue", emoji="??", value="soumis"),
-            discord.SelectOption(label="Joueur", description="Fun et gamer", emoji="??", value="joueur"),
-            discord.SelectOption(label="Intellectuel", description="Cultive et profond", emoji="??", value="intellectuel")
+            discord.SelectOption(label="Amical", description="Sympathique et ouvert", value="amical"),
+            discord.SelectOption(label="Seducteur", description="Charmant et flirteur", value="seducteur"),
+            discord.SelectOption(label="Coquin", description="Ose et provocateur", value="coquin"),
+            discord.SelectOption(label="Romantique", description="Doux et passionne", value="romantique"),
+            discord.SelectOption(label="Dominant", description="Confiant et autoritaire", value="dominant"),
+            discord.SelectOption(label="Soumis", description="Respectueux et devoue", value="soumis"),
+            discord.SelectOption(label="Joueur", description="Fun et gamer", value="joueur"),
+            discord.SelectOption(label="Intellectuel", description="Cultive et profond", value="intellectuel")
         ]
-        print(f"?? DEBUG options cr??es: {len(options)}")
-        super().__init__(placeholder="?? Choisissez une personnalit?...", min_values=1, max_values=1, options=options)
-        print(f"?? DEBUG PersonalitySelect initialis?")
+        super().__init__(placeholder="Choisissez une personnalite...", min_values=1, max_values=1, options=options)
     
     async def callback(self, interaction: discord.Interaction):
         try:
@@ -310,19 +307,19 @@ class PersonalitySelect(discord.ui.Select):
             personality_info = PERSONALITIES[selected_personality]
             conversation_history[channel_id].clear()
             
-            # Cr?er l'embed
+            # Creer l'embed
             embed = discord.Embed(
-                title="? Bot Activ?!",
-                description=f"Je suis maintenant actif avec la personnalit? **{personality_info['name']}**",
+                title="Bot Active!",
+                description=f"Je suis maintenant actif avec la personnalite **{personality_info['name']}**",
                 color=discord.Color.green()
             )
-            embed.add_field(name="?? Comment interagir?", value="? Mentionnez-moi (@bot)\n? R?pondez ? mes messages\n? En message priv?", inline=False)
-            embed.add_field(name="?? Personnalit?", value=f"{personality_info['name']}", inline=False)
+            embed.add_field(name="Comment interagir?", value="- Mentionnez-moi (@bot)\n- Repondez a mes messages\n- En message prive", inline=False)
+            embed.add_field(name="Personnalite", value=f"{personality_info['name']}", inline=False)
             
-            # R?pondre et ?diter le message original en une seule op?ration
+            # Repondre et editer le message original en une seule operation
             await interaction.response.edit_message(embed=embed, view=None)
             
-            # Mise ? jour du statut (asynchrone, sans bloquer)
+            # Mise a jour du statut (asynchrone, sans bloquer)
             active_count = len([c for c in bot_active_channels.values() if c])
             asyncio.create_task(
                 bot.change_presence(activity=discord.Activity(
@@ -331,55 +328,34 @@ class PersonalitySelect(discord.ui.Select):
                 ))
             )
         except Exception as e:
-            print(f"? Erreur dans callback: {e}")
+            print(f"Erreur dans callback: {e}")
             try:
-                await interaction.response.send_message("? Erreur lors de l'activation. R?essayez avec /start", ephemeral=True)
+                await interaction.response.send_message("Erreur lors de l'activation. Reessayez avec /start", ephemeral=True)
             except:
                 pass
 
 class PersonalityView(discord.ui.View):
     def __init__(self):
-        print(f"?? DEBUG PersonalityView.__init__")
-        super().__init__(timeout=180)  # 3 minutes
-        print(f"?? DEBUG ajout PersonalitySelect...")
+        super().__init__(timeout=180)
         self.add_item(PersonalitySelect())
-        print(f"?? DEBUG PersonalityView initialis?")
 
-@bot.tree.command(name="start", description="Active le bot avec choix de personnalit? (admin)")
+@bot.tree.command(name="start", description="Active le bot avec choix de personnalite (admin)")
 @is_admin()
 async def start_bot(interaction: discord.Interaction):
-    try:
-        print(f"?? DEBUG /start appel? par {interaction.user}")
-        channel_id = interaction.channel_id
-        print(f"?? DEBUG channel_id: {channel_id}")
-        
-        if bot_active_channels[channel_id]:
-            print(f"?? DEBUG bot d?j? actif")
-            await interaction.response.send_message("?? Le bot est d?j? actif! Utilisez /stop puis /start pour r?activer.", ephemeral=True)
-            return
-        
-        print(f"?? DEBUG cr?ation embed...")
-        embed = discord.Embed(
-            title="?? Activation du Bot", 
-            description="Choisissez la personnalit? du bot:",
-            color=discord.Color.blue()
-        )
-        embed.add_field(name="?? Personnalit?s", value="S?lectionnez dans le menu ci-dessous", inline=False)
-        
-        print(f"?? DEBUG cr?ation view...")
-        view = PersonalityView()
-        
-        print(f"?? DEBUG envoi message...")
-        await interaction.response.send_message(embed=embed, view=view)
-        print(f"? DEBUG /start r?ussi!")
-    except Exception as e:
-        print(f"? ERREUR /start: {type(e).__name__}: {e}")
-        import traceback
-        traceback.print_exc()
-        try:
-            await interaction.response.send_message("? Erreur lors de l'affichage du menu. R?essayez.", ephemeral=True)
-        except Exception as e2:
-            print(f"? Impossible d'envoyer message erreur: {e2}")
+    channel_id = interaction.channel_id
+    if bot_active_channels[channel_id]:
+        await interaction.response.send_message("Le bot est deja actif! Utilisez /stop puis /start pour reactiver.", ephemeral=True)
+        return
+    
+    embed = discord.Embed(
+        title="Activation du Bot", 
+        description="Choisissez la personnalite du bot:",
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="Personnalites", value="Selectionnez dans le menu ci-dessous", inline=False)
+    view = PersonalityView()
+    
+    await interaction.response.send_message(embed=embed, view=view)
 
 @bot.tree.command(name="stop", description="D?sactive le bot dans ce canal (admin uniquement)")
 @is_admin()
