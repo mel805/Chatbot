@@ -4,10 +4,12 @@ from discord.ext import commands
 import os
 import asyncio
 import aiohttp
+from aiohttp import web
 from dotenv import load_dotenv
 import json
 from collections import defaultdict
 import time
+import threading
 
 # Charger les variables d'environnement
 # load_dotenv() charge le fichier .env en local, mais sur Render les variables sont d?j? dans l'environnement
@@ -469,32 +471,32 @@ async def help_command(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 def main():
-    """Fonction principale pour démarrer le bot"""
+    """Fonction principale pour d?marrer le bot"""
     if not DISCORD_TOKEN:
-        print("❌ ERREUR: DISCORD_TOKEN non trouvé")
-        print("En local: Créez un fichier .env avec votre token Discord")
+        print("? ERREUR: DISCORD_TOKEN non trouv?")
+        print("En local: Cr?ez un fichier .env avec votre token Discord")
         print("Sur Render/Production: Configurez DISCORD_TOKEN dans le Dashboard Render")
         return
     
     if not GROQ_API_KEY:
-        print("❌ ERREUR: GROQ_API_KEY non trouvé")
+        print("? ERREUR: GROQ_API_KEY non trouv?")
         print("En local: Ajoutez GROQ_API_KEY dans le fichier .env")
         print("Sur Render/Production: Configurez GROQ_API_KEY dans le Dashboard Render")
-        print("Obtenez votre clé API gratuite sur https://console.groq.com")
+        print("Obtenez votre cl? API gratuite sur https://console.groq.com")
         return
     
-    print("🚀 Démarrage du bot Discord IA avec Groq...")
-    print(f"🧠 Modèle: {AI_MODEL}")
-    print(f"🎭 Personnalités: {len(PERSONALITIES)}")
-    print("⚡ Commandes Slash activées!")
+    print("?? D?marrage du bot Discord IA avec Groq...")
+    print(f"?? Mod?le: {AI_MODEL}")
+    print(f"?? Personnalit?s: {len(PERSONALITIES)}")
+    print("? Commandes Slash activ?es!")
     
     try:
         bot.run(DISCORD_TOKEN)
     except discord.LoginFailure:
-        print("❌ ERREUR: Token Discord invalide")
-        print("Vérifiez que le token est correct et sans espaces")
+        print("? ERREUR: Token Discord invalide")
+        print("V?rifiez que le token est correct et sans espaces")
     except Exception as e:
-        print(f"❌ ERREUR: {e}")
+        print(f"? ERREUR: {e}")
 
 if __name__ == "__main__":
     main()
