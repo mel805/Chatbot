@@ -127,10 +127,15 @@ class GroqClient:
         }
     
     async def generate_response(self, messages, personality="amical", max_tokens=500):
-        """G?n?re une r?ponse en utilisant l'API Groq"""
+        """Genere une reponse en utilisant l'API Groq"""
         try:
-            # Obtenir le prompt de personnalit?
+            print(f"[DEBUG] generate_response - Personality: {personality}")
+            print(f"[DEBUG] Messages count: {len(messages)}")
+            print(f"[DEBUG] AI_MODEL: {AI_MODEL}")
+            
+            # Obtenir le prompt de personnalite
             system_prompt = PERSONALITIES.get(personality, PERSONALITIES["amical"])["prompt"]
+            print(f"[DEBUG] System prompt length: {len(system_prompt)}")
             
             # Construire les messages pour l'API
             api_messages = [{"role": "system", "content": system_prompt}]
@@ -143,6 +148,8 @@ class GroqClient:
                         "content": msg['content']
                     })
             
+            print(f"[DEBUG] API messages count: {len(api_messages)}")
+            
             payload = {
                 "model": AI_MODEL,
                 "messages": api_messages,
@@ -152,6 +159,7 @@ class GroqClient:
                 "stream": False
             }
             
+            print(f"[DEBUG] Calling Groq API...")
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     self.api_url,
@@ -159,21 +167,30 @@ class GroqClient:
                     json=payload,
                     timeout=aiohttp.ClientTimeout(total=30)
                 ) as response:
+                    print(f"[DEBUG] Groq response status: {response.status}")
+                    
                     if response.status == 200:
                         result = await response.json()
+                        print(f"[DEBUG] Response received")
                         if result.get('choices') and len(result['choices']) > 0:
-                            return result['choices'][0]['message']['content'].strip()
-                        return "D?sol?, je n'ai pas pu g?n?rer de r?ponse."
+                            content = result['choices'][0]['message']['content'].strip()
+                            print(f"[DEBUG] Content length: {len(content)}")
+                            return content
+                        print(f"[ERROR] No choices in response")
+                        return "Desole, je n'ai pas pu generer de reponse."
                     else:
                         error_text = await response.text()
-                        print(f"Erreur API Groq: {response.status} - {error_text}")
-                        return "D?sol?, j'ai rencontr? une erreur technique."
+                        print(f"[ERROR] Groq API error {response.status}: {error_text}")
+                        return "Desole, j'ai rencontre une erreur technique."
         
         except asyncio.TimeoutError:
-            return "D?sol?, la requ?te a pris trop de temps."
+            print(f"[ERROR] Groq API timeout (30s)")
+            return "Desole, la requete a pris trop de temps."
         except Exception as e:
-            print(f"Erreur lors de la g?n?ration: {e}")
-            return "D?sol?, une erreur s'est produite."
+            print(f"[ERROR] Exception in generate_response: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            return "Desole, une erreur s'est produite."
 
 ai_client = GroqClient()
 
