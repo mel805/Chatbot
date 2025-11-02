@@ -278,11 +278,7 @@ def is_admin():
     """V?rifie si l'utilisateur est administrateur"""
     async def predicate(interaction: discord.Interaction):
         if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message(
-                "? Seuls les administrateurs peuvent utiliser cette commande.",
-                ephemeral=True
-            )
-            return False
+            raise app_commands.MissingPermissions(['administrator'])
         return True
     return app_commands.check(predicate)
 
@@ -514,6 +510,42 @@ async def help_command(interaction: discord.Interaction):
     )
     
     await interaction.response.send_message(embed=embed)
+
+# Gestionnaire d'erreurs pour les commandes slash
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    """G?re les erreurs des commandes slash"""
+    if isinstance(error, app_commands.MissingPermissions):
+        try:
+            await interaction.response.send_message(
+                "?? Seuls les administrateurs peuvent utiliser cette commande.",
+                ephemeral=True
+            )
+        except:
+            try:
+                await interaction.followup.send(
+                    "?? Seuls les administrateurs peuvent utiliser cette commande.",
+                    ephemeral=True
+                )
+            except:
+                pass
+    elif isinstance(error, app_commands.CheckFailure):
+        try:
+            await interaction.response.send_message(
+                "? Vous n'avez pas la permission d'utiliser cette commande.",
+                ephemeral=True
+            )
+        except:
+            pass
+    else:
+        print(f"? Erreur commande slash: {type(error).__name__}: {error}")
+        try:
+            await interaction.response.send_message(
+                "? Une erreur s'est produite. R?essayez.",
+                ephemeral=True
+            )
+        except:
+            pass
 
 async def health_check(request):
     """Endpoint de sant? pour le Web Service"""
