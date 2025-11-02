@@ -285,17 +285,20 @@ def is_admin():
 class PersonalitySelect(discord.ui.Select):
     """Menu d?roulant pour s?lectionner la personnalit?"""
     def __init__(self):
+        print(f"?? DEBUG PersonalitySelect.__init__")
         options = [
-            discord.SelectOption(label="Amical", description="Sympathique et ouvert d'esprit", emoji="??", value="amical"),
-            discord.SelectOption(label="S?ducteur", description="Charmant et flirteur", emoji="??", value="seducteur"),
-            discord.SelectOption(label="Coquin", description="Os? et provocateur", emoji="??", value="coquin"),
-            discord.SelectOption(label="Romantique", description="Doux et passionn?", emoji="??", value="romantique"),
+            discord.SelectOption(label="Amical", description="Sympathique et ouvert", emoji="??", value="amical"),
+            discord.SelectOption(label="Seducteur", description="Charmant et flirteur", emoji="??", value="seducteur"),
+            discord.SelectOption(label="Coquin", description="Ose et provocateur", emoji="??", value="coquin"),
+            discord.SelectOption(label="Romantique", description="Doux et passionne", emoji="??", value="romantique"),
             discord.SelectOption(label="Dominant", description="Confiant et autoritaire", emoji="??", value="dominant"),
-            discord.SelectOption(label="Soumis", description="Respectueux et d?vou?", emoji="??", value="soumis"),
+            discord.SelectOption(label="Soumis", description="Respectueux et devoue", emoji="??", value="soumis"),
             discord.SelectOption(label="Joueur", description="Fun et gamer", emoji="??", value="joueur"),
-            discord.SelectOption(label="Intellectuel", description="Cultiv? et profond", emoji="??", value="intellectuel")
+            discord.SelectOption(label="Intellectuel", description="Cultive et profond", emoji="??", value="intellectuel")
         ]
+        print(f"?? DEBUG options cr??es: {len(options)}")
         super().__init__(placeholder="?? Choisissez une personnalit?...", min_values=1, max_values=1, options=options)
+        print(f"?? DEBUG PersonalitySelect initialis?")
     
     async def callback(self, interaction: discord.Interaction):
         try:
@@ -336,8 +339,11 @@ class PersonalitySelect(discord.ui.Select):
 
 class PersonalityView(discord.ui.View):
     def __init__(self):
-        super().__init__(timeout=180)  # 3 minutes au lieu de 60 secondes
+        print(f"?? DEBUG PersonalityView.__init__")
+        super().__init__(timeout=180)  # 3 minutes
+        print(f"?? DEBUG ajout PersonalitySelect...")
         self.add_item(PersonalitySelect())
+        print(f"?? DEBUG PersonalityView initialis?")
 
 @bot.tree.command(name="start", description="Active le bot avec choix de personnalit? (admin)")
 @is_admin()
