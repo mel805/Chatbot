@@ -302,47 +302,72 @@ class PersonalitySelect(discord.ui.Select):
         super().__init__(placeholder="?? Choisissez une personnalit?...", min_values=1, max_values=1, options=options)
     
     async def callback(self, interaction: discord.Interaction):
-        # R?pondre IMM?DIATEMENT pour ?viter le timeout (critique!)
-        await interaction.response.defer()
-        
-        selected_personality = self.values[0]
-        channel_id = interaction.channel_id
-        bot_active_channels[channel_id] = True
-        channel_personalities[channel_id] = selected_personality
-        personality_info = PERSONALITIES[selected_personality]
-        conversation_history[channel_id].clear()
-        
-        embed = discord.Embed(
-            title="? Bot Activ?!",
-            description=f"Je suis maintenant actif avec la personnalit? **{personality_info['name']}**",
-            color=discord.Color.green()
-        )
-        embed.add_field(name="?? Comment interagir?", value="? Mentionnez-moi (@bot)\n? R?pondez ? mes messages\n? En message priv?", inline=False)
-        embed.add_field(name="?? Personnalit?", value=f"{personality_info['name']}", inline=False)
-        
-        # Utiliser edit_original_response apr?s defer
-        await interaction.edit_original_response(embed=embed, view=None)
-        
-        active_count = len([c for c in bot_active_channels.values() if c])
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"{active_count} canal{'aux' if active_count > 1 else ''} actif{'s' if active_count > 1 else ''}"))
+        try:
+            # Configuration imm?diate
+            selected_personality = self.values[0]
+            channel_id = interaction.channel_id
+            bot_active_channels[channel_id] = True
+            channel_personalities[channel_id] = selected_personality
+            personality_info = PERSONALITIES[selected_personality]
+            conversation_history[channel_id].clear()
+            
+            # Cr?er l'embed
+            embed = discord.Embed(
+                title="? Bot Activ?!",
+                description=f"Je suis maintenant actif avec la personnalit? **{personality_info['name']}**",
+                color=discord.Color.green()
+            )
+            embed.add_field(name="?? Comment interagir?", value="? Mentionnez-moi (@bot)\n? R?pondez ? mes messages\n? En message priv?", inline=False)
+            embed.add_field(name="?? Personnalit?", value=f"{personality_info['name']}", inline=False)
+            
+            # R?pondre et ?diter le message original en une seule op?ration
+            await interaction.response.edit_message(embed=embed, view=None)
+            
+            # Mise ? jour du statut (asynchrone, sans bloquer)
+            active_count = len([c for c in bot_active_channels.values() if c])
+            asyncio.create_task(
+                bot.change_presence(activity=discord.Activity(
+                    type=discord.ActivityType.watching, 
+                    name=f"{active_count} canal{'aux' if active_count > 1 else ''} actif{'s' if active_count > 1 else ''}"
+                ))
+            )
+        except Exception as e:
+            print(f"? Erreur dans callback: {e}")
+            try:
+                await interaction.response.send_message("? Erreur lors de l'activation. R?essayez avec /start", ephemeral=True)
+            except:
+                pass
 
 class PersonalityView(discord.ui.View):
     def __init__(self):
-        super().__init__(timeout=60)
+        super().__init__(timeout=180)  # 3 minutes au lieu de 60 secondes
         self.add_item(PersonalitySelect())
 
 @bot.tree.command(name="start", description="Active le bot avec choix de personnalit? (admin)")
 @is_admin()
 async def start_bot(interaction: discord.Interaction):
-    channel_id = interaction.channel_id
-    if bot_active_channels[channel_id]:
-        await interaction.response.send_message("?? Le bot est d?j? actif! Utilisez /stop puis /start pour r?activer.", ephemeral=True)
-        return
-    
-    embed = discord.Embed(title="?? Activation du Bot", description="Choisissez la personnalit? du bot:", color=discord.Color.blue())
-    embed.add_field(name="?? Personnalit?s", value="S?lectionnez dans le menu ci-dessous", inline=False)
-    view = PersonalityView()
-    await interaction.response.send_message(embed=embed, view=view)
+    try:
+        channel_id = interaction.channel_id
+        if bot_active_channels[channel_id]:
+            await interaction.response.send_message("?? Le bot est d?j? actif! Utilisez /stop puis /start pour r?activer.", ephemeral=True)
+            return
+        
+        embed = discord.Embed(
+            title="?? Activation du Bot", 
+            description="Choisissez la personnalit? du bot:",
+            color=discord.Color.blue()
+        )
+        embed.add_field(name="?? Personnalit?s", value="S?lectionnez dans le menu ci-dessous", inline=False)
+        view = PersonalityView()
+        
+        # Envoyer imm?diatement sans op?ration lente
+        await interaction.response.send_message(embed=embed, view=view)
+    except Exception as e:
+        print(f"? Erreur /start: {e}")
+        try:
+            await interaction.response.send_message("? Erreur lors de l'affichage du menu. R?essayez.", ephemeral=True)
+        except:
+            pass
 
 @bot.tree.command(name="stop", description="D?sactive le bot dans ce canal (admin uniquement)")
 @is_admin()
