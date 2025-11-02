@@ -314,7 +314,7 @@ class PersonalitySelect(discord.ui.Select):
             description=f"Je suis maintenant actif avec la personnalité **{personality_info['name']}**",
             color=discord.Color.green()
         )
-        embed.add_field(name="💬 Comment interagir?", value="• Mentionnez-moi (@bot)
+        embed.add_field(name="💬 Comment interagir?", value="• Mentionnez-moi (@bot)\n• Répondez à mes messages\n• En message privé", inline=False)
 • Répondez à mes messages
 • En message privé", inline=False)
         embed.add_field(name="🎭 Personnalité", value=f"{personality_info['name']}", inline=False)
