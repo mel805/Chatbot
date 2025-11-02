@@ -223,17 +223,26 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    # Ignorer les messages du bot lui-m?me
+    # Ignorer les messages du bot lui-meme
     if message.author == bot.user:
         return
+    
+    print(f"[MESSAGE] From {message.author.name} in channel {message.channel.id}")
+    print(f"[MESSAGE] Content: {message.content[:100]}")
     
     # Traiter les commandes d'abord
     await bot.process_commands(message)
     
-    # V?rifier si le bot est actif dans ce canal
+    # Verifier si le bot est actif dans ce canal
     channel_id = message.channel.id
+    print(f"[INFO] Checking if bot active in channel {channel_id}")
+    print(f"[INFO] bot_active_channels: {dict(bot_active_channels)}")
+    
     if not bot_active_channels[channel_id]:
+        print(f"[INFO] Bot NOT active in channel {channel_id} - ignoring")
         return
+    
+    print(f"[INFO] Bot IS active in channel {channel_id}")
     
     # Verifier si le bot est mentionne ou si le message est dans un thread prive
     bot_mentioned = bot.user in message.mentions
@@ -246,7 +255,7 @@ async def on_message(message):
     
     # Repondre si mentionne, en DM, ou en reponse au bot
     if bot_mentioned or is_dm or is_reply_to_bot:
-        print(f"[INFO] Bot should respond to this message")
+        print(f"[INFO] Bot WILL respond to this message")
         # Rate limiting
         user_id = message.author.id
         current_time = time.time()
