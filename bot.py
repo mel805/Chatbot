@@ -470,33 +470,112 @@ async def help_command(interaction: discord.Interaction):
     
     await interaction.response.send_message(embed=embed)
 
+async def health_check(request):
+    """Endpoint de santé pour le Web Service"""
+    active_channels = len([c for c in bot_active_channels.values() if c])
+    return web.json_response({
+        'status': 'online',
+        'bot': str(bot.user) if bot.user else 'connecting',
+        'guilds': len(bot.guilds),
+        'active_channels': active_channels,
+        'personalities': len(PERSONALITIES),
+        'model': AI_MODEL
+    })
+
+async def root_handler(request):
+    """Page d'accueil"""
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Discord Bot IA - Status</title>
+        <style>
+            body { font-family: Arial; max-width: 800px; margin: 50px auto; padding: 20px; }
+            .status { background: #2ecc71; color: white; padding: 20px; border-radius: 10px; }
+            .info { margin: 20px 0; padding: 15px; background: #ecf0f1; border-radius: 5px; }
+            h1 { margin: 0; }
+        </style>
+    </head>
+    <body>
+        <div class="status">
+            <h1>🤖 Bot Discord IA - En ligne</h1>
+            <p>Le bot fonctionne correctement</p>
+        </div>
+        <div class="info">
+            <h2>Informations</h2>
+            <p><strong>Statut:</strong> ✅ Connecté</p>
+            <p><strong>Modèle IA:</strong> """ + AI_MODEL + """</p>
+            <p><strong>Personnalités:</strong> """ + str(len(PERSONALITIES)) + """</p>
+        </div>
+        <div class="info">
+            <h2>Commandes Discord</h2>
+            <p>/start - Active le bot (admin)</p>
+            <p>/personality - Change la personnalité</p>
+            <p>/help - Affiche l'aide</p>
+        </div>
+    </body>
+    </html>
+    """
+    return web.Response(text=html, content_type='text/html')
+
+async def start_web_server():
+    """Démarre le serveur web pour Render"""
+    app = web.Application()
+    app.router.add_get('/', root_handler)
+    app.router.add_get('/health', health_check)
+    
+    # Port pour Render
+    port = int(os.getenv('PORT', 10000))
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    
+    print(f"🌐 Serveur web démarré sur le port {port}")
+    print(f"📍 Health check disponible sur /health")
+
+async def start_bot():
+    """Démarre le bot Discord"""
+    print("🚀 Démarrage du bot Discord IA avec Groq...")
+    print(f"🧠 Modèle: {AI_MODEL}")
+    print(f"🎭 Personnalités: {len(PERSONALITIES)}")
+    print("⚡ Commandes Slash activées!")
+    
+    try:
+        await bot.start(DISCORD_TOKEN)
+    except discord.LoginFailure:
+        print("❌ ERREUR: Token Discord invalide")
+    except Exception as e:
+        print(f"❌ ERREUR: {e}")
+
+async def main_async():
+    """Fonction principale asynchrone"""
+    await asyncio.gather(
+        start_web_server(),
+        start_bot()
+    )
+
 def main():
-    """Fonction principale pour d?marrer le bot"""
+    """Fonction principale pour démarrer le bot"""
     if not DISCORD_TOKEN:
-        print("? ERREUR: DISCORD_TOKEN non trouv?")
-        print("En local: Cr?ez un fichier .env avec votre token Discord")
-        print("Sur Render/Production: Configurez DISCORD_TOKEN dans le Dashboard Render")
+        print("❌ ERREUR: DISCORD_TOKEN non trouvé")
+        print("En local: Créez un fichier .env avec votre token Discord")
+        print("Sur Render: Configurez DISCORD_TOKEN dans le Dashboard")
         return
     
     if not GROQ_API_KEY:
-        print("? ERREUR: GROQ_API_KEY non trouv?")
+        print("❌ ERREUR: GROQ_API_KEY non trouvé")
         print("En local: Ajoutez GROQ_API_KEY dans le fichier .env")
-        print("Sur Render/Production: Configurez GROQ_API_KEY dans le Dashboard Render")
-        print("Obtenez votre cl? API gratuite sur https://console.groq.com")
+        print("Sur Render: Configurez GROQ_API_KEY dans le Dashboard")
+        print("Obtenez votre clé API gratuite sur https://console.groq.com")
         return
     
-    print("?? D?marrage du bot Discord IA avec Groq...")
-    print(f"?? Mod?le: {AI_MODEL}")
-    print(f"?? Personnalit?s: {len(PERSONALITIES)}")
-    print("? Commandes Slash activ?es!")
-    
     try:
-        bot.run(DISCORD_TOKEN)
-    except discord.LoginFailure:
-        print("? ERREUR: Token Discord invalide")
-        print("V?rifiez que le token est correct et sans espaces")
-    except Exception as e:
-        print(f"? ERREUR: {e}")
+        asyncio.run(main_async())
+    except KeyboardInterrupt:
+        print("
+👋 Arrêt du bot...")
 
 if __name__ == "__main__":
     main()
