@@ -286,42 +286,61 @@ def is_admin():
         return True
     return app_commands.check(predicate)
 
-@bot.tree.command(name="start", description="Active le bot dans ce canal (admin uniquement)")
+class PersonalitySelect(discord.ui.Select):
+    """Menu déroulant pour sélectionner la personnalité"""
+    def __init__(self):
+        options = [
+            discord.SelectOption(label="Amical", description="Sympathique et ouvert d'esprit", emoji="😊", value="amical"),
+            discord.SelectOption(label="Séducteur", description="Charmant et flirteur", emoji="😏", value="seducteur"),
+            discord.SelectOption(label="Coquin", description="Osé et provocateur", emoji="🔥", value="coquin"),
+            discord.SelectOption(label="Romantique", description="Doux et passionné", emoji="💕", value="romantique"),
+            discord.SelectOption(label="Dominant", description="Confiant et autoritaire", emoji="👑", value="dominant"),
+            discord.SelectOption(label="Soumis", description="Respectueux et dévoué", emoji="🙇", value="soumis"),
+            discord.SelectOption(label="Joueur", description="Fun et gamer", emoji="🎮", value="joueur"),
+            discord.SelectOption(label="Intellectuel", description="Cultivé et profond", emoji="🧠", value="intellectuel")
+        ]
+        super().__init__(placeholder="🎭 Choisissez une personnalité...", min_values=1, max_values=1, options=options)
+    
+    async def callback(self, interaction: discord.Interaction):
+        selected_personality = self.values[0]
+        channel_id = interaction.channel_id
+        bot_active_channels[channel_id] = True
+        channel_personalities[channel_id] = selected_personality
+        personality_info = PERSONALITIES[selected_personality]
+        conversation_history[channel_id].clear()
+        
+        embed = discord.Embed(
+            title="✅ Bot Activé!",
+            description=f"Je suis maintenant actif avec la personnalité **{personality_info['name']}**",
+            color=discord.Color.green()
+        )
+        embed.add_field(name="💬 Comment interagir?", value="• Mentionnez-moi (@bot)
+• Répondez à mes messages
+• En message privé", inline=False)
+        embed.add_field(name="🎭 Personnalité", value=f"{personality_info['name']}", inline=False)
+        
+        await interaction.response.edit_message(embed=embed, view=None)
+        
+        active_count = len([c for c in bot_active_channels.values() if c])
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"{active_count} canal{'aux' if active_count > 1 else ''} actif{'s' if active_count > 1 else ''}"))
+
+class PersonalityView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=60)
+        self.add_item(PersonalitySelect())
+
+@bot.tree.command(name="start", description="Active le bot avec choix de personnalité (admin)")
 @is_admin()
 async def start_bot(interaction: discord.Interaction):
-    """Active le bot dans ce canal"""
     channel_id = interaction.channel_id
-    
     if bot_active_channels[channel_id]:
-        await interaction.response.send_message(
-            "?? Le bot est d?j? actif dans ce canal!",
-            ephemeral=True
-        )
+        await interaction.response.send_message("ℹ️ Le bot est déjà actif! Utilisez /stop puis /start pour réactiver.", ephemeral=True)
         return
     
-    bot_active_channels[channel_id] = True
-    personality = channel_personalities[channel_id]
-    personality_info = PERSONALITIES[personality]
-    
-    embed = discord.Embed(
-        title="? Bot Activ?!",
-        description=f"Je suis maintenant actif dans ce canal avec la personnalit? **{personality_info['name']}**",
-        color=discord.Color.green()
-    )
-    embed.add_field(
-        name="?? Comment interagir?",
-        value="? Mentionnez-moi (@bot)\n? R?pondez ? mes messages\n? En message priv?",
-        inline=False
-    )
-    await interaction.response.send_message(embed=embed)
-    
-    # Mettre ? jour le statut
-    active_count = len([c for c in bot_active_channels.values() if c])
-    await bot.change_presence(
-        activity=discord.Activity(
-            type=discord.ActivityType.watching,
-            name=f"{active_count} canal{'aux' if active_count > 1 else ''} actif{'s' if active_count > 1 else ''}"
-        )
+    embed = discord.Embed(title="🤖 Activation du Bot", description="Choisissez la personnalité du bot:", color=discord.Color.blue())
+    embed.add_field(name="🎭 Personnalités", value="Sélectionnez dans le menu ci-dessous", inline=False)
+    view = PersonalityView()
+    await interaction.response.send_message(embed=embed, view=view)
     )
 
 @bot.tree.command(name="stop", description="D?sactive le bot dans ce canal (admin uniquement)")
