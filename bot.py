@@ -471,7 +471,7 @@ async def help_command(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 async def health_check(request):
-    """Endpoint de santé pour le Web Service"""
+    """Endpoint de sant? pour le Web Service"""
     active_channels = len([c for c in bot_active_channels.values() if c])
     return web.json_response({
         'status': 'online',
@@ -498,19 +498,19 @@ async def root_handler(request):
     </head>
     <body>
         <div class="status">
-            <h1>🤖 Bot Discord IA - En ligne</h1>
+            <h1>?? Bot Discord IA - En ligne</h1>
             <p>Le bot fonctionne correctement</p>
         </div>
         <div class="info">
             <h2>Informations</h2>
-            <p><strong>Statut:</strong> ✅ Connecté</p>
-            <p><strong>Modèle IA:</strong> """ + AI_MODEL + """</p>
-            <p><strong>Personnalités:</strong> """ + str(len(PERSONALITIES)) + """</p>
+            <p><strong>Statut:</strong> ? Connect?</p>
+            <p><strong>Mod?le IA:</strong> """ + AI_MODEL + """</p>
+            <p><strong>Personnalit?s:</strong> """ + str(len(PERSONALITIES)) + """</p>
         </div>
         <div class="info">
             <h2>Commandes Discord</h2>
             <p>/start - Active le bot (admin)</p>
-            <p>/personality - Change la personnalité</p>
+            <p>/personality - Change la personnalit?</p>
             <p>/help - Affiche l'aide</p>
         </div>
     </body>
@@ -519,7 +519,7 @@ async def root_handler(request):
     return web.Response(text=html, content_type='text/html')
 
 async def start_web_server():
-    """Démarre le serveur web pour Render"""
+    """D?marre le serveur web pour Render"""
     app = web.Application()
     app.router.add_get('/', root_handler)
     app.router.add_get('/health', health_check)
@@ -532,22 +532,22 @@ async def start_web_server():
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
     
-    print(f"🌐 Serveur web démarré sur le port {port}")
-    print(f"📍 Health check disponible sur /health")
+    print(f"?? Serveur web d?marr? sur le port {port}")
+    print(f"?? Health check disponible sur /health")
 
 async def start_bot():
-    """Démarre le bot Discord"""
-    print("🚀 Démarrage du bot Discord IA avec Groq...")
-    print(f"🧠 Modèle: {AI_MODEL}")
-    print(f"🎭 Personnalités: {len(PERSONALITIES)}")
-    print("⚡ Commandes Slash activées!")
+    """D?marre le bot Discord"""
+    print("?? D?marrage du bot Discord IA avec Groq...")
+    print(f"?? Mod?le: {AI_MODEL}")
+    print(f"?? Personnalit?s: {len(PERSONALITIES)}")
+    print("? Commandes Slash activ?es!")
     
     try:
         await bot.start(DISCORD_TOKEN)
     except discord.LoginFailure:
-        print("❌ ERREUR: Token Discord invalide")
+        print("? ERREUR: Token Discord invalide")
     except Exception as e:
-        print(f"❌ ERREUR: {e}")
+        print(f"? ERREUR: {e}")
 
 async def main_async():
     """Fonction principale asynchrone"""
@@ -557,25 +557,24 @@ async def main_async():
     )
 
 def main():
-    """Fonction principale pour démarrer le bot"""
+    """Fonction principale pour d?marrer le bot"""
     if not DISCORD_TOKEN:
-        print("❌ ERREUR: DISCORD_TOKEN non trouvé")
-        print("En local: Créez un fichier .env avec votre token Discord")
+        print("? ERREUR: DISCORD_TOKEN non trouv?")
+        print("En local: Cr?ez un fichier .env avec votre token Discord")
         print("Sur Render: Configurez DISCORD_TOKEN dans le Dashboard")
         return
     
     if not GROQ_API_KEY:
-        print("❌ ERREUR: GROQ_API_KEY non trouvé")
+        print("? ERREUR: GROQ_API_KEY non trouv?")
         print("En local: Ajoutez GROQ_API_KEY dans le fichier .env")
         print("Sur Render: Configurez GROQ_API_KEY dans le Dashboard")
-        print("Obtenez votre clé API gratuite sur https://console.groq.com")
+        print("Obtenez votre cl? API gratuite sur https://console.groq.com")
         return
     
     try:
         asyncio.run(main_async())
     except KeyboardInterrupt:
-        print("
-👋 Arrêt du bot...")
+        print("\n?? Arr?t du bot...")
 
 if __name__ == "__main__":
     main()
