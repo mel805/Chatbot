@@ -302,6 +302,9 @@ class PersonalitySelect(discord.ui.Select):
         super().__init__(placeholder="?? Choisissez une personnalit?...", min_values=1, max_values=1, options=options)
     
     async def callback(self, interaction: discord.Interaction):
+        # R?pondre IMM?DIATEMENT pour ?viter le timeout (critique!)
+        await interaction.response.defer()
+        
         selected_personality = self.values[0]
         channel_id = interaction.channel_id
         bot_active_channels[channel_id] = True
@@ -317,7 +320,8 @@ class PersonalitySelect(discord.ui.Select):
         embed.add_field(name="?? Comment interagir?", value="? Mentionnez-moi (@bot)\n? R?pondez ? mes messages\n? En message priv?", inline=False)
         embed.add_field(name="?? Personnalit?", value=f"{personality_info['name']}", inline=False)
         
-        await interaction.response.edit_message(embed=embed, view=None)
+        # Utiliser edit_original_response apr?s defer
+        await interaction.edit_original_response(embed=embed, view=None)
         
         active_count = len([c for c in bot_active_channels.values() if c])
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"{active_count} canal{'aux' if active_count > 1 else ''} actif{'s' if active_count > 1 else ''}"))
