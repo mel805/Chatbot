@@ -315,8 +315,6 @@ class PersonalitySelect(discord.ui.Select):
             color=discord.Color.green()
         )
         embed.add_field(name="💬 Comment interagir?", value="• Mentionnez-moi (@bot)\n• Répondez à mes messages\n• En message privé", inline=False)
-        embed.add_field(name="💬 Comment interagir?", value="• Mentionnez-moi (@bot)\n• Répondez à mes messages\n• En message privé", inline=False)
-        embed.add_field(name="💬 Comment interagir?", value="• Mentionnez-moi (@bot)\n• Répondez à mes messages\n• En message privé", inline=False)
         embed.add_field(name="🎭 Personnalité", value=f"{personality_info['name']}", inline=False)
         
         await interaction.response.edit_message(embed=embed, view=None)
@@ -341,7 +339,6 @@ async def start_bot(interaction: discord.Interaction):
     embed.add_field(name="🎭 Personnalités", value="Sélectionnez dans le menu ci-dessous", inline=False)
     view = PersonalityView()
     await interaction.response.send_message(embed=embed, view=view)
-    )
 
 @bot.tree.command(name="stop", description="D?sactive le bot dans ce canal (admin uniquement)")
 @is_admin()
