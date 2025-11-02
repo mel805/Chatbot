@@ -129,9 +129,9 @@ class GroqClient:
     async def generate_response(self, messages, personality="amical", max_tokens=500):
         """Genere une reponse en utilisant l'API Groq"""
         try:
-            print(f"[DEBUG] generate_response - Personality: {personality}")
-            print(f"[DEBUG] Messages count: {len(messages)}")
-            print(f"[DEBUG] AI_MODEL: {AI_MODEL}")
+            print(f"[DEBUG] generate_response - Personality: {personality}", flush=True)
+            print(f"[DEBUG] Messages count: {len(messages)}", flush=True)
+            print(f"[DEBUG] AI_MODEL: {AI_MODEL}", flush=True)
             
             # Obtenir le prompt de personnalite
             system_prompt = PERSONALITIES.get(personality, PERSONALITIES["amical"])["prompt"]
@@ -196,15 +196,15 @@ ai_client = GroqClient()
 
 @bot.event
 async def on_ready():
-    print("="*60)
-    print(f"BOT READY - Version avec logs debug")
-    print(f"Bot user: {bot.user}")
-    print(f"Guilds: {len(bot.guilds)}")
-    print(f"AI_MODEL: {AI_MODEL}")
-    print(f"GROQ_API_KEY defined: {GROQ_API_KEY is not None and len(GROQ_API_KEY) > 0}")
-    print(f"GROQ_API_KEY length: {len(GROQ_API_KEY) if GROQ_API_KEY else 0}")
-    print(f"Personalities: {len(PERSONALITIES)}")
-    print("="*60)
+    print("="*60, flush=True)
+    print(f"BOT READY - Version avec logs debug complets", flush=True)
+    print(f"Bot user: {bot.user}", flush=True)
+    print(f"Guilds: {len(bot.guilds)}", flush=True)
+    print(f"AI_MODEL: {AI_MODEL}", flush=True)
+    print(f"GROQ_API_KEY defined: {GROQ_API_KEY is not None and len(GROQ_API_KEY) > 0}", flush=True)
+    print(f"GROQ_API_KEY length: {len(GROQ_API_KEY) if GROQ_API_KEY else 0}", flush=True)
+    print(f"Personalities: {len(PERSONALITIES)}", flush=True)
+    print("="*60, flush=True)
     
     # Synchroniser les commandes slash
     try:
@@ -227,8 +227,8 @@ async def on_message(message):
     if message.author == bot.user:
         return
     
-    print(f"[MESSAGE] From {message.author.name} in channel {message.channel.id}")
-    print(f"[MESSAGE] Content: {message.content[:100]}")
+    print(f"[MESSAGE] From {message.author.name} in channel {message.channel.id}", flush=True)
+    print(f"[MESSAGE] Content: {message.content[:100]}", flush=True)
     
     # Traiter les commandes d'abord
     await bot.process_commands(message)

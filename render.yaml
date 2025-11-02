@@ -5,7 +5,7 @@ services:
     region: frankfurt
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python3 bot.py
+    startCommand: python3 -u bot.py
     envVars:
       - key: DISCORD_TOKEN
         sync: false
