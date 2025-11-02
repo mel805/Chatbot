@@ -22,7 +22,15 @@ pip install -r requirements.txt
 5. **IMPORTANT**: Activez "Message Content Intent" et "Server Members Intent"
 6. Copiez le **Token**
 
-### 4?? Inviter le bot
+### 4?? Obtenir une cl? API Groq (GRATUIT!)
+
+1. Allez sur https://console.groq.com
+2. Cr?ez un compte gratuit
+3. Allez dans **"API Keys"**
+4. Cliquez **"Create API Key"**
+5. Copiez la cl?
+
+### 5?? Inviter le bot
 
 1. Allez dans **"OAuth2"** ? **"URL Generator"**
 2. Cochez **"bot"** dans Scopes
@@ -31,9 +39,10 @@ pip install -r requirements.txt
    - Send Messages
    - Send Messages in Threads
    - Read Message History
+   - Embed Links
 4. Copiez l'URL et ouvrez-la pour inviter le bot
 
-### 5?? Configuration
+### 6?? Configuration
 
 ```bash
 # Copier le fichier de configuration
@@ -45,12 +54,14 @@ nano .env
 notepad .env
 ```
 
-Ajoutez votre token:
-```
-DISCORD_TOKEN=votre_token_ici
+Ajoutez vos cl?s:
+```env
+DISCORD_TOKEN=votre_token_discord_ici
+GROQ_API_KEY=votre_cle_groq_ici
+AI_MODEL=llama-3.1-70b-versatile
 ```
 
-### 6?? D?marrer le bot
+### 7?? D?marrer le bot
 
 ```bash
 python bot.py
@@ -58,62 +69,191 @@ python bot.py
 
 ? **C'est pr?t!**
 
+---
+
 ## ?? Comment l'utiliser?
 
-### Mentionner le bot
+### ?? Important: Activer le bot d'abord!
+
+Le bot ne r?pond PAS automatiquement. Un **admin** doit l'activer:
+
+```
+!start
+```
+
+### Ensuite, interagissez:
+
+**Mentionner le bot**
 ```
 @BotIA Salut! Comment ?a va?
 ```
 
-### R?pondre ? ses messages
+**R?pondre ? ses messages**
 Utilisez la fonction "R?pondre" de Discord sur un message du bot
 
-### En priv?
+**En priv?**
 Envoyez-lui un message priv? directement
 
-## ?? Commandes utiles
+---
+
+## ?? Personnalit?s
+
+Le bot a **8 personnalit?s** diff?rentes:
+
+| Code | Description |
+|------|-------------|
+| `amical` | Sympathique et cool (d?faut) |
+| `seducteur` | Charmant et flirteur ?? |
+| `coquin` | Os? et provocateur ?? |
+| `romantique` | Doux et passionn? ?? |
+| `dominant` | Confiant et autoritaire ?? |
+| `soumis` | Respectueux et d?vou? ?? |
+| `joueur` | Fun et gamer ?? |
+| `intellectuel` | Cultiv? et profond ?? |
+
+### Changer de personnalit? (admin)
 
 ```
-!help_bot          ? Affiche l'aide
-!reset             ? Efface l'historique de conversation
-!personality ...   ? Change la personnalit? (admin)
-!model ...         ? Change le mod?le IA (admin)
+!personality coquin
 ```
 
-## ?? Personnalisation rapide
+---
 
-### Changer la personnalit?
+## ?? Commandes Admin
+
 ```
-!personality Tu es un pirate sympathique qui parle comme un vrai pirate des Cara?bes!
+!start                    ? Active le bot dans ce canal
+!stop                     ? D?sactive le bot
+!personality              ? Liste les personnalit?s
+!personality <nom>        ? Change de personnalit?
+!reset                    ? R?initialise l'historique
+!status                   ? Affiche le statut
+!help_bot                 ? Aide compl?te
 ```
 
-### Utiliser un mod?le plus rapide
-Dans le fichier `.env`:
-```
-AI_MODEL=google/flan-t5-large
-```
+---
+
+## ?? H?bergement 24/7
+
+Pour garder le bot en ligne 24/7, vous avez plusieurs options:
+
+### Option 1: VPS Oracle (GRATUIT!) ??
+
+Oracle offre un VPS **gratuit ? vie**!
+
+1. Cr?ez un compte sur https://www.oracle.com/cloud/free/
+2. Cr?ez une instance Ubuntu
+3. Suivez le guide complet: **[HEBERGEMENT_24_7.md](HEBERGEMENT_24_7.md)**
+
+### Option 2: Raspberry Pi
+
+~60? une fois, consommation ?lectrique ~3?/an
+
+### Option 3: VPS payant
+
+Contabo: 5?/mois, DigitalOcean: 5$/mois
+
+?? **Guide complet dans [HEBERGEMENT_24_7.md](HEBERGEMENT_24_7.md)**
+
+---
 
 ## ?? Conseils
 
-- **Token Hugging Face** (optionnel): Cr?ez un compte gratuit sur https://huggingface.co/ pour des r?ponses plus rapides
-- **Premi?re utilisation**: Le mod?le peut prendre 20-30 secondes ? se charger la premi?re fois
-- **Conversation fluide**: Le bot se souvient des 20 derniers messages de chaque canal
+### Pourquoi Groq?
+
+- ? **Ultra rapide**: R?ponses en ~1 seconde (vs 5-15s)
+- ?? **100% Gratuit**: API g?n?reuse
+- ?? **Puissant**: Llama 3.1, Mixtral, Gemma
+- ?? **Moins censur?**: Meilleur pour conversations adultes
+
+### Mod?les recommand?s
+
+- `llama-3.1-70b-versatile` (d?faut) - Meilleur ?quilibre
+- `mixtral-8x7b-32768` - Excellent, contexte ?tendu
+- `llama-3.1-8b-instant` - Ultra rapide
+
+Changez dans `.env`:
+```env
+AI_MODEL=mixtral-8x7b-32768
+```
+
+---
 
 ## ?? Probl?mes courants
 
 **Le bot ne r?pond pas?**
-- V?rifiez que "Message Content Intent" est activ? dans le portail Discord
-- Assurez-vous que le token est correct dans `.env`
+1. Avez-vous fait `!start`? (admin uniquement)
+2. V?rifiez que "Message Content Intent" est activ?
+3. Mentionnez le bot ou r?pondez ? ses messages
 
-**"Model is loading"?**
-- C'est normal la premi?re fois, attendez 30 secondes et r?essayez
+**"GROQ_API_KEY non trouv?"?**
+- Cr?ez un compte sur https://console.groq.com
+- Obtenez une cl? API gratuite
+- Ajoutez-la dans le fichier `.env`
 
-**Trop lent?**
-- Ajoutez un token Hugging Face dans `.env`
-- Essayez un mod?le plus petit comme `google/flan-t5-large`
+**"DISCORD_TOKEN invalide"?**
+- V?rifiez que vous avez copi? le bon token
+- Le token commence g?n?ralement par `MTk...`
+
+**Le bot parle ? tout le monde?**
+- Normal! Une fois activ?, il r?pond quand on le mentionne
+- Utilisez `!stop` pour le d?sactiver dans un canal
+
+---
+
+## ?? Documentation compl?te
+
+Pour plus de d?tails:
+
+- **README.md** - Documentation compl?te
+- **HEBERGEMENT_24_7.md** - Guide h?bergement 24/7
+- **config.json** - Configurations suppl?mentaires
+
+---
+
+## ?? Exemple rapide
+
+```
+Admin: !start
+Bot: ? Bot Activ? avec la personnalit? Amical ??
+
+User: @Bot Hey!
+Bot: Salut! Ravi de pouvoir discuter avec vous! ??
+
+Admin: !personality seducteur
+Bot: ? Personnalit? chang?e! Nouvelle personnalit?: S?ducteur ??
+
+User: @Bot Toujours l??
+Bot: Bien s?r... *te regarde avec un sourire charmeur* Comment pourrais-je partir alors que la conversation devient int?ressante? ??
+
+Admin: !stop
+Bot: ?? Bot d?sactiv? dans ce canal.
+```
+
+---
+
+## ?? S?curit?
+
+- ? Ne partagez jamais vos tokens
+- ? Utilisez uniquement sur des serveurs priv?s
+- ? Le bot ne sauvegarde aucune conversation
+- ? Tout est stock? en RAM (effac? au red?marrage)
+
+---
+
+## ? Avantages de cette version
+
+? **Groq** au lieu de Hugging Face (10x plus rapide)
+? **8 personnalit?s** pr?d?finies
+? **Contr?le admin** pour activation/d?sactivation
+? **24/7 ready** avec guide complet
+? **100% Gratuit** pour toujours
+? **Conversations immersives** et r?alistes
+
+---
 
 ## ?? Vous ?tes pr?t!
 
 Votre bot IA est maintenant op?rationnel! Amusez-vous bien!
 
-Pour plus de d?tails, consultez le **README.md** complet.
+**Besoin d'aide?** Consultez le **README.md** complet!
