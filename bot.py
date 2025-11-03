@@ -37,6 +37,17 @@ bot_active_channels = defaultdict(bool)
 # Personnalit? actuelle par canal
 channel_personalities = defaultdict(lambda: "amical")
 
+# Stockage du genre des utilisateurs (user_id -> genre)
+user_genders = defaultdict(lambda: "inconnu")
+
+# Mots-cl?s pour d?tecter le genre dans les r?les Discord
+ROLE_KEYWORDS = {
+    "homme": ["homme", "men", "male", "mec", "garcon", "boy", "man"],
+    "femme": ["femme", "women", "female", "fille", "girl", "woman"],
+    "non-binaire": ["non-binaire", "nonbinary", "enby", "nb", "non binaire"],
+    "trans": ["trans", "transgender"]
+}
+
 # Personnalites predefinies
 PERSONALITIES = {
     # FEMMES
