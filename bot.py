@@ -548,6 +548,19 @@ class PersonalitySelect(discord.ui.Select):
             personality_info = PERSONALITIES[selected_personality]
             conversation_history[channel_id].clear()
             
+            # Changer le nickname du bot pour prendre le nom du personnage
+            try:
+                guild = interaction.guild
+                if guild:
+                    bot_member = guild.me
+                    new_nickname = f"{personality_info['name']} ({personality_info['age']})"
+                    await bot_member.edit(nick=new_nickname)
+                    print(f"[INFO] Bot nickname changed to: {new_nickname}", flush=True)
+            except discord.Forbidden:
+                print(f"[WARNING] No permission to change nickname", flush=True)
+            except Exception as e:
+                print(f"[ERROR] Failed to change nickname: {e}", flush=True)
+            
             # Creer un bel embed avec toutes les infos
             embed = discord.Embed(
                 title=f"{personality_info['name']} - {personality_info['title']}",
@@ -563,11 +576,11 @@ class PersonalitySelect(discord.ui.Select):
             # Instructions d'interaction
             embed.add_field(
                 name="Comment interagir?", 
-                value="- Mentionnez-moi @bot\n- Repondez a mes messages\n- Envoyez-moi un message prive", 
+                value=f"- Mentionnez-moi @{personality_info['name']}\n- Repondez a mes messages\n- Envoyez-moi un message prive", 
                 inline=False
             )
             
-            embed.set_footer(text=f"Bot active dans ce canal avec {personality_info['name']}")
+            embed.set_footer(text=f"Je suis maintenant {personality_info['name']} dans ce serveur")
             
             # Repondre et editer le message original en une seule operation
             await interaction.response.edit_message(embed=embed, view=None)
@@ -576,8 +589,8 @@ class PersonalitySelect(discord.ui.Select):
             active_count = len([c for c in bot_active_channels.values() if c])
             asyncio.create_task(
                 bot.change_presence(activity=discord.Activity(
-                    type=discord.ActivityType.watching, 
-                    name=f"{active_count} canal{'aux' if active_count > 1 else ''} actif{'s' if active_count > 1 else ''}"
+                    type=discord.ActivityType.playing, 
+                    name=f"{personality_info['name']} | {active_count} canal actif"
                 ))
             )
         except Exception as e:
