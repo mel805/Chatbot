@@ -1,0 +1,42 @@
+services:
+  # Bot NSFW - Channels NSFW uniquement
+  - type: web
+    name: discord-bot-nsfw
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 -u bot.py
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: llama-3.3-70b-versatile
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 10000
+    autoDeploy: true
+
+  # Bot SFW - Channels normaux uniquement  
+  - type: web
+    name: discord-bot-sfw
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 -u bot_sfw.py
+    envVars:
+      - key: DISCORD_TOKEN_SFW
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: llama-3.3-70b-versatile
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT_SFW
+        value: 10001
+    autoDeploy: true
