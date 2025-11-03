@@ -159,7 +159,11 @@ class GroqClient:
                 "stream": False
             }
             
-            print(f"[DEBUG] Calling Groq API...")
+            print(f"[DEBUG] Calling Groq API...", flush=True)
+            print(f"[DEBUG] API URL: {self.api_url}", flush=True)
+            print(f"[DEBUG] Payload model: {payload['model']}", flush=True)
+            print(f"[DEBUG] Payload messages count: {len(payload['messages'])}", flush=True)
+            
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     self.api_url,
@@ -167,29 +171,36 @@ class GroqClient:
                     json=payload,
                     timeout=aiohttp.ClientTimeout(total=30)
                 ) as response:
-                    print(f"[DEBUG] Groq response status: {response.status}")
+                    print(f"[DEBUG] Groq response status: {response.status}", flush=True)
+                    response_text = await response.text()
+                    print(f"[DEBUG] Groq raw response: {response_text[:500]}", flush=True)
                     
                     if response.status == 200:
-                        result = await response.json()
-                        print(f"[DEBUG] Response received")
-                        if result.get('choices') and len(result['choices']) > 0:
-                            content = result['choices'][0]['message']['content'].strip()
-                            print(f"[DEBUG] Content length: {len(content)}")
-                            return content
-                        print(f"[ERROR] No choices in response")
-                        return "Desole, je n'ai pas pu generer de reponse."
+                        try:
+                            result = await response.json() if not response_text else json.loads(response_text)
+                            print(f"[DEBUG] Response parsed successfully", flush=True)
+                            if result.get('choices') and len(result['choices']) > 0:
+                                content = result['choices'][0]['message']['content'].strip()
+                                print(f"[DEBUG] Content length: {len(content)}", flush=True)
+                                print(f"[DEBUG] Content preview: {content[:100]}", flush=True)
+                                return content
+                            print(f"[ERROR] No choices in response: {result}", flush=True)
+                            return "Desole, je n'ai pas pu generer de reponse."
+                        except Exception as e:
+                            print(f"[ERROR] Failed to parse JSON: {e}", flush=True)
+                            return "Desole, erreur de parsing de la reponse."
                     else:
-                        error_text = await response.text()
-                        print(f"[ERROR] Groq API error {response.status}: {error_text}")
+                        print(f"[ERROR] Groq API error {response.status}: {response_text}", flush=True)
                         return "Desole, j'ai rencontre une erreur technique."
         
         except asyncio.TimeoutError:
-            print(f"[ERROR] Groq API timeout (30s)")
+            print(f"[ERROR] Groq API timeout (30s)", flush=True)
             return "Desole, la requete a pris trop de temps."
         except Exception as e:
-            print(f"[ERROR] Exception in generate_response: {type(e).__name__}: {e}")
+            print(f"[ERROR] Exception in generate_response: {type(e).__name__}: {e}", flush=True)
             import traceback
             traceback.print_exc()
+            print(f"[ERROR] Traceback complete", flush=True)
             return "Desole, une erreur s'est produite."
 
 ai_client = GroqClient()
