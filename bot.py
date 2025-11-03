@@ -272,6 +272,38 @@ PERSONALITIES = {
 user_last_response = {}
 RATE_LIMIT_SECONDS = 2
 
+def detect_gender_from_roles(member):
+    """D?tecte le genre d'un membre via ses r?les Discord"""
+    if not hasattr(member, 'roles'):
+        return "inconnu"
+    
+    for role in member.roles:
+        role_name = role.name.lower()
+        
+        # V?rifier chaque cat?gorie de genre
+        for gender, keywords in ROLE_KEYWORDS.items():
+            if any(keyword in role_name for keyword in keywords):
+                print(f"[INFO] Genre d?tect? via r?le '{role.name}': {gender}", flush=True)
+                return gender
+    
+    return "inconnu"
+
+def get_user_gender(user_id, member=None):
+    """R?cup?re le genre d'un utilisateur (cache ou d?tection)"""
+    # Si d?j? en cache
+    if user_id in user_genders and user_genders[user_id] != "inconnu":
+        return user_genders[user_id]
+    
+    # Sinon tenter d?tection via r?les
+    if member:
+        gender = detect_gender_from_roles(member)
+        if gender != "inconnu":
+            user_genders[user_id] = gender
+            print(f"[INFO] Genre enregistr? pour user {user_id}: {gender}", flush=True)
+            return gender
+    
+    return "inconnu"
+
 class GroqClient:
     """Client pour interagir avec l'API Groq"""
     
@@ -282,7 +314,7 @@ class GroqClient:
             "Content-Type": "application/json"
         }
     
-    async def generate_response(self, messages, personality="amical", max_tokens=500):
+    async def generate_response(self, messages, personality="amical", max_tokens=500, user_gender="inconnu"):
         """Genere une reponse en utilisant l'API Groq"""
         try:
             print(f"[DEBUG] generate_response - Personality: {personality}", flush=True)
@@ -532,6 +564,10 @@ async def on_message(message):
         
         # Afficher l'indicateur de frappe
         async with message.channel.typing():
+            # D?tecter le genre de l'utilisateur
+            user_gender = get_user_gender(message.author.id, message.author)
+            print(f"[INFO] Genre d?tect? pour {message.author.name}: {user_gender}", flush=True)
+            
             # Nettoyer le message (retirer la mention du bot)
             clean_content = message.clean_content
             for mention in message.mentions:
@@ -552,11 +588,12 @@ async def on_message(message):
             personality = channel_personalities[channel_id]
             print(f"[INFO] Using personality: {personality}")
             
-            # Generer la reponse
+            # Generer la reponse avec le genre de l'utilisateur
             print(f"[INFO] Calling ai_client.generate_response...")
             response = await ai_client.generate_response(
                 conversation_history[channel_id],
-                personality=personality
+                personality=personality,
+                user_gender=user_gender
             )
             print(f"[INFO] Response received: {response[:100] if response else 'None'}")
             
