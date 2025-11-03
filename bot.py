@@ -451,17 +451,53 @@ async def on_message(message):
                        message.reference.resolved and 
                        message.reference.resolved.author == bot.user)
     
+    # Nettoyer le message pour analyse
+    message_lower = message.content.lower().strip()
+    
+    # Detecter les salutations courantes
+    greetings = ['bonjour', 'hello', 'salut', 'hey', 'coucou', 'cc', 'yo', 'bonsoir', 'hi', 'bjr', 'slt']
+    is_greeting = any(greeting in message_lower.split() for greeting in greetings)
+    
+    # Detecter les questions (destinees potentiellement au bot)
+    is_question = any(q in message_lower for q in ['?', 'qui ', 'quoi ', 'comment ', 'pourquoi ', 'ou ', 'quand '])
+    
+    # Detecter le nom de la personnalite actuelle
+    personality = channel_personalities[channel_id]
+    personality_name = None
+    if personality:
+        personality_name = PERSONALITIES.get(personality, {}).get('name', '').lower()
+    
+    is_name_mentioned = personality_name and personality_name in message_lower
+    
     # Repondre de maniere naturelle comme un vrai membre
-    # Le bot peut reagir spontanement aux conversations (pas tout le temps)
+    # Le bot peut reagir spontanement aux conversations
     should_respond_naturally = False
     if not (bot_mentioned or is_dm or is_reply_to_bot):
-        # Repondre aleatoirement a environ 30% des messages pour etre naturel
         import random
-        if random.random() < 0.3:  # 30% de chance de repondre spontanement
+        
+        # 1. Si le nom de la personnalite est mentionne (ex: "Luna tu fais quoi?")
+        if is_name_mentioned:
             should_respond_naturally = True
-            print(f"[INFO] Bot responding naturally (not pinged)")
+            print(f"[INFO] Nom de la personnalite detecte: {personality_name}", flush=True)
+        
+        # 2. Salutations -> 90% de chance de repondre
+        elif is_greeting:
+            if random.random() < 0.9:  # 90% de chance
+                should_respond_naturally = True
+                print(f"[INFO] Salutation detectee - reponse naturelle (90% chance)", flush=True)
+        
+        # 3. Questions -> 60% de chance de repondre
+        elif is_question:
+            if random.random() < 0.6:  # 60% de chance
+                should_respond_naturally = True
+                print(f"[INFO] Question detectee - reponse naturelle (60% chance)", flush=True)
+        
+        # 4. Reponse naturelle spontanee (20% de chance pour les autres messages)
+        elif random.random() < 0.2:  # 20% de chance de repondre spontanement
+            should_respond_naturally = True
+            print(f"[INFO] Reponse naturelle spontanee (20% chance)", flush=True)
     
-    print(f"[INFO] bot_mentioned={bot_mentioned}, is_dm={is_dm}, is_reply_to_bot={is_reply_to_bot}, natural={should_respond_naturally}")
+    print(f"[INFO] bot_mentioned={bot_mentioned}, is_dm={is_dm}, is_reply_to_bot={is_reply_to_bot}, natural={should_respond_naturally}", flush=True)
     
     # Repondre si mentionne, en DM, en reponse, ou spontanement
     if bot_mentioned or is_dm or is_reply_to_bot or should_respond_naturally:
