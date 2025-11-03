@@ -415,9 +415,11 @@ Tu es {personality_name}, un personnage de roleplay fictif dans un espace adulte
             payload = {
                 "model": AI_MODEL,
                 "messages": api_messages,
-                "temperature": 0.9,
-                "max_tokens": 150,  # Reponses courtes et naturelles comme sur Discord
-                "top_p": 0.95,
+                "temperature": 1.0,  # Maximum creativite
+                "max_tokens": 150,  # Reponses courtes
+                "top_p": 0.98,  # Haute diversite
+                "frequency_penalty": 0.5,  # Eviter repetitions censure
+                "presence_penalty": 0.5,  # Nouveaux tokens (evite phrases types censure)
                 "stream": False
             }
             
