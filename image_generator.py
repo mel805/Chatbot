@@ -18,13 +18,14 @@ class ImageGenerator:
         self.replicate_key = os.getenv('REPLICATE_API_KEY', '')
         self.huggingface_key = os.getenv('HUGGINGFACE_API_KEY', '')
         
-    async def generate_personality_image(self, personality_data, prompt_addition=""):
+    async def generate_personality_image(self, personality_data, prompt_addition="", max_retries=3):
         """
-        G?n?re une image bas?e sur la personnalit?
+        G?n?re une image bas?e sur la personnalit? avec retry automatique
         
         Args:
             personality_data: Dictionnaire avec name, genre, age, description, visual
             prompt_addition: Texte additionnel pour le prompt
+            max_retries: Nombre maximum de tentatives (d?faut: 3)
         
         Returns:
             URL de l'image ou None si erreur
@@ -46,23 +47,43 @@ class ImageGenerator:
         
         print(f"[IMAGE] Generating image for {name} with prompt: {full_prompt[:100]}...", flush=True)
         
-        # Essayer diff?rentes APIs (Pollinations en priorit? car gratuit)
+        # Essayer avec retry automatique pour 100% de r?ussite
         image_url = None
         
-        # M?thode 1: Pollinations.ai (GRATUIT, sans cl? API, PRIORITAIRE)
-        print(f"[IMAGE] Trying Pollinations.ai (free, unlimited)...", flush=True)
-        image_url = await self._generate_pollinations(full_prompt)
+        for attempt in range(max_retries):
+            print(f"[IMAGE] Attempt {attempt + 1}/{max_retries}...", flush=True)
+            
+            # M?thode 1: Pollinations.ai (GRATUIT, sans cl? API, PRIORITAIRE)
+            print(f"[IMAGE] Trying Pollinations.ai (free, unlimited)...", flush=True)
+            image_url = await self._generate_pollinations(full_prompt)
+            
+            if image_url:
+                print(f"[IMAGE] Success on attempt {attempt + 1}!", flush=True)
+                return image_url
+            
+            # M?thode 2: Replicate (backup si cl? configur?e)
+            if self.replicate_key:
+                print(f"[IMAGE] Pollinations failed, trying Replicate...", flush=True)
+                image_url = await self._generate_replicate(full_prompt)
+                
+                if image_url:
+                    print(f"[IMAGE] Success with Replicate on attempt {attempt + 1}!", flush=True)
+                    return image_url
+            
+            # M?thode 3: Hugging Face (backup si cl? configur?e)
+            if self.huggingface_key:
+                print(f"[IMAGE] Replicate failed, trying Hugging Face...", flush=True)
+                image_url = await self._generate_huggingface(full_prompt)
+                
+                if image_url:
+                    print(f"[IMAGE] Success with Hugging Face on attempt {attempt + 1}!", flush=True)
+                    return image_url
+            
+            if attempt < max_retries - 1:
+                print(f"[IMAGE] Attempt {attempt + 1} failed, retrying...", flush=True)
+                await asyncio.sleep(2)  # Petite pause avant retry
         
-        # M?thode 2: Replicate (backup si cl? configur?e)
-        if not image_url and self.replicate_key:
-            print(f"[IMAGE] Pollinations failed, trying Replicate...", flush=True)
-            image_url = await self._generate_replicate(full_prompt)
-        
-        # M?thode 3: Hugging Face (backup si cl? configur?e)
-        if not image_url and self.huggingface_key:
-            print(f"[IMAGE] Replicate failed, trying Hugging Face...", flush=True)
-            image_url = await self._generate_huggingface(full_prompt)
-        
+        print(f"[IMAGE] All {max_retries} attempts failed", flush=True)
         return image_url
     
     def _build_base_prompt(self, genre, age, description, visual_traits=""):
@@ -194,27 +215,30 @@ class ImageGenerator:
         context_keywords = []
         conversation_text = " ".join(conversation_history[-10:]).lower()
         
-        # D?tecter le contexte NSFW/intime (termes subtils)
-        if any(word in conversation_text for word in ["nue", "nu", "nud", "d?shabill", "sans v?tements", "corps", "montre", "voir"]):
-            context_keywords.append("artistic nude, natural, revealing")
+        # D?tecter le contexte NSFW/intime (plus explicite)
+        if any(word in conversation_text for word in ["nue", "nu", "nud", "d?shabill", "sans v?tements", "corps", "montre", "voir", "naked", "bare"]):
+            context_keywords.append("nude bare skin, revealing body, natural figure")
         
-        if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed"]):
-            context_keywords.append("bedroom setting, intimate, on bed")
+        if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed", "matelas"]):
+            context_keywords.append("bedroom intimate setting, on bed, private room")
         
-        if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "?rotique", "excit", "belle"]):
-            context_keywords.append("sexy, sensual pose, alluring")
+        if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "?rotique", "excit", "belle", "bandant", "chaud"]):
+            context_keywords.append("sexy sensual pose, seductive alluring, provocative")
         
-        if any(word in conversation_text for word in ["lingerie", "sous-v?tements", "underwear", "d?shabille"]):
-            context_keywords.append("wearing lingerie, revealing clothing")
+        if any(word in conversation_text for word in ["lingerie", "sous-v?tements", "underwear", "d?shabille", "petite tenue"]):
+            context_keywords.append("wearing revealing lingerie, intimate clothing, seductive outfit")
         
-        if any(word in conversation_text for word in ["position", "pose", "comme ?a", "ainsi"]):
-            context_keywords.append("provocative pose, suggestive")
+        if any(word in conversation_text for word in ["position", "pose", "comme ?a", "ainsi", "posture"]):
+            context_keywords.append("provocative seductive pose, suggestive position, alluring stance")
         
-        if any(word in conversation_text for word in ["envie", "d?sir", "veux", "besoin"]):
-            context_keywords.append("desire, wanting, passionate")
+        if any(word in conversation_text for word in ["envie", "d?sir", "veux", "besoin", "desire"]):
+            context_keywords.append("desire wanting, passionate, aroused expression")
         
-        if any(word in conversation_text for word in ["touche", "caresse", "embrasse", "l?che"]):
-            context_keywords.append("intimate, sensual, romantic")
+        if any(word in conversation_text for word in ["touche", "caresse", "embrasse", "l?che", "kiss", "touch"]):
+            context_keywords.append("intimate touching, sensual contact, romantic caress")
+        
+        if any(word in conversation_text for word in ["sein", "poitrine", "fesse", "cul", "jambe", "cuisse"]):
+            context_keywords.append("sensual body curves, revealing figure, attractive physique")
         
         # Construire le prompt contextuel
         name = personality_data.get('name', 'Person')
