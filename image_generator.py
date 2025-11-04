@@ -71,8 +71,8 @@ class ImageGenerator:
         # Si des traits visuels sp?cifiques sont fournis, les utiliser en priorit?
         if visual_traits:
             print(f"[IMAGE] Using specific visual traits: {visual_traits[:80]}...", flush=True)
-            # Simplifier le prompt pour ?viter les blocages
-            prompt = f"portrait, {visual_traits}, {age} years old, professional photography, cinematic lighting"
+            # Prompt plus simple et plus fiable
+            prompt = f"{visual_traits}, {age} years old, portrait photography"
             return prompt
         
         # Sinon, utiliser l'ancienne m?thode (fallback)

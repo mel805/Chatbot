@@ -828,7 +828,13 @@ class PersonalitySelect(discord.ui.Select):
             # Configuration immediate
             selected_personality = self.values[0]
             channel_id = interaction.channel_id
+            
+            # Activer le bot et log
             bot_active_channels[channel_id] = True
+            print(f"[PERSONALITY] Bot activated in channel {channel_id}", flush=True)
+            print(f"[PERSONALITY] Selected: {selected_personality}", flush=True)
+            print(f"[PERSONALITY] bot_active_channels: {dict(bot_active_channels)}", flush=True)
+            
             channel_personalities[channel_id] = selected_personality
             personality_info = PERSONALITIES[selected_personality]
             conversation_history[channel_id].clear()
