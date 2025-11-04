@@ -899,18 +899,26 @@ class PersonalityView(discord.ui.View):
 @bot.tree.command(name="start", description="Active le bot avec choix de personnalite (admin)")
 @is_admin()
 async def start_bot(interaction: discord.Interaction):
+    # Log pour debug
+    channel_id = interaction.channel_id
+    print(f"[START] Command /start called in channel {channel_id}", flush=True)
+    print(f"[START] Current bot_active_channels: {dict(bot_active_channels)}", flush=True)
+    
     # VERIFICATION: Ce bot NSFW ne fonctionne QUE dans les channels NSFW
     if hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
+        print(f"[START] Channel {channel_id} is not NSFW, rejecting", flush=True)
         await interaction.response.send_message(
             "Ce bot est reserve aux channels NSFW. Activez le bot SFW dans les channels normaux.",
             ephemeral=True
         )
         return
     
-    channel_id = interaction.channel_id
     if bot_active_channels[channel_id]:
-        await interaction.response.send_message("Le bot est deja actif! Utilisez /stop puis /start pour reactiver.", ephemeral=True)
+        print(f"[START] Bot already active in channel {channel_id}", flush=True)
+        await interaction.response.send_message("? Le bot est d?j? actif! Utilisez /stop puis /start pour r?activer.", ephemeral=True)
         return
+    
+    print(f"[START] Showing personality selection menu", flush=True)
     
     embed = discord.Embed(
         title="Activation du Bot", 
