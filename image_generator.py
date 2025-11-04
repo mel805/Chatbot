@@ -1,12 +1,13 @@
 """
 G?n?rateur d'images NSFW pour les personnalit?s du bot Discord
-Utilise Stable Diffusion via API
+Utilise Pollinations.ai (gratuit, sans cl? API) comme m?thode principale
 """
 
 import aiohttp
 import asyncio
 import os
 import json
+import urllib.parse
 
 class ImageGenerator:
     """G?n?re des images NSFW bas?es sur les personnalit?s"""
@@ -21,7 +22,7 @@ class ImageGenerator:
         
         Args:
             personality_data: Dictionnaire avec name, genre, age, description
-            prompt_addition: Texte additionnel pour le prompt (ex: "in lingerie", "nude")
+            prompt_addition: Texte additionnel pour le prompt
         
         Returns:
             URL de l'image ou None si erreur
@@ -40,25 +41,24 @@ class ImageGenerator:
         base_prompt = self._build_base_prompt(genre, age_num, description)
         full_prompt = f"{base_prompt}, {prompt_addition}" if prompt_addition else base_prompt
         
-        # Prompt n?gatif pour meilleure qualit?
-        negative_prompt = "ugly, deformed, disfigured, bad anatomy, bad proportions, blurry, low quality, worst quality, watermark, text"
-        
         print(f"[IMAGE] Generating image with prompt: {full_prompt[:100]}...", flush=True)
         
-        # Essayer diff?rentes APIs
+        # Essayer diff?rentes APIs (Pollinations en priorit? car gratuit)
         image_url = None
         
-        # M?thode 1: Replicate (Stable Diffusion)
-        if self.replicate_key:
-            image_url = await self._generate_replicate(full_prompt, negative_prompt)
+        # M?thode 1: Pollinations.ai (GRATUIT, sans cl? API, PRIORITAIRE)
+        print(f"[IMAGE] Trying Pollinations.ai (free, unlimited)...", flush=True)
+        image_url = await self._generate_pollinations(full_prompt)
         
-        # M?thode 2: Hugging Face (backup)
+        # M?thode 2: Replicate (backup si cl? configur?e)
+        if not image_url and self.replicate_key:
+            print(f"[IMAGE] Pollinations failed, trying Replicate...", flush=True)
+            image_url = await self._generate_replicate(full_prompt)
+        
+        # M?thode 3: Hugging Face (backup si cl? configur?e)
         if not image_url and self.huggingface_key:
-            image_url = await self._generate_huggingface(full_prompt, negative_prompt)
-        
-        # M?thode 3: API publique (backup backup)
-        if not image_url:
-            image_url = await self._generate_public_api(full_prompt, negative_prompt)
+            print(f"[IMAGE] Replicate failed, trying Hugging Face...", flush=True)
+            image_url = await self._generate_huggingface(full_prompt)
         
         return image_url
     
@@ -94,30 +94,44 @@ class ImageGenerator:
         
         return prompt
     
-    async def _generate_replicate(self, prompt, negative_prompt):
-        """G?n?re via Replicate API (Stable Diffusion)"""
+    async def _generate_pollinations(self, prompt):
+        """G?n?re via Pollinations.ai (gratuit, sans cl? API)"""
+        try:
+            print(f"[IMAGE] Using Pollinations.ai FREE API", flush=True)
+            
+            # Encoder le prompt pour URL
+            encoded_prompt = urllib.parse.quote(prompt)
+            
+            # Construire l'URL Pollinations (Flux model, haute qualit?)
+            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=768&height=1024&model=flux&seed=-1&nologo=true&enhance=true"
+            
+            print(f"[IMAGE] Pollinations.ai URL generated successfully", flush=True)
+            return image_url
+            
+        except Exception as e:
+            print(f"[ERROR] Pollinations.ai error: {e}", flush=True)
+            return None
+    
+    async def _generate_replicate(self, prompt):
+        """G?n?re via Replicate API (n?cessite cl? API)"""
         try:
             headers = {
                 "Authorization": f"Token {self.replicate_key}",
                 "Content-Type": "application/json"
             }
             
-            # Utiliser SDXL (meilleur mod?le)
             data = {
                 "version": "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
                 "input": {
                     "prompt": prompt,
-                    "negative_prompt": negative_prompt,
                     "width": 768,
                     "height": 1024,
-                    "num_outputs": 1,
-                    "guidance_scale": 7.5,
-                    "num_inference_steps": 30
+                    "num_outputs": 1
                 }
             }
             
-            async with aiohttp.ClientSession() as session:
-                # Cr?er la pr?diction
+            timeout = aiohttp.ClientTimeout(total=90)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(
                     "https://api.replicate.com/v1/predictions",
                     headers=headers,
@@ -127,7 +141,7 @@ class ImageGenerator:
                         result = await resp.json()
                         prediction_url = result.get('urls', {}).get('get')
                         
-                        # Attendre que l'image soit pr?te (max 60s)
+                        # Attendre g?n?ration (max 60s)
                         for _ in range(30):
                             await asyncio.sleep(2)
                             async with session.get(prediction_url, headers=headers) as check_resp:
@@ -137,80 +151,16 @@ class ImageGenerator:
                                 if status == 'succeeded':
                                     output = check_result.get('output', [])
                                     if output:
-                                        print(f"[IMAGE] Replicate generation succeeded", flush=True)
                                         return output[0]
                                 elif status == 'failed':
-                                    print(f"[IMAGE] Replicate generation failed", flush=True)
                                     return None
                     
-                    print(f"[IMAGE] Replicate API error: {resp.status}", flush=True)
                     return None
         except Exception as e:
-            print(f"[ERROR] Replicate generation error: {e}", flush=True)
+            print(f"[ERROR] Replicate error: {e}", flush=True)
             return None
     
-    async def _generate_huggingface(self, prompt, negative_prompt):
-        """G?n?re via Hugging Face Inference API"""
-        try:
-            headers = {
-                "Authorization": f"Bearer {self.huggingface_key}",
-                "Content-Type": "application/json"
-            }
-            
-            # Utiliser Stable Diffusion 2.1
-            api_url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1"
-            
-            data = {
-                "inputs": prompt,
-                "negative_prompt": negative_prompt,
-                "width": 512,
-                "height": 768
-            }
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.post(api_url, headers=headers, json=data) as resp:
-                    if resp.status == 200:
-                        # HF retourne l'image en binaire
-                        image_bytes = await resp.read()
-                        # On devrait uploader ?a quelque part et retourner l'URL
-                        # Pour l'instant, on retourne None (? impl?menter)
-                        print(f"[IMAGE] HuggingFace generation succeeded (needs upload)", flush=True)
-                        return None  # TODO: Upload image et retourner URL
-                    else:
-                        print(f"[IMAGE] HuggingFace API error: {resp.status}", flush=True)
-                        return None
-        except Exception as e:
-            print(f"[ERROR] HuggingFace generation error: {e}", flush=True)
-            return None
-    
-    async def _generate_public_api(self, prompt, negative_prompt):
-        """G?n?re via API publique (backup)"""
-        # Pour l'instant, retourner None
-        # On pourrait utiliser une API publique comme Pollinations.ai
-        print(f"[IMAGE] No public API configured yet", flush=True)
+    async def _generate_huggingface(self, prompt):
+        """G?n?re via Hugging Face (n?cessite cl? API)"""
+        print(f"[IMAGE] Hugging Face not implemented yet", flush=True)
         return None
-    
-    def get_personality_prompts(self, personality_key):
-        """
-        Retourne des prompts sugg?r?s pour une personnalit?
-        
-        Returns:
-            Liste de tuples (label, prompt_addition)
-        """
-        
-        base_prompts = [
-            ("Portrait", "portrait, face focus, beautiful lighting"),
-            ("Tenue D?contract?e", "casual outfit, relaxed pose"),
-            ("Tenue ?l?gante", "elegant dress, formal attire"),
-            ("Lingerie", "lingerie, sensual pose, bedroom"),
-            ("Maillot de Bain", "swimsuit, beach setting"),
-        ]
-        
-        nsfw_prompts = [
-            ("Suggestif", "suggestive pose, intimate setting, artistic nude"),
-            ("Artistique Nu", "artistic nude, tasteful, professional photography"),
-            ("Intime", "intimate scene, bedroom, soft lighting, nsfw"),
-        ]
-        
-        # Retourner tous les prompts
-        return base_prompts + nsfw_prompts
