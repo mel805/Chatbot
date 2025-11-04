@@ -952,18 +952,15 @@ async def help_command(interaction: discord.Interaction):
 ])
 async def generate_image(interaction: discord.Interaction, style: str = "portrait"):
     """G?n?re une image de la personnalit? actuelle"""
-    channel_id = str(interaction.channel_id)
-    if not bot_active_channels[interaction.channel_id]:
+    channel_id = interaction.channel_id
+    if not bot_active_channels[channel_id]:
         await interaction.response.send_message("? Le bot n'est pas actif. Utilisez `/start`.", ephemeral=True)
         return
     nsfw_styles = ["lingerie", "suggestive", "artistic_nude", "intimate"]
     if style in nsfw_styles and hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
         await interaction.response.send_message("?? Images NSFW uniquement dans channels NSFW.", ephemeral=True)
         return
-    personality_key = active_channels.get(channel_id)
-    if not personality_key:
-        await interaction.response.send_message("? Aucune personnalit? active.", ephemeral=True)
-        return
+    personality_key = channel_personalities.get(channel_id, "femme_coquine")
     personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
     style_prompts = {"portrait": "portrait, face focus, beautiful lighting", "casual": "casual outfit, relaxed", "elegant": "elegant dress, formal", "lingerie": "lingerie, sensual, bedroom", "swimsuit": "swimsuit, beach", "suggestive": "suggestive pose, artistic", "artistic_nude": "artistic nude, tasteful, nsfw", "intimate": "intimate scene, romantic, nsfw"}
     await interaction.response.defer()
