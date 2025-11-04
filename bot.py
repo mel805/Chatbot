@@ -30,6 +30,9 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='/', intents=intents)
 
+# Initialiser le g?n?rateur d'images
+image_gen = ImageGenerator()
+
 # Historique des conversations par canal
 conversation_history = defaultdict(list)
 MAX_HISTORY = 40  # Nombre de messages ? garder en m?moire par canal (augment? pour meilleure coh?rence)
