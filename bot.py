@@ -1068,27 +1068,33 @@ async def help_command(interaction: discord.Interaction):
 ])
 async def generate_image(interaction: discord.Interaction, style: str = "portrait"):
     """G?n?re une image de la personnalit? actuelle"""
+    # DEFER IMM?DIATEMENT pour ?viter timeout
+    await interaction.response.defer()
+    
     channel_id = interaction.channel_id
     if not bot_active_channels[channel_id]:
-        await interaction.response.send_message("? Le bot n'est pas actif. Utilisez `/start`.", ephemeral=True)
+        await interaction.edit_original_response(content="? Le bot n'est pas actif. Utilisez `/start`.")
         return
+    
     nsfw_styles = ["lingerie", "suggestive", "artistic_nude", "intimate"]
     if style in nsfw_styles and hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
-        await interaction.response.send_message("?? Images NSFW uniquement dans channels NSFW.", ephemeral=True)
+        await interaction.edit_original_response(content="?? Images NSFW uniquement dans channels NSFW.")
         return
+    
     personality_key = channel_personalities.get(channel_id, "femme_coquine")
     personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
+    
+    # Prompts simplifi?s et plus fiables
     style_prompts = {
-        "portrait": "portrait, face focus, beautiful eyes, soft lighting, detailed features",
-        "casual": "casual outfit, relaxed pose, natural setting, everyday style",
-        "elegant": "elegant evening dress, formal attire, sophisticated, glamorous",
-        "lingerie": "wearing lingerie, sensual, bedroom setting, intimate lighting, seductive",
-        "swimsuit": "revealing swimsuit, beach or pool, summer vibes, attractive body",
-        "suggestive": "suggestive pose, teasing expression, provocative, alluring, sensual",
-        "artistic_nude": "artistic nude, tasteful, aesthetic, sensual curves, natural beauty",
-        "intimate": "intimate scene, romantic, passionate moment, sensual atmosphere, private setting"
+        "portrait": "portrait, face focus, beautiful lighting",
+        "casual": "casual outfit, relaxed, natural",
+        "elegant": "elegant dress, formal, sophisticated",
+        "lingerie": "lingerie, bedroom, sensual",
+        "swimsuit": "swimsuit, beach, summer",
+        "suggestive": "suggestive pose, alluring",
+        "artistic_nude": "artistic, tasteful, aesthetic",
+        "intimate": "intimate, romantic, private"
     }
-    await interaction.response.defer()
     try:
         embed = discord.Embed(title="?? G?n?ration", description=f"Image de **{personality_data['name']}** en cours...\n? 10-30s...", color=personality_data.get('color', 0x3498db))
         await interaction.edit_original_response(embed=embed)

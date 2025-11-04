@@ -71,8 +71,8 @@ class ImageGenerator:
         # Si des traits visuels sp?cifiques sont fournis, les utiliser en priorit?
         if visual_traits:
             print(f"[IMAGE] Using specific visual traits: {visual_traits[:80]}...", flush=True)
-            # Les traits visuels sont d?j? tr?s sp?cifiques, on les utilise directement
-            prompt = f"high quality portrait, {visual_traits}, {age} years old, realistic, detailed, professional photography, cinematic lighting, 8k"
+            # Simplifier le prompt pour ?viter les blocages
+            prompt = f"portrait, {visual_traits}, {age} years old, professional photography, cinematic lighting"
             return prompt
         
         # Sinon, utiliser l'ancienne m?thode (fallback)
@@ -99,8 +99,8 @@ class ImageGenerator:
         
         traits_str = ", ".join(traits) if traits else "attractive"
         
-        # Prompt complet
-        prompt = f"high quality portrait, {gender_desc}, {age} years old, {traits_str}, realistic, detailed, professional photography, cinematic lighting"
+        # Prompt complet (simplifi?)
+        prompt = f"portrait, {gender_desc}, {age} years old, {traits_str}, professional photography"
         
         return prompt
     
@@ -226,11 +226,11 @@ class ImageGenerator:
         
         if context_keywords:
             context_str = ", ".join(context_keywords)
-            full_prompt = f"{base_prompt}, {context_str}, artistic, tasteful"
+            full_prompt = f"{base_prompt}, {context_str}"
             print(f"[IMAGE] Contextual generation with keywords: {context_str}", flush=True)
         else:
             # Par d?faut, g?n?rer une image suggestive
-            full_prompt = f"{base_prompt}, suggestive pose, teasing, sensual"
+            full_prompt = f"{base_prompt}, suggestive, sensual"
             print(f"[IMAGE] No specific context detected, using suggestive default", flush=True)
         
         print(f"[IMAGE] Contextual prompt: {full_prompt[:150]}...", flush=True)
