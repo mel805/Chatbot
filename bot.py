@@ -734,8 +734,16 @@ class GenerateImageButton(ui.Button):
             
             print(f"[IMAGE BUTTON] Generating contextual image for {personality_data['name']}...", flush=True)
             
+            # Convertir l'historique (dict) en liste de strings
+            history_strings = []
+            for msg in history:
+                if isinstance(msg, dict):
+                    history_strings.append(msg.get('content', ''))
+                else:
+                    history_strings.append(str(msg))
+            
             # G?n?rer l'image contextuelle
-            image_url = await image_gen.generate_contextual_image(personality_data, history)
+            image_url = await image_gen.generate_contextual_image(personality_data, history_strings)
             
             if image_url:
                 print(f"[IMAGE BUTTON] Success! Displaying image...", flush=True)
@@ -1181,8 +1189,16 @@ async def generate_contextual_image(interaction: discord.Interaction):
         print(f"[IMAGE] Generating contextual image for {personality_data['name']}...", flush=True)
         print(f"[IMAGE] Analyzing {len(history)} messages of conversation history...", flush=True)
         
+        # Convertir l'historique (dict) en liste de strings
+        history_strings = []
+        for msg in history:
+            if isinstance(msg, dict):
+                history_strings.append(msg.get('content', ''))
+            else:
+                history_strings.append(str(msg))
+        
         # G?n?rer l'image contextuelle
-        image_url = await image_gen.generate_contextual_image(personality_data, history)
+        image_url = await image_gen.generate_contextual_image(personality_data, history_strings)
         print(f"[IMAGE] Contextual generation result: {image_url if image_url else 'None'}", flush=True)
         
         if image_url:
