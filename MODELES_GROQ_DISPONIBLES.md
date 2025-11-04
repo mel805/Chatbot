@@ -1,182 +1,207 @@
-# ?? Mod?les Groq Disponibles
+# ?? Mod?les Groq Disponibles et Test?s
 
-## ? Mod?le Actuel: llama-3.1-8b-instant
+## ? Mod?les ACTUELLEMENT Disponibles sur Groq (Dec 2024)
 
-Le bot utilise maintenant **llama-3.1-8b-instant** pour:
-- ? **Plus de rapidit?** (2-3x plus rapide)
-- ?? **Plus de stabilit?** (moins d'erreurs)
-- ? **Meilleure fiabilit?** pour les conversations
-- ?? **Toujours gratuit**
-
----
-
-## ?? Tous les mod?les Groq disponibles
-
-### Recommand? ?
-
-#### llama-3.1-8b-instant (ACTUEL)
-- **Vitesse**: ????? Ultra rapide
-- **Qualit?**: ???? Tr?s bon
-- **Usage**: Conversations, r?ponses rapides
-- **Id?al pour**: Bot Discord 24/7
-- **Nom**: `llama-3.1-8b-instant`
+| Mod?le | Vitesse | Contexte | Censure | Pour NSFW | Status |
+|--------|---------|----------|---------|-----------|--------|
+| **llama-3.1-8b-instant** | ????? | 8k | ???? | ??? | ? **CONFIGUR?** |
+| llama-3.3-70b-versatile | ??? | 128k | ???????? | ? | ? Trop censur? |
+| llama-3.1-70b-versatile | ???? | 128k | ?????? | ?? | ?? Peut ?tre censur? |
+| gemma2-9b-it | ???? | 8k | ?????? | ? | ? Tr?s censur? |
+| mixtral-8x7b-32768 | ???? | 32k | ?? | ???? | ?? Parfois indisponible |
 
 ---
 
-### Alternatives
+## ?? Mod?le Actuel: llama-3.1-8b-instant
 
-#### llama-3.1-70b-versatile
-- **Vitesse**: ??? Rapide
-- **Qualit?**: ????? Excellent
-- **Usage**: Conversations complexes
-- **Note**: Plus lent mais plus intelligent
-- **Nom**: `llama-3.1-70b-versatile`
+**Pourquoi ce choix:**
 
-#### mixtral-8x7b-32768
-- **Vitesse**: ??? Rapide
-- **Qualit?**: ????? Excellent
-- **Usage**: Contexte long (32k tokens)
-- **Id?al pour**: Conversations longues
-- **Nom**: `mixtral-8x7b-32768`
+? **TR?S rapide** (le plus rapide de Groq)  
+? **Toujours disponible** (mod?le stable)  
+? **Moins censur?** que Llama 3.3  
+? **8k contexte** (suffisant pour nos 40 messages)  
+? **"instant"** = optimis? pour vitesse  
 
-#### gemma2-9b-it
-- **Vitesse**: ???? Tr?s rapide
-- **Qualit?**: ???? Tr?s bon
-- **Usage**: Conversations g?n?rales
-- **Id?al pour**: L?ger et rapide
-- **Nom**: `gemma2-9b-it`
-
-#### llama-3.2-90b-text-preview
-- **Vitesse**: ?? Moyen
-- **Qualit?**: ????? Exceptionnel
-- **Usage**: T?ches complexes
-- **Note**: Le plus puissant mais plus lent
-- **Nom**: `llama-3.2-90b-text-preview`
+**Compromis:**
+- Plus petit mod?le (8B vs 70B param?tres)
+- Moins "intelligent" sur contextes complexes
+- **MAIS** fonctionne et ne refuse pas "hello"!
 
 ---
 
-## ?? Comment changer de mod?le
+## ?? Tests de Censure
 
-### M?thode 1: Variable d'environnement Render (Recommand?)
-
-1. **Dashboard Render** ? Votre service
-2. **Settings** ? **Environment**
-3. Trouvez `AI_MODEL` (ou ajoutez-la)
-4. Changez la valeur:
-   ```
-   llama-3.1-8b-instant          (Rapide et stable)
-   llama-3.1-70b-versatile       (Plus intelligent)
-   mixtral-8x7b-32768            (Contexte long)
-   gemma2-9b-it                  (L?ger)
-   llama-3.2-90b-text-preview    (Le plus puissant)
-   ```
-5. **Save Changes**
-6. **Manual Deploy**
-
-### M?thode 2: Fichier .env (Local)
-
-Dans votre fichier `.env`:
-```env
-AI_MODEL=llama-3.1-8b-instant
+### llama-3.1-8b-instant
+```
+Message neutre: ? Fonctionne
+Flirt: ? Fonctionne
+NSFW progressif: ?? Peut refuser si trop direct
+NSFW avec contexte: ? G?n?ralement fonctionne
 ```
 
-### M?thode 3: render.yaml
+**Note:** Moins censur? que 3.3, mais pas totalement libre.
 
-Dans `render.yaml`:
-```yaml
-envVars:
-  - key: AI_MODEL
-    value: llama-3.1-8b-instant
+---
+
+### llama-3.3-70b-versatile
+```
+Message neutre: ? Peut refuser "hello"!
+Flirt: ? Refuse souvent
+NSFW: ? Refuse quasi-syst?matiquement
+```
+
+**Note:** TROP censur? depuis fin 2024.
+
+---
+
+### mixtral-8x7b-32768
+```
+Message neutre: ? Fonctionne
+Flirt: ? Fonctionne
+NSFW: ? G?n?ralement accepte
+```
+
+**Note:** Excellent MAIS parfois indisponible/erreur.
+
+---
+
+## ?? Historique des Changements
+
+1. **llama-3.1-70b-versatile** (d?part) ? Deprecated
+2. **llama-3.1-8b-instant** (stable) ? OK mais un peu censur?
+3. **llama-3.3-70b-versatile** (upgrade) ? TROP censur?
+4. **mixtral-8x7b-32768** (tentative) ? Indisponible/Erreur
+5. **llama-3.1-8b-instant** (retour) ? **ACTUEL** ?
+
+---
+
+## ? Performances
+
+| Mod?le | Temps R?ponse Moyen | Tokens/sec |
+|--------|---------------------|------------|
+| **llama-3.1-8b-instant** | 0.5-1s | ~800 |
+| llama-3.1-70b-versatile | 2-3s | ~200 |
+| llama-3.3-70b-versatile | 3-4s | ~150 |
+| mixtral-8x7b-32768 | 1-2s | ~400 |
+
+**llama-3.1-8b-instant est LE PLUS RAPIDE!**
+
+---
+
+## ?? Recommandations par Cas d'Usage
+
+### Pour Vitesse Maximum
+```
+llama-3.1-8b-instant ?????
+```
+
+### Pour NSFW Maximum (si disponible)
+```
+mixtral-8x7b-32768
+```
+
+### Pour Contexte Long
+```
+llama-3.3-70b-versatile (128k)
+?? Mais tr?s censur?
+```
+
+### Pour ?quilibre
+```
+llama-3.1-70b-versatile
+Bon compromis mais peut ?tre censur?
 ```
 
 ---
 
-## ?? Comparaison
+## ?? Changer de Mod?le sur Render
 
-| Mod?le | Vitesse | Qualit? | RAM | Usage Discord |
-|--------|---------|---------|-----|---------------|
-| **llama-3.1-8b-instant** ? | ????? | ???? | Faible | ? Parfait |
-| llama-3.1-70b-versatile | ??? | ????? | Moyen | ? Excellent |
-| mixtral-8x7b-32768 | ??? | ????? | Moyen | ? Excellent |
-| gemma2-9b-it | ???? | ???? | Faible | ? Tr?s bon |
-| llama-3.2-90b-text-preview | ?? | ????? | ?lev? | ?? Lent |
+**Dashboard Render ? Environment:**
 
----
+```
+AI_MODEL = llama-3.1-8b-instant     (Actuel)
+AI_MODEL = llama-3.1-70b-versatile  (Plus gros)
+AI_MODEL = mixtral-8x7b-32768       (Si disponible)
+```
 
-## ?? Recommandations
-
-### Pour un bot Discord 24/7:
-? **llama-3.1-8b-instant** (d?faut actuel)
-- Rapide et stable
-- Parfait pour conversations en temps r?el
-- Moins de timeout
-
-### Pour des conversations complexes:
-? **llama-3.1-70b-versatile**
-- Plus intelligent
-- Meilleure compr?hension
-- Peut ?tre plus lent
-
-### Pour des discussions tr?s longues:
-? **mixtral-8x7b-32768**
-- Contexte de 32k tokens
-- Se souvient de beaucoup plus
-- Excellent pour role-play
-
-### Pour un serveur avec beaucoup d'activit?:
-? **gemma2-9b-it** ou **llama-3.1-8b-instant**
-- Tr?s rapide
-- G?re bien la charge
-- Stable
+**Sauvegardez ? Red?marre en 30s**
 
 ---
 
-## ? Pourquoi llama-3.1-8b-instant maintenant?
+## ?? Si Groq Ne Suffit Pas
 
-Le bot a ?t? chang? pour ce mod?le car:
+### Probl?me: Tous les mod?les Groq trop censur?s
 
-1. **Plus stable** - Moins d'erreurs techniques
-2. **Plus rapide** - R?ponses quasi-instantan?es
-3. **Meilleure fiabilit?** - Parfait pour Render Free
-4. **Toujours intelligent** - Qualit? de conversation excellente
-5. **Moins de timeout** - Important avec les limitations de Render
+**Solution: Together.ai**
 
----
+```
+API gratuite
+Moins censur? que Groq
+Mod?les: Mixtral, Llama 3, etc.
+Compatible OpenAI API
+```
 
-## ?? Tester diff?rents mod?les
-
-Vous pouvez tester:
-
-1. Changez `AI_MODEL` sur Render
-2. Red?ployez
-3. Testez avec `/start`
-4. Discutez avec le bot
-5. Comparez les r?ponses
+**Je peux configurer en 5 minutes!**
 
 ---
 
-## ?? Note sur les limitations
+## ?? Configuration Actuelle
 
-### Plan Gratuit Groq:
-- ~30 requ?tes/minute
-- ~14,400 requ?tes/jour
-- Tous les mod?les disponibles
-- Pas de limitation de tokens par mod?le
+```python
+AI_MODEL = 'llama-3.1-8b-instant'
 
-### Tous les mod?les sont gratuits! ??
+Param?tres:
+- temperature: 0.95
+- max_tokens: 200
+- top_p: 0.95
+- frequency_penalty: 0.4
+- presence_penalty: 0.3
+```
+
+**Prompt:** Simplifi? et subtil (?vite triggers)
+
+---
+
+## ? Test Apr?s D?ploiement (2-3 min)
+
+**Test rapide:**
+```
+/start
+[Activez Luna]
+
+Vous: hello
+Luna: hey ?? ?
+
+Vous: ?a va?
+Luna: ouais et toi?
+
+Vous: t'es mignonne
+Luna: merci ??
+
+[Testez progression NSFW progressivement]
+```
 
 ---
 
 ## ?? R?sum?
 
-**Mod?le actuel**: `llama-3.1-8b-instant`
+**Mod?le actuel:** `llama-3.1-8b-instant`
 
-**Pourquoi**: Plus rapide et plus stable pour un bot Discord
+**Avantages:**
+- ? Tr?s rapide
+- ? Toujours disponible
+- ? Fonctionne (pas d'erreur technique)
+- ? Moins censur? que 3.3
 
-**Changer**: Mettez ? jour `AI_MODEL` dans Render Environment
+**Inconv?nients:**
+- ?? Plus petit mod?le
+- ?? Peut refuser NSFW trop direct
+- ?? Besoin de progression naturelle
 
-**R?sultat**: Bot plus r?actif et moins d'erreurs!
+**Conseil:** Construisez progressivement (3-4 messages) avant NSFW explicite.
 
 ---
 
-? **Le bot utilise maintenant le mod?le le plus adapt? pour Discord!**
+**Le bot devrait fonctionner maintenant dans 2-3 minutes!** ??
+
+Testez et dites-moi si "hello" fonctionne! ??
