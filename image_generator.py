@@ -23,7 +23,7 @@ class ImageGenerator:
         G?n?re une image bas?e sur la personnalit?
         
         Args:
-            personality_data: Dictionnaire avec name, genre, age, description
+            personality_data: Dictionnaire avec name, genre, age, description, visual
             prompt_addition: Texte additionnel pour le prompt
         
         Returns:
@@ -35,15 +35,16 @@ class ImageGenerator:
         genre = personality_data.get('genre', 'Neutre')
         age = personality_data.get('age', '25 ans')
         description = personality_data.get('description', '')
+        visual_traits = personality_data.get('visual', '')  # Caract?ristiques visuelles uniques
         
         # Extraire l'?ge num?rique
         age_num = ''.join(filter(str.isdigit, age))
         
-        # Construire le prompt Stable Diffusion
-        base_prompt = self._build_base_prompt(genre, age_num, description)
+        # Construire le prompt Stable Diffusion avec traits visuels uniques
+        base_prompt = self._build_base_prompt(genre, age_num, description, visual_traits)
         full_prompt = f"{base_prompt}, {prompt_addition}" if prompt_addition else base_prompt
         
-        print(f"[IMAGE] Generating image with prompt: {full_prompt[:100]}...", flush=True)
+        print(f"[IMAGE] Generating image for {name} with prompt: {full_prompt[:100]}...", flush=True)
         
         # Essayer diff?rentes APIs (Pollinations en priorit? car gratuit)
         image_url = None
@@ -64,10 +65,17 @@ class ImageGenerator:
         
         return image_url
     
-    def _build_base_prompt(self, genre, age, description):
+    def _build_base_prompt(self, genre, age, description, visual_traits=""):
         """Construit le prompt de base selon la personnalit?"""
         
-        # Mapper genre vers descripteurs (subtils mais NSFW-friendly)
+        # Si des traits visuels sp?cifiques sont fournis, les utiliser en priorit?
+        if visual_traits:
+            print(f"[IMAGE] Using specific visual traits: {visual_traits[:80]}...", flush=True)
+            # Les traits visuels sont d?j? tr?s sp?cifiques, on les utilise directement
+            prompt = f"high quality portrait, {visual_traits}, {age} years old, realistic, detailed, professional photography, cinematic lighting, 8k"
+            return prompt
+        
+        # Sinon, utiliser l'ancienne m?thode (fallback)
         gender_map = {
             "Femme": "beautiful sensual woman, feminine figure, attractive",
             "Homme": "handsome man, masculine, athletic build",
@@ -78,7 +86,7 @@ class ImageGenerator:
         
         gender_desc = gender_map.get(genre, "attractive person")
         
-        # Extraire traits de la description (suggestifs mais pas trop explicites)
+        # Extraire traits de la description
         traits = []
         if "seduisant" in description.lower() or "belle" in description.lower():
             traits.append("seductive, alluring")
@@ -91,7 +99,7 @@ class ImageGenerator:
         
         traits_str = ", ".join(traits) if traits else "attractive"
         
-        # Prompt complet (subtil mais NSFW-capable)
+        # Prompt complet
         prompt = f"high quality portrait, {gender_desc}, {age} years old, {traits_str}, realistic, detailed, professional photography, cinematic lighting"
         
         return prompt
@@ -212,8 +220,9 @@ class ImageGenerator:
         name = personality_data.get('name', 'Person')
         genre = personality_data.get('genre', 'Neutre')
         age_num = ''.join(filter(str.isdigit, personality_data.get('age', '25')))
+        visual_traits = personality_data.get('visual', '')
         
-        base_prompt = self._build_base_prompt(genre, age_num, personality_data.get('description', ''))
+        base_prompt = self._build_base_prompt(genre, age_num, personality_data.get('description', ''), visual_traits)
         
         if context_keywords:
             context_str = ", ".join(context_keywords)
