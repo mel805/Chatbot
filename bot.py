@@ -965,19 +965,42 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
     style_prompts = {"portrait": "portrait, face focus, beautiful lighting", "casual": "casual outfit, relaxed", "elegant": "elegant dress, formal", "lingerie": "lingerie, sensual, bedroom", "swimsuit": "swimsuit, beach", "suggestive": "suggestive pose, artistic", "artistic_nude": "artistic nude, tasteful, nsfw", "intimate": "intimate scene, romantic, nsfw"}
     await interaction.response.defer()
     try:
-        embed = discord.Embed(title="?? G?n?ration", description=f"Image de **{personality_data['name']}** en cours...\n? 30-60s...", color=personality_data.get('color', 0x3498db))
+        embed = discord.Embed(title="?? G?n?ration", description=f"Image de **{personality_data['name']}** en cours...\n? 10-30s...", color=personality_data.get('color', 0x3498db))
         await interaction.edit_original_response(embed=embed)
+        
+        print(f"[IMAGE] Calling image generator for {personality_data['name']}...", flush=True)
         image_url = await image_gen.generate_personality_image(personality_data, style_prompts.get(style, "portrait"))
+        print(f"[IMAGE] Generation result: {image_url if image_url else 'None'}", flush=True)
+        
         if image_url:
-            embed = discord.Embed(title=f"? {personality_data['name']}", description=f"**Style:** {style.replace('_', ' ').title()}", color=personality_data.get('color', 0x3498db))
+            print(f"[IMAGE] Success! Displaying image...", flush=True)
+            embed = discord.Embed(
+                title=f"? {personality_data['name']}",
+                description=f"**Style:** {style.replace('_', ' ').title()}\n**Genre:** {personality_data.get('genre', 'N/A')}\n**?ge:** {personality_data.get('age', 'N/A')}",
+                color=personality_data.get('color', 0x3498db)
+            )
             embed.set_image(url=image_url)
-            embed.set_footer(text=f"Stable Diffusion XL ? {personality_data['age']}")
+            embed.set_footer(text=f"G?n?r? avec Pollinations.ai (Flux) ? Gratuit et illimit?")
             await interaction.edit_original_response(embed=embed)
+            print(f"[IMAGE] Image displayed successfully!", flush=True)
         else:
-            embed = discord.Embed(title="? Erreur", description="G?n?ration ?chou?e. V?rifiez REPLICATE_API_KEY.", color=0xe74c3c)
+            print(f"[IMAGE] Generation failed - no URL returned", flush=True)
+            embed = discord.Embed(
+                title="? Erreur de G?n?ration",
+                description="La g?n?ration d'image a ?chou?.\n\n**Pollinations.ai** peut ?tre temporairement indisponible.\n\n**R?essayez dans quelques instants.**",
+                color=0xe74c3c
+            )
+            embed.set_footer(text="Service gratuit Pollinations.ai ? Peut ?tre surcharg?")
             await interaction.edit_original_response(embed=embed)
     except Exception as e:
-        print(f"[ERROR] Image generation: {e}", flush=True)
+        print(f"[ERROR] Image generation exception: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        try:
+            embed = discord.Embed(title="? Erreur", description=f"Erreur: {str(e)[:200]}", color=0xe74c3c)
+            await interaction.edit_original_response(embed=embed)
+        except:
+            pass
 
 @bot.tree.command(name="galerie", description="Styles d'images disponibles")
 async def show_gallery(interaction: discord.Interaction):
