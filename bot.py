@@ -10,6 +10,8 @@ import json
 from collections import defaultdict
 import time
 import threading
+import random
+from image_generator import ImageGenerator
 
 # Charger les variables d'environnement
 # load_dotenv() charge le fichier .env en local, mais sur Render les variables sont d?j? dans l'environnement
@@ -18,6 +20,7 @@ load_dotenv()  # Optionnel, ne fait rien si .env n'existe pas
 # Configuration
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+REPLICATE_API_KEY = os.getenv('REPLICATE_API_KEY', '')
 AI_MODEL = os.getenv('AI_MODEL', 'llama-3.1-8b-instant')
 
 # Configuration du bot
