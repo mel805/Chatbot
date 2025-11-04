@@ -1,0 +1,145 @@
+?? NOUVELLES FONCTIONNALIT?S ? TESTER
+
+? ATTENDEZ 2-3 MINUTES (Render red?marre)
+
+================================================================================
+
+? NOUVEAUT?S:
+
+1. ?? PERSONNAGES VISUELLEMENT UNIQUES
+   Chaque personnalit? a maintenant des traits distincts:
+   - Luna: cheveux argent?s, yeux violets, piercing nez
+   - Victoria: cheveux noirs, yeux verts, grande athl?tique  
+   - Damien: cheveux bruns, yeux bleus, barbe l?g?re
+   - Alex (trans): coupe pixie rose, silhouette androgyne
+   - River (non-binaire): mohawk turquoise, yeux vairons
+
+2. ?? BOUTON "G?N?RER IMAGE" SOUS CHAQUE MESSAGE
+   Un bouton appara?t sous CHAQUE r?ponse du bot!
+   - Clic = g?n?ration automatique
+   - Bas? sur votre conversation
+   - Uniquement channels NSFW
+
+================================================================================
+
+?? TEST 1: PERSONNAGES DISTINCTS
+
+G?n?rez des images de diff?rents personnages:
+
+1. /start ? Choisissez "Luna 25ans - Coquine"
+   /generer_image style:portrait
+   ? Cheveux argent?s, yeux violets
+
+2. /start ? Choisissez "Victoria 30ans - Dominatrice"  
+   /generer_image style:portrait
+   ? Cheveux noirs, yeux verts
+
+3. /start ? Choisissez "Damien 28ans - Seducteur"
+   /generer_image style:portrait
+   ? Homme, cheveux bruns, yeux bleus
+
+LES IMAGES SERONT TOTALEMENT DIFF?RENTES! ?
+
+================================================================================
+
+?? TEST 2: BOUTON D'IMAGE
+
+1. Activez le bot: /start
+2. Choisissez une personnalit? (ex: Luna)
+3. Discutez:
+   Vous: "salut Luna"
+   Bot: "hey ??"
+   
+4. REGARDEZ SOUS LE MESSAGE DU BOT
+   ? Bouton: [?? G?n?rer Image]
+
+5. CLIQUEZ SUR LE BOUTON
+   ? G?n?ration automatique!
+   ? Image bas?e sur votre conversation
+
+================================================================================
+
+?? TEST 3: BOUTON AVEC CONTEXTE NSFW
+
+1. Discutez de mani?re NSFW:
+   Vous: "tu es dans ta chambre?"
+   Bot: "oui, sur mon lit ??"
+   
+2. CLIQUEZ SUR LE BOUTON sous sa r?ponse
+   ? Image g?n?r?e:
+   - Luna avec ses traits uniques
+   - Dans une chambre, sur un lit
+   - Pose sensuelle bas?e sur conversation
+
+================================================================================
+
+?? DIFF?RENCES VISUELLES
+
+AVANT:
+- Luna ? Image femme g?n?rique
+- Victoria ? Image femme g?n?rique (similaire)
+- Amelie ? Image femme g?n?rique (similaire)
+
+MAINTENANT:
+- Luna ? Cheveux ARGENT?S longs, yeux VIOLETS, piercing nez
+- Victoria ? Cheveux NOIRS raides, yeux VERTS, grande athl?tique
+- Amelie ? Cheveux BLONDS ondul?s, yeux BLEUS, courbes douces
+
+Chaque personnage est UNIQUE! ?
+
+================================================================================
+
+?? COMMENT V?RIFIER LE BOUTON?
+
+Le bouton appara?t:
+? Sous CHAQUE message du bot
+? UNIQUEMENT dans les channels NSFW
+? G?n?re une image bas?e sur la conversation
+
+Le bouton N'appara?t PAS:
+? Dans les channels non-NSFW
+? Si moins de 3 messages de conversation
+
+================================================================================
+
+?? EXEMPLE COMPLET
+
+Conversation:
+Vous: "Luna, tu es o??"
+Bot Luna: "dans ma chambre ??"
+      [?? G?n?rer Image] ? BOUTON
+
+*Clic sur le bouton*
+
+Bot: ?? G?n?ration d'une image de Luna bas?e sur notre conversation...
+     ? 15-40s...
+
+Bot: ? Luna
+     Bas? sur notre conversation
+     ?? 3 messages analys?s
+     
+     [IMAGE: Luna avec cheveux argent?s, yeux violets, dans chambre, pose sensuelle]
+     
+     G?n?r? avec Pollinations.ai ? Contextuel & NSFW
+
+================================================================================
+
+?? R?SUM?
+
+? 16 personnages avec apparences UNIQUES
+? Bouton "?? G?n?rer Image" sous chaque message (NSFW)
+? G?n?ration automatique contextuelle
+? Coh?rence visuelle (m?me perso = m?me look)
+
+================================================================================
+
+?? TESTEZ DANS 2-3 MINUTES!
+
+1. Test personnages: /generer_image style:portrait
+   (Essayez Luna, Victoria, Damien ? tous diff?rents!)
+
+2. Test bouton: Discutez puis cliquez sur le bouton
+
+3. Test contextuel: Discussion NSFW + clic bouton
+
+Lisez PERSONNAGES_UNIQUES_ET_BOUTON.md pour tous les d?tails! ??
