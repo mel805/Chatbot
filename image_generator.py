@@ -8,6 +8,8 @@ import asyncio
 import os
 import json
 import urllib.parse
+import random
+import time
 
 class ImageGenerator:
     """G?n?re des images NSFW bas?es sur les personnalit?s"""
@@ -65,32 +67,32 @@ class ImageGenerator:
     def _build_base_prompt(self, genre, age, description):
         """Construit le prompt de base selon la personnalit?"""
         
-        # Mapper genre vers descripteurs
+        # Mapper genre vers descripteurs (NSFW-friendly, sans censure)
         gender_map = {
-            "Femme": "beautiful woman, female, feminine",
-            "Homme": "handsome man, male, masculine",
-            "Trans": "beautiful transgender person, androgynous",
-            "Non-binaire": "androgynous person, non-binary",
-            "Neutre": "attractive person"
+            "Femme": "beautiful sensual woman, feminine curves, attractive body",
+            "Homme": "handsome muscular man, masculine physique, athletic body",
+            "Trans": "beautiful transgender person, alluring body",
+            "Non-binaire": "attractive androgynous person, unique beauty",
+            "Neutre": "attractive person, appealing physique"
         }
         
         gender_desc = gender_map.get(genre, "attractive person")
         
-        # Extraire traits de la description
+        # Extraire traits de la description (plus explicite)
         traits = []
         if "seduisant" in description.lower() or "belle" in description.lower():
-            traits.append("seductive, alluring")
+            traits.append("seductive, alluring, captivating")
         if "confiant" in description.lower():
-            traits.append("confident")
+            traits.append("confident, dominant")
         if "mature" in description.lower():
-            traits.append("mature, experienced")
+            traits.append("mature, experienced, sensual")
         if "coquin" in description.lower() or "ose" in description.lower():
-            traits.append("playful, mischievous")
+            traits.append("playful, teasing, provocative")
         
-        traits_str = ", ".join(traits) if traits else "attractive"
+        traits_str = ", ".join(traits) if traits else "attractive, appealing"
         
-        # Prompt complet
-        prompt = f"high quality portrait, {gender_desc}, {age} years old, {traits_str}, realistic, detailed face, professional photography, cinematic lighting, 8k uhd"
+        # Prompt complet (NSFW-ready, haute qualit?)
+        prompt = f"high quality, {gender_desc}, {age} years old, {traits_str}, realistic, detailed, professional photography, cinematic lighting, 8k uhd, uncensored"
         
         return prompt
     
@@ -99,11 +101,15 @@ class ImageGenerator:
         try:
             print(f"[IMAGE] Using Pollinations.ai FREE API", flush=True)
             
+            # G?n?rer un seed VRAIMENT al?atoire pour ?viter images identiques
+            random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
+            print(f"[IMAGE] Using random seed: {random_seed}", flush=True)
+            
             # Encoder le prompt pour URL
             encoded_prompt = urllib.parse.quote(prompt)
             
-            # Construire l'URL Pollinations (Flux model, haute qualit?)
-            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=768&height=1024&model=flux&seed=-1&nologo=true&enhance=true"
+            # Construire l'URL Pollinations (Flux model, haute qualit?, seed al?atoire)
+            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=768&height=1024&model=flux&seed={random_seed}&nologo=true&enhance=true"
             
             print(f"[IMAGE] Pollinations.ai URL generated successfully", flush=True)
             return image_url
@@ -164,3 +170,66 @@ class ImageGenerator:
         """G?n?re via Hugging Face (n?cessite cl? API)"""
         print(f"[IMAGE] Hugging Face not implemented yet", flush=True)
         return None
+    
+    async def generate_contextual_image(self, personality_data, conversation_history):
+        """
+        G?n?re une image bas?e sur le contexte de la conversation
+        
+        Args:
+            personality_data: Dictionnaire avec name, genre, age, description
+            conversation_history: Liste des derniers messages de conversation
+        
+        Returns:
+            URL de l'image ou None si erreur
+        """
+        # Analyser les derniers messages pour extraire le contexte
+        context_keywords = []
+        conversation_text = " ".join(conversation_history[-10:]).lower()
+        
+        # D?tecter le contexte NSFW/intime
+        if any(word in conversation_text for word in ["nue", "nu", "nud", "d?shabill", "sans v?tements", "corps"]):
+            context_keywords.append("nude, naked, undressed")
+        
+        if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed"]):
+            context_keywords.append("bedroom, intimate setting, on bed")
+        
+        if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "?rotique", "excit"]):
+            context_keywords.append("sexy pose, erotic, sensual, aroused")
+        
+        if any(word in conversation_text for word in ["lingerie", "sous-v?tements", "underwear"]):
+            context_keywords.append("lingerie, sexy underwear, revealing")
+        
+        if any(word in conversation_text for word in ["position", "pose", "comme ?a", "ainsi"]):
+            context_keywords.append("explicit pose, provocative position")
+        
+        if any(word in conversation_text for word in ["envie", "d?sir", "veux", "besoin"]):
+            context_keywords.append("desire, wanting, needing, passionate")
+        
+        if any(word in conversation_text for word in ["touche", "caresse", "embrasse", "l?che"]):
+            context_keywords.append("touching, intimate contact, sensual")
+        
+        # Construire le prompt contextuel
+        name = personality_data.get('name', 'Person')
+        genre = personality_data.get('genre', 'Neutre')
+        age_num = ''.join(filter(str.isdigit, personality_data.get('age', '25')))
+        
+        base_prompt = self._build_base_prompt(genre, age_num, personality_data.get('description', ''))
+        
+        if context_keywords:
+            context_str = ", ".join(context_keywords)
+            full_prompt = f"{base_prompt}, {context_str}, explicit, nsfw, uncensored"
+            print(f"[IMAGE] Contextual generation with keywords: {context_str}", flush=True)
+        else:
+            # Par d?faut, g?n?rer une image suggestive
+            full_prompt = f"{base_prompt}, suggestive pose, teasing, sensual, nsfw"
+            print(f"[IMAGE] No specific context detected, using suggestive default", flush=True)
+        
+        print(f"[IMAGE] Contextual prompt: {full_prompt[:150]}...", flush=True)
+        
+        # G?n?rer l'image
+        image_url = await self._generate_pollinations(full_prompt)
+        
+        if not image_url and self.replicate_key:
+            image_url = await self._generate_replicate(full_prompt)
+        
+        return image_url

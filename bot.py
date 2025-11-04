@@ -965,7 +965,16 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
         return
     personality_key = channel_personalities.get(channel_id, "femme_coquine")
     personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
-    style_prompts = {"portrait": "portrait, face focus, beautiful lighting", "casual": "casual outfit, relaxed", "elegant": "elegant dress, formal", "lingerie": "lingerie, sensual, bedroom", "swimsuit": "swimsuit, beach", "suggestive": "suggestive pose, artistic", "artistic_nude": "artistic nude, tasteful, nsfw", "intimate": "intimate scene, romantic, nsfw"}
+    style_prompts = {
+        "portrait": "portrait, face focus, beautiful eyes, soft lighting, detailed features",
+        "casual": "casual outfit, relaxed pose, natural setting, everyday style",
+        "elegant": "elegant evening dress, formal attire, sophisticated, glamorous",
+        "lingerie": "sexy lingerie, sensual pose, bedroom, intimate lighting, seductive, nsfw",
+        "swimsuit": "revealing swimsuit, beach or pool, summer vibes, attractive body",
+        "suggestive": "suggestive pose, teasing, provocative angle, sensual expression, nsfw",
+        "artistic_nude": "artistic nude, full body, tasteful nudity, sensual curves, explicit, nsfw",
+        "intimate": "intimate scene, passionate, explicit nudity, erotic pose, uncensored, nsfw"
+    }
     await interaction.response.defer()
     try:
         embed = discord.Embed(title="?? G?n?ration", description=f"Image de **{personality_data['name']}** en cours...\n? 10-30s...", color=personality_data.get('color', 0x3498db))
@@ -1009,11 +1018,82 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
 async def show_gallery(interaction: discord.Interaction):
     """Affiche les styles disponibles"""
     embed = discord.Embed(title="?? Galerie", description="Styles disponibles:", color=0x9b59b6)
-    embed.add_field(name="?? Standards", value="? Portrait\n? Casual\n? ?l?gant\n? Maillot", inline=False)
+    embed.add_field(name="??? Standards", value="?? Portrait\n?? Casual\n? ?l?gant\n??? Maillot", inline=False)
     if hasattr(interaction.channel, 'is_nsfw') and interaction.channel.is_nsfw():
-        embed.add_field(name="?? NSFW", value="? Lingerie\n? Suggestif\n? Artistique Nu\n? Intime", inline=False)
-    embed.add_field(name="?? Exemple", value="```/generer_image style:portrait```", inline=False)
+        embed.add_field(name="?? NSFW", value="?? Lingerie\n?? Suggestif\n?? Artistique Nu\n?? Intime", inline=False)
+    embed.add_field(name="?? Exemples", value="```/generer_image style:portrait\n/generer_contexte```", inline=False)
     await interaction.response.send_message(embed=embed, ephemeral=True)
+
+@bot.tree.command(name="generer_contexte", description="Genere une image basee sur la conversation en cours")
+async def generate_contextual_image(interaction: discord.Interaction):
+    """G?n?re une image bas?e sur le contexte de la conversation"""
+    channel_id = interaction.channel_id
+    
+    # V?rifier que le bot est actif
+    if not bot_active_channels[channel_id]:
+        await interaction.response.send_message("? Le bot n'est pas actif. Utilisez `/start`.", ephemeral=True)
+        return
+    
+    # V?rifier canal NSFW (cette commande est NSFW par nature)
+    if hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
+        await interaction.response.send_message("?? Cette commande est uniquement disponible dans les channels NSFW.", ephemeral=True)
+        return
+    
+    # V?rifier qu'il y a une conversation en cours
+    history = conversation_history.get(channel_id, [])
+    if len(history) < 3:
+        await interaction.response.send_message("?? Pas assez de conversation pour g?n?rer une image contextuelle. Discutez un peu plus!", ephemeral=True)
+        return
+    
+    personality_key = channel_personalities.get(channel_id, "femme_coquine")
+    personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
+    
+    await interaction.response.defer()
+    
+    try:
+        embed = discord.Embed(
+            title="?? G?n?ration Contextuelle",
+            description=f"Image de **{personality_data['name']}** bas?e sur votre conversation...\n? 15-40s...",
+            color=personality_data.get('color', 0x3498db)
+        )
+        await interaction.edit_original_response(embed=embed)
+        
+        print(f"[IMAGE] Generating contextual image for {personality_data['name']}...", flush=True)
+        print(f"[IMAGE] Analyzing {len(history)} messages of conversation history...", flush=True)
+        
+        # G?n?rer l'image contextuelle
+        image_url = await image_gen.generate_contextual_image(personality_data, history)
+        print(f"[IMAGE] Contextual generation result: {image_url if image_url else 'None'}", flush=True)
+        
+        if image_url:
+            print(f"[IMAGE] Success! Displaying contextual image...", flush=True)
+            embed = discord.Embed(
+                title=f"? {personality_data['name']} - Contexte",
+                description=f"**Bas? sur votre conversation**\n?? {len(history)} messages analys?s\n\n*Image g?n?r?e selon le contexte de vos ?changes*",
+                color=personality_data.get('color', 0x3498db)
+            )
+            embed.set_image(url=image_url)
+            embed.set_footer(text=f"G?n?r? avec Pollinations.ai (Flux) ? Contextuel & NSFW")
+            await interaction.edit_original_response(embed=embed)
+            print(f"[IMAGE] Contextual image displayed successfully!", flush=True)
+        else:
+            print(f"[IMAGE] Contextual generation failed - no URL returned", flush=True)
+            embed = discord.Embed(
+                title="? Erreur de G?n?ration",
+                description="La g?n?ration d'image contextuelle a ?chou?.\n\n**Pollinations.ai** peut ?tre temporairement indisponible.\n\n**R?essayez dans quelques instants.**",
+                color=0xe74c3c
+            )
+            embed.set_footer(text="Service gratuit Pollinations.ai ? Peut ?tre surcharg?")
+            await interaction.edit_original_response(embed=embed)
+    except Exception as e:
+        print(f"[ERROR] Contextual image generation exception: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        try:
+            embed = discord.Embed(title="? Erreur", description=f"Erreur: {str(e)[:200]}", color=0xe74c3c)
+            await interaction.edit_original_response(embed=embed)
+        except:
+            pass
 
 # Gestionnaire d'erreurs pour les commandes slash
 @bot.tree.error
