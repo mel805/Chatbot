@@ -18,7 +18,7 @@ load_dotenv()  # Optionnel, ne fait rien si .env n'existe pas
 # Configuration
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-AI_MODEL = os.getenv('AI_MODEL', 'mixtral-8x7b-32768')
+AI_MODEL = os.getenv('AI_MODEL', 'llama-3.1-8b-instant')
 
 # Configuration du bot
 intents = discord.Intents.default()
