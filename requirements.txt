@@ -6,8 +6,5 @@ discord.py>=2.3.2
 # Python-dotenv - Gestion des variables d'environnement
 python-dotenv>=1.0.0
 
-# Aiohttp - Client HTTP asynchrone pour l'API Groq
+# Aiohttp - Client HTTP asynchrone pour API Groq et g?n?ration d'images
 aiohttp>=3.9.0
-
-# Optionnel mais recommand? pour de meilleures performances
-# uvloop>=0.19.0  # D?commentez sur Linux/macOS pour meilleures performances
