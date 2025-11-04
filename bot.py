@@ -1092,16 +1092,16 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
     personality_key = channel_personalities.get(channel_id, "femme_coquine")
     personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
     
-    # Prompts simplifi?s et plus fiables
+    # Prompts plus sp?cifiques pour diff?rencier les styles
     style_prompts = {
-        "portrait": "portrait, face focus, beautiful lighting",
-        "casual": "casual outfit, relaxed, natural",
-        "elegant": "elegant dress, formal, sophisticated",
-        "lingerie": "lingerie, bedroom, sensual",
-        "swimsuit": "swimsuit, beach, summer",
-        "suggestive": "suggestive pose, alluring",
-        "artistic_nude": "artistic, tasteful, aesthetic",
-        "intimate": "intimate, romantic, private"
+        "portrait": "close-up portrait, face focus, head and shoulders, beautiful lighting",
+        "casual": "full body, casual everyday outfit, standing, relaxed pose, natural setting",
+        "elegant": "full body, elegant evening dress, formal attire, sophisticated pose, glamorous",
+        "lingerie": "full body, wearing lingerie, bedroom setting, sensual pose, seductive",
+        "swimsuit": "full body, wearing swimsuit, beach or pool, summer setting, attractive pose",
+        "suggestive": "full body, suggestive provocative pose, seductive expression, alluring stance",
+        "artistic_nude": "full body, artistic nude pose, natural beauty, aesthetic composition, tasteful",
+        "intimate": "close intimate scene, romantic moment, passionate pose, private bedroom setting, sensual atmosphere"
     }
     try:
         embed = discord.Embed(title="?? G?n?ration", description=f"Image de **{personality_data['name']}** en cours...\n? 10-30s...", color=personality_data.get('color', 0x3498db))
