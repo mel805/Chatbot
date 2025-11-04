@@ -938,6 +938,60 @@ async def help_command(interaction: discord.Interaction):
     
     await interaction.response.send_message(embed=embed)
 
+@bot.tree.command(name="generer_image", description="Genere une image de la personnalite actuelle")
+@app_commands.describe(style="Style de l'image a generer")
+@app_commands.choices(style=[
+    app_commands.Choice(name="Portrait", value="portrait"),
+    app_commands.Choice(name="Tenue Decontractee", value="casual"),
+    app_commands.Choice(name="Tenue Elegante", value="elegant"),
+    app_commands.Choice(name="Lingerie", value="lingerie"),
+    app_commands.Choice(name="Maillot de Bain", value="swimsuit"),
+    app_commands.Choice(name="Suggestif", value="suggestive"),
+    app_commands.Choice(name="Artistique Nu", value="artistic_nude"),
+    app_commands.Choice(name="Intime", value="intimate"),
+])
+async def generate_image(interaction: discord.Interaction, style: str = "portrait"):
+    """G?n?re une image de la personnalit? actuelle"""
+    channel_id = str(interaction.channel_id)
+    if not bot_active_channels[interaction.channel_id]:
+        await interaction.response.send_message("? Le bot n'est pas actif. Utilisez `/start`.", ephemeral=True)
+        return
+    nsfw_styles = ["lingerie", "suggestive", "artistic_nude", "intimate"]
+    if style in nsfw_styles and hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
+        await interaction.response.send_message("?? Images NSFW uniquement dans channels NSFW.", ephemeral=True)
+        return
+    personality_key = active_channels.get(channel_id)
+    if not personality_key:
+        await interaction.response.send_message("? Aucune personnalit? active.", ephemeral=True)
+        return
+    personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
+    style_prompts = {"portrait": "portrait, face focus, beautiful lighting", "casual": "casual outfit, relaxed", "elegant": "elegant dress, formal", "lingerie": "lingerie, sensual, bedroom", "swimsuit": "swimsuit, beach", "suggestive": "suggestive pose, artistic", "artistic_nude": "artistic nude, tasteful, nsfw", "intimate": "intimate scene, romantic, nsfw"}
+    await interaction.response.defer()
+    try:
+        embed = discord.Embed(title="?? G?n?ration", description=f"Image de **{personality_data['name']}** en cours...\n? 30-60s...", color=personality_data.get('color', 0x3498db))
+        await interaction.edit_original_response(embed=embed)
+        image_url = await image_gen.generate_personality_image(personality_data, style_prompts.get(style, "portrait"))
+        if image_url:
+            embed = discord.Embed(title=f"? {personality_data['name']}", description=f"**Style:** {style.replace('_', ' ').title()}", color=personality_data.get('color', 0x3498db))
+            embed.set_image(url=image_url)
+            embed.set_footer(text=f"Stable Diffusion XL ? {personality_data['age']}")
+            await interaction.edit_original_response(embed=embed)
+        else:
+            embed = discord.Embed(title="? Erreur", description="G?n?ration ?chou?e. V?rifiez REPLICATE_API_KEY.", color=0xe74c3c)
+            await interaction.edit_original_response(embed=embed)
+    except Exception as e:
+        print(f"[ERROR] Image generation: {e}", flush=True)
+
+@bot.tree.command(name="galerie", description="Styles d'images disponibles")
+async def show_gallery(interaction: discord.Interaction):
+    """Affiche les styles disponibles"""
+    embed = discord.Embed(title="?? Galerie", description="Styles disponibles:", color=0x9b59b6)
+    embed.add_field(name="?? Standards", value="? Portrait\n? Casual\n? ?l?gant\n? Maillot", inline=False)
+    if hasattr(interaction.channel, 'is_nsfw') and interaction.channel.is_nsfw():
+        embed.add_field(name="?? NSFW", value="? Lingerie\n? Suggestif\n? Artistique Nu\n? Intime", inline=False)
+    embed.add_field(name="?? Exemple", value="```/generer_image style:portrait```", inline=False)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
 # Gestionnaire d'erreurs pour les commandes slash
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
