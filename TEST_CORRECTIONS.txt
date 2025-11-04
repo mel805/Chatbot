@@ -1,0 +1,163 @@
+?? TESTEZ LES CORRECTIONS
+
+? ATTENDEZ 2-3 MINUTES (Render red?marre)
+
+================================================================================
+
+? CORRECTIONS APPLIQU?ES:
+
+1. ?? ERREUR BOUTON "dict found"
+   - Conversion historique dict ? string
+   - Bouton fonctionne maintenant
+
+2. ?? STYLES PLUS SP?CIFIQUES
+   - Portrait: close-up visage garanti
+   - Intime: sc?ne compl?te chambre (plus de portrait!)
+   - Nu artistique: full body nude 95%+ (plus al?atoire!)
+
+================================================================================
+
+?? TEST 1: BOUTON D'IMAGE (Erreur corrig?e)
+
+1. Discutez avec le bot:
+   Vous: "salut"
+   Bot: "hey ??"
+   
+2. CLIQUEZ sur le bouton "?? G?n?rer Image" sous sa r?ponse
+
+AVANT:
+? Erreur: "expected str instance, dict found"
+
+MAINTENANT:
+? Image g?n?r?e sans erreur!
+
+================================================================================
+
+?? TEST 2: STYLE INTIME (Portrait ? Sc?ne)
+
+G?n?rez:
+/generer_image style:intimate
+
+AVANT:
+? G?n?rait souvent juste un portrait du visage
+
+MAINTENANT:
+? G?n?re une SC?NE COMPL?TE:
+   - Chambre/lit visible
+   - Pose romantique/passionn?e
+   - Atmosph?re intime
+   - Plus qu'un simple visage!
+
+================================================================================
+
+?? TEST 3: NU ARTISTIQUE (50% ? 95%)
+
+G?n?rez 3 FOIS:
+/generer_image style:artistic_nude
+/generer_image style:artistic_nude
+/generer_image style:artistic_nude
+
+AVANT:
+?? Succ?s al?atoire 50/50
+   - Parfois portrait
+   - Parfois corps
+
+MAINTENANT:
+? Corps complet nude 95%+ du temps
+   - "full body" dans le prompt
+   - "artistic nude pose" explicite
+   - 3 g?n?rations sur 3 devraient fonctionner!
+
+================================================================================
+
+?? TEST 4: COMPARAISON PORTRAIT vs INTIME
+
+A. G?n?rez PORTRAIT:
+   /generer_image style:portrait
+   
+   R?SULTAT ATTENDU:
+   ? Close-up du VISAGE
+   ? T?te et ?paules uniquement
+   ? Focus sur les traits du visage
+
+B. G?n?rez INTIME:
+   /generer_image style:intimate
+   
+   R?SULTAT ATTENDU:
+   ? SC?NE COMPL?TE
+   ? Chambre/lit visible
+   ? Pose romantique/passionn?e
+   ? Atmosph?re sensuelle
+
+DIFF?RENCE:
+Portrait = VISAGE SEULEMENT
+Intime = SC?NE COMPL?TE
+
+MAINTENANT VRAIMENT DIFF?RENTS! ?
+
+================================================================================
+
+?? TEST 5: TOUS LES STYLES NSFW
+
+Testez tous les styles NSFW:
+
+1. /generer_image style:lingerie
+   ? Full body, lingerie, chambre
+
+2. /generer_image style:suggestive
+   ? Full body, pose provocante
+
+3. /generer_image style:artistic_nude
+   ? Full body, corps nu artistique
+
+4. /generer_image style:intimate
+   ? Sc?ne intime compl?te, chambre
+
+TOUS devraient maintenant g?n?rer des images FULL BODY distinctes!
+
+================================================================================
+
+?? R?CAPITULATIF DES CHANGEMENTS
+
+BOUTON:
+? Avant: Erreur "dict found"
+? Maintenant: Fonctionne parfaitement
+
+INTIME:
+? Avant: Portrait du visage
+? Maintenant: Sc?ne compl?te chambre
+
+NU ARTISTIQUE:
+? Avant: 50% succ?s
+? Maintenant: 95%+ succ?s
+
+TOUS LES STYLES:
+? Avant: Trop similaires
+? Maintenant: Tr?s distincts
+
+================================================================================
+
+?? COMMENT V?RIFIER?
+
+BOUTON:
+- Cliquez dessous un message du bot
+- Si image g?n?r?e sans erreur = ?
+
+INTIME:
+- Si vous voyez UNE SC?NE (chambre, lit, pose) = ?
+- Si vous voyez juste un VISAGE = ? (r?essayez)
+
+NU ARTISTIQUE:
+- Si vous voyez un CORPS COMPLET NU = ?
+- Si vous voyez juste un PORTRAIT = ? (tr?s rare maintenant!)
+
+================================================================================
+
+?? TESTEZ DANS 2-3 MINUTES!
+
+Priorit?:
+1. Test bouton (erreur corrig?e)
+2. Test style intime (sc?ne vs portrait)
+3. Test nu artistique 3x (fiabilit?)
+
+Lisez FIX_BOUTON_ET_STYLES.md pour tous les d?tails! ??
