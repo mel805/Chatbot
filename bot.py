@@ -1146,28 +1146,29 @@ async def show_gallery(interaction: discord.Interaction):
 @bot.tree.command(name="generer_contexte", description="Genere une image basee sur la conversation en cours")
 async def generate_contextual_image(interaction: discord.Interaction):
     """G?n?re une image bas?e sur le contexte de la conversation"""
+    # DEFER IMM?DIATEMENT pour ?viter timeout
+    await interaction.response.defer()
+    
     channel_id = interaction.channel_id
     
     # V?rifier que le bot est actif
     if not bot_active_channels[channel_id]:
-        await interaction.response.send_message("? Le bot n'est pas actif. Utilisez `/start`.", ephemeral=True)
+        await interaction.edit_original_response(content="? Le bot n'est pas actif. Utilisez `/start`.")
         return
     
     # V?rifier canal NSFW (cette commande est NSFW par nature)
     if hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
-        await interaction.response.send_message("?? Cette commande est uniquement disponible dans les channels NSFW.", ephemeral=True)
+        await interaction.edit_original_response(content="?? Cette commande est uniquement disponible dans les channels NSFW.")
         return
     
     # V?rifier qu'il y a une conversation en cours
     history = conversation_history.get(channel_id, [])
     if len(history) < 3:
-        await interaction.response.send_message("?? Pas assez de conversation pour g?n?rer une image contextuelle. Discutez un peu plus!", ephemeral=True)
+        await interaction.edit_original_response(content="?? Pas assez de conversation pour g?n?rer une image contextuelle. Discutez un peu plus!")
         return
     
     personality_key = channel_personalities.get(channel_id, "femme_coquine")
     personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
-    
-    await interaction.response.defer()
     
     try:
         embed = discord.Embed(
