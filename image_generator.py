@@ -67,32 +67,32 @@ class ImageGenerator:
     def _build_base_prompt(self, genre, age, description):
         """Construit le prompt de base selon la personnalit?"""
         
-        # Mapper genre vers descripteurs (NSFW-friendly, sans censure)
+        # Mapper genre vers descripteurs (subtils mais NSFW-friendly)
         gender_map = {
-            "Femme": "beautiful sensual woman, feminine curves, attractive body",
-            "Homme": "handsome muscular man, masculine physique, athletic body",
-            "Trans": "beautiful transgender person, alluring body",
-            "Non-binaire": "attractive androgynous person, unique beauty",
-            "Neutre": "attractive person, appealing physique"
+            "Femme": "beautiful sensual woman, feminine figure, attractive",
+            "Homme": "handsome man, masculine, athletic build",
+            "Trans": "beautiful person, alluring, attractive",
+            "Non-binaire": "attractive androgynous person, unique style",
+            "Neutre": "attractive person, appealing"
         }
         
         gender_desc = gender_map.get(genre, "attractive person")
         
-        # Extraire traits de la description (plus explicite)
+        # Extraire traits de la description (suggestifs mais pas trop explicites)
         traits = []
         if "seduisant" in description.lower() or "belle" in description.lower():
-            traits.append("seductive, alluring, captivating")
+            traits.append("seductive, alluring")
         if "confiant" in description.lower():
-            traits.append("confident, dominant")
+            traits.append("confident")
         if "mature" in description.lower():
-            traits.append("mature, experienced, sensual")
+            traits.append("mature, experienced")
         if "coquin" in description.lower() or "ose" in description.lower():
-            traits.append("playful, teasing, provocative")
+            traits.append("playful, teasing")
         
-        traits_str = ", ".join(traits) if traits else "attractive, appealing"
+        traits_str = ", ".join(traits) if traits else "attractive"
         
-        # Prompt complet (NSFW-ready, haute qualit?)
-        prompt = f"high quality, {gender_desc}, {age} years old, {traits_str}, realistic, detailed, professional photography, cinematic lighting, 8k uhd, uncensored"
+        # Prompt complet (subtil mais NSFW-capable)
+        prompt = f"high quality portrait, {gender_desc}, {age} years old, {traits_str}, realistic, detailed, professional photography, cinematic lighting"
         
         return prompt
     
@@ -186,27 +186,27 @@ class ImageGenerator:
         context_keywords = []
         conversation_text = " ".join(conversation_history[-10:]).lower()
         
-        # D?tecter le contexte NSFW/intime
-        if any(word in conversation_text for word in ["nue", "nu", "nud", "d?shabill", "sans v?tements", "corps"]):
-            context_keywords.append("nude, naked, undressed")
+        # D?tecter le contexte NSFW/intime (termes subtils)
+        if any(word in conversation_text for word in ["nue", "nu", "nud", "d?shabill", "sans v?tements", "corps", "montre", "voir"]):
+            context_keywords.append("artistic nude, natural, revealing")
         
         if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed"]):
-            context_keywords.append("bedroom, intimate setting, on bed")
+            context_keywords.append("bedroom setting, intimate, on bed")
         
-        if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "?rotique", "excit"]):
-            context_keywords.append("sexy pose, erotic, sensual, aroused")
+        if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "?rotique", "excit", "belle"]):
+            context_keywords.append("sexy, sensual pose, alluring")
         
-        if any(word in conversation_text for word in ["lingerie", "sous-v?tements", "underwear"]):
-            context_keywords.append("lingerie, sexy underwear, revealing")
+        if any(word in conversation_text for word in ["lingerie", "sous-v?tements", "underwear", "d?shabille"]):
+            context_keywords.append("wearing lingerie, revealing clothing")
         
         if any(word in conversation_text for word in ["position", "pose", "comme ?a", "ainsi"]):
-            context_keywords.append("explicit pose, provocative position")
+            context_keywords.append("provocative pose, suggestive")
         
         if any(word in conversation_text for word in ["envie", "d?sir", "veux", "besoin"]):
-            context_keywords.append("desire, wanting, needing, passionate")
+            context_keywords.append("desire, wanting, passionate")
         
         if any(word in conversation_text for word in ["touche", "caresse", "embrasse", "l?che"]):
-            context_keywords.append("touching, intimate contact, sensual")
+            context_keywords.append("intimate, sensual, romantic")
         
         # Construire le prompt contextuel
         name = personality_data.get('name', 'Person')
@@ -217,11 +217,11 @@ class ImageGenerator:
         
         if context_keywords:
             context_str = ", ".join(context_keywords)
-            full_prompt = f"{base_prompt}, {context_str}, explicit, nsfw, uncensored"
+            full_prompt = f"{base_prompt}, {context_str}, artistic, tasteful"
             print(f"[IMAGE] Contextual generation with keywords: {context_str}", flush=True)
         else:
             # Par d?faut, g?n?rer une image suggestive
-            full_prompt = f"{base_prompt}, suggestive pose, teasing, sensual, nsfw"
+            full_prompt = f"{base_prompt}, suggestive pose, teasing, sensual"
             print(f"[IMAGE] No specific context detected, using suggestive default", flush=True)
         
         print(f"[IMAGE] Contextual prompt: {full_prompt[:150]}...", flush=True)

@@ -969,11 +969,11 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
         "portrait": "portrait, face focus, beautiful eyes, soft lighting, detailed features",
         "casual": "casual outfit, relaxed pose, natural setting, everyday style",
         "elegant": "elegant evening dress, formal attire, sophisticated, glamorous",
-        "lingerie": "sexy lingerie, sensual pose, bedroom, intimate lighting, seductive, nsfw",
+        "lingerie": "wearing lingerie, sensual, bedroom setting, intimate lighting, seductive",
         "swimsuit": "revealing swimsuit, beach or pool, summer vibes, attractive body",
-        "suggestive": "suggestive pose, teasing, provocative angle, sensual expression, nsfw",
-        "artistic_nude": "artistic nude, full body, tasteful nudity, sensual curves, explicit, nsfw",
-        "intimate": "intimate scene, passionate, explicit nudity, erotic pose, uncensored, nsfw"
+        "suggestive": "suggestive pose, teasing expression, provocative, alluring, sensual",
+        "artistic_nude": "artistic nude, tasteful, aesthetic, sensual curves, natural beauty",
+        "intimate": "intimate scene, romantic, passionate moment, sensual atmosphere, private setting"
     }
     await interaction.response.defer()
     try:
