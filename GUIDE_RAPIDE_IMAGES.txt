@@ -1,0 +1,74 @@
+?? GUIDE RAPIDE - G?N?RATION D'IMAGES NSFW
+
+=== ACTIVATION ===
+
+1. Cr?ez un compte Replicate (GRATUIT):
+   https://replicate.com
+
+2. R?cup?rez votre API Key:
+   https://replicate.com/account/api-tokens
+   
+3. Ajoutez-la sur Render:
+   Dashboard ? Environment ? Add Variable
+   Nom: REPLICATE_API_KEY
+   Valeur: r8_xxxxx (votre token)
+
+4. Sauvegardez et attendez red?marrage (2 min)
+
+=== COMMANDES DISCORD ===
+
+/galerie
+? Affiche tous les styles disponibles
+
+/generer_image style:portrait
+? G?n?re un portrait de la personnalit? actuelle
+
+/generer_image style:lingerie
+? G?n?re une image en lingerie (NSFW uniquement)
+
+=== STYLES DISPONIBLES ===
+
+?? SFW (Tous channels):
+- portrait
+- casual
+- elegant
+- swimsuit
+
+?? NSFW (Channels NSFW uniquement):
+- lingerie
+- suggestive
+- artistic_nude
+- intimate
+
+=== EXEMPLES ===
+
+1. Activer bot avec personnalit?:
+   /start
+   [S?lectionner Luna]
+
+2. G?n?rer image:
+   /generer_image style:portrait
+
+3. Attendre 30-60s ? Image appara?t!
+
+=== NOTES ===
+
+- Tier gratuit: ~100-200 images/mois
+- Temps: 30-60 secondes par image
+- NSFW fonctionne SEULEMENT dans channels Discord NSFW
+- Chaque personnalit? g?n?re des images diff?rentes
+
+=== D?PANNAGE ===
+
+"? API key manquante"
+? Ajoutez REPLICATE_API_KEY sur Render
+
+"?? NSFW non disponible"
+? Marquez le channel comme NSFW dans Discord
+
+"? G?n?ration ?choue"
+? Attendez 5 min, r?essayez (rate limit)
+
+=== SUPPORT ===
+
+Documentation compl?te: GENERATION_IMAGES.md
