@@ -1,10 +1,3 @@
-# D?pendances du Bot Discord IA avec Groq
-
-# Discord.py - Biblioth?que Discord
-discord.py>=2.3.2
-
-# Python-dotenv - Gestion des variables d'environnement
-python-dotenv>=1.0.0
-
-# Aiohttp - Client HTTP asynchrone pour API Groq et g?n?ration d'images
-aiohttp>=3.9.0
+discord.py==2.3.2
+aiohttp==3.9.1
+python-dotenv==1.0.0
