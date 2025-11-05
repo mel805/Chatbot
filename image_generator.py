@@ -597,21 +597,19 @@ class ImageGenerator:
     
     def _analyze_bot_actions(self, conversation_history):
         """
-        Analyse les ACTIONS du bot dans la conversation pour générer l'image correspondante
+        Analyse PRÉCISÉMENT les descriptions du bot pour extraire TOUS les détails
         
-        Retourne: dict avec 'action', 'location', 'clothing', 'pose', 'activity'
+        Retourne: dict avec tous les détails (vêtements, accessoires, couleurs, etc.)
         """
         # Extraire les 10 derniers messages DU BOT seulement
         bot_messages = []
         for msg in conversation_history[-15:]:
             if isinstance(msg, dict):
-                # Extraire juste le contenu du message, en retirant le nom de l'utilisateur
                 content = msg.get('content', '')
                 role = msg.get('role', '')
-                if role == 'assistant':  # Messages du bot seulement
+                if role == 'assistant':
                     bot_messages.append(content.lower())
             else:
-                # Si c'est une string, vérifier si ça ne commence pas par un nom d'utilisateur
                 msg_str = str(msg).lower()
                 if not any(msg_str.startswith(prefix) for prefix in ['user:', 'assistant:']):
                     bot_messages.append(msg_str)
@@ -619,15 +617,20 @@ class ImageGenerator:
         # Analyser les 5 derniers messages du bot
         recent_bot_text = " ".join(bot_messages[-5:])
         
-        print(f"[IMAGE] Analyzing BOT actions from last 5 messages...", flush=True)
-        print(f"[IMAGE] Bot text analyzed: {recent_bot_text[:150]}...", flush=True)
+        print(f"[IMAGE] Analyzing BOT descriptions from last 5 messages...", flush=True)
+        print(f"[IMAGE] Bot text: {recent_bot_text[:200]}...", flush=True)
         
         detected = {
             'action': None,
             'location': None,
-            'clothing': None,
+            'clothing_items': [],  # Liste de tous les vêtements
+            'accessories': [],     # Liste de tous les accessoires
+            'colors': [],          # Couleurs mentionnées
+            'materials': [],       # Matières (soie, dentelle, etc.)
+            'descriptors': [],     # Qualificatifs (transparent, moulant, etc.)
             'pose': None,
-            'activity': None
+            'activity': None,
+            'body_visibility': None  # Niveau d'exposition
         }
         
         # ACTIONS QUOTIDIENNES
@@ -681,19 +684,143 @@ class ImageGenerator:
             detected['location'] = "comfortable setting"
             detected['activity'] = "reading a book, relaxed"
         
-        # VÊTEMENTS mentionnés
-        if any(word in recent_bot_text for word in ["pyjama", "pajama", "sleepwear"]):
-            detected['clothing'] = "wearing pajamas"
-        elif any(word in recent_bot_text for word in ["lingerie", "sous-vêtement", "underwear"]):
-            detected['clothing'] = "wearing lingerie"
-        elif any(word in recent_bot_text for word in ["robe", "dress"]):
-            detected['clothing'] = "wearing dress"
-        elif any(word in recent_bot_text for word in ["nu", "nue", "naked", "déshabillé"]):
-            detected['clothing'] = "nude, no clothing"
-        elif any(word in recent_bot_text for word in ["serviette", "towel"]):
-            detected['clothing'] = "wrapped in towel"
-        elif any(word in recent_bot_text for word in ["sport", "gym", "exercise"]):
-            detected['clothing'] = "wearing workout clothes"
+        # EXTRACTION PRÉCISE DES VÊTEMENTS
+        clothing_keywords = {
+            "robe": "dress",
+            "dress": "dress",
+            "jupe": "skirt",
+            "skirt": "skirt",
+            "string": "thong",
+            "thong": "thong",
+            "culotte": "panties",
+            "panties": "panties",
+            "soutien-gorge": "bra",
+            "bra": "bra",
+            "lingerie": "lingerie",
+            "body": "bodysuit",
+            "corset": "corset",
+            "bas": "stockings",
+            "stockings": "stockings",
+            "collants": "tights",
+            "pyjama": "pajamas",
+            "chemise": "shirt",
+            "t-shirt": "t-shirt",
+            "top": "top",
+            "débardeur": "tank top",
+            "pull": "sweater",
+            "gilet": "cardigan",
+            "veste": "jacket",
+            "manteau": "coat",
+            "pantalon": "pants",
+            "jean": "jeans",
+            "short": "shorts",
+            "maillot": "swimsuit",
+            "bikini": "bikini"
+        }
+        
+        for keyword, english in clothing_keywords.items():
+            if keyword in recent_bot_text:
+                detected['clothing_items'].append(english)
+        
+        # ACCESSOIRES
+        accessory_keywords = {
+            "talons": "high heels",
+            "heels": "high heels",
+            "chaussures": "shoes",
+            "boots": "boots",
+            "bottes": "boots",
+            "escarpins": "pumps",
+            "collier": "necklace",
+            "boucles d'oreilles": "earrings",
+            "bracelet": "bracelet",
+            "bague": "ring",
+            "ceinture": "belt",
+            "chapeau": "hat",
+            "lunettes": "glasses",
+            "gants": "gloves",
+            "foulard": "scarf",
+            "écharpe": "scarf"
+        }
+        
+        for keyword, english in accessory_keywords.items():
+            if keyword in recent_bot_text:
+                detected['accessories'].append(english)
+        
+        # COULEURS
+        color_keywords = {
+            "noir": "black",
+            "blanc": "white",
+            "rouge": "red",
+            "bleu": "blue",
+            "vert": "green",
+            "rose": "pink",
+            "violet": "purple",
+            "jaune": "yellow",
+            "orange": "orange",
+            "gris": "gray",
+            "beige": "beige",
+            "doré": "gold",
+            "argenté": "silver"
+        }
+        
+        for keyword, english in color_keywords.items():
+            if keyword in recent_bot_text:
+                detected['colors'].append(english)
+        
+        # MATIÈRES
+        material_keywords = {
+            "soie": "silk",
+            "silk": "silk",
+            "dentelle": "lace",
+            "lace": "lace",
+            "cuir": "leather",
+            "leather": "leather",
+            "satin": "satin",
+            "velours": "velvet",
+            "coton": "cotton",
+            "latex": "latex",
+            "résille": "fishnet"
+        }
+        
+        for keyword, english in material_keywords.items():
+            if keyword in recent_bot_text:
+                detected['materials'].append(english)
+        
+        # QUALIFICATIFS/DESCRIPTEURS
+        descriptor_keywords = {
+            "transparent": "transparent, see-through",
+            "see-through": "see-through",
+            "moulant": "tight-fitting, form-fitting",
+            "tight": "tight-fitting",
+            "serré": "tight",
+            "ample": "loose",
+            "court": "short",
+            "long": "long",
+            "décolleté": "low-cut, cleavage",
+            "échancré": "revealing, cut-out",
+            "ouvert": "open",
+            "fermé": "closed",
+            "sexy": "sexy",
+            "élégant": "elegant",
+            "chic": "chic",
+            "décontracté": "casual"
+        }
+        
+        for keyword, english in descriptor_keywords.items():
+            if keyword in recent_bot_text:
+                if english not in detected['descriptors']:
+                    detected['descriptors'].append(english)
+        
+        # VISIBILITÉ DU CORPS
+        if any(word in recent_bot_text for word in ["laisse voir", "montre", "dévoile", "révèle", "voir tout", "transparente"]):
+            detected['body_visibility'] = "revealing, showing body"
+        elif any(word in recent_bot_text for word in ["cache", "couvre", "dissimule"]):
+            detected['body_visibility'] = "covering, modest"
+        
+        # NU/NUE (à part)
+        if any(word in recent_bot_text for word in ["nu", "nue", "naked", "nud", "déshabillé", "sans vêtement"]):
+            detected['clothing_items'] = ["nude, no clothing"]
+            detected['body_visibility'] = "fully nude"
         
         # POSES spécifiques
         if any(word in recent_bot_text for word in ["assis", "sitting", "seated"]):
@@ -756,52 +883,93 @@ class ImageGenerator:
         # 2. AJOUTER L'ACTIVITÉ (ce que le bot FAIT)
         if bot_actions['activity']:
             prompt_parts.append(bot_actions['activity'])
-            print(f"[IMAGE] Activity added: {bot_actions['activity']}", flush=True)
+            print(f"[IMAGE] Activity: {bot_actions['activity']}", flush=True)
         
         # 3. AJOUTER LE LIEU
         if bot_actions['location']:
             prompt_parts.append(bot_actions['location'])
-            print(f"[IMAGE] Location added: {bot_actions['location']}", flush=True)
+            print(f"[IMAGE] Location: {bot_actions['location']}", flush=True)
         
-        # 4. AJOUTER LES VÊTEMENTS
-        if bot_actions['clothing']:
-            prompt_parts.append(bot_actions['clothing'])
-            print(f"[IMAGE] Clothing added: {bot_actions['clothing']}", flush=True)
+        # 4. CONSTRUIRE LA DESCRIPTION DES VÊTEMENTS COMPLÈTE
+        clothing_description_parts = []
+        
+        # Ajouter les vêtements avec leurs qualificatifs
+        if bot_actions['clothing_items']:
+            # Combiner couleurs + matières + descripteurs + vêtements
+            clothing_details = []
+            
+            # Couleurs en premier
+            if bot_actions['colors']:
+                clothing_details.extend(bot_actions['colors'])
+            
+            # Matières
+            if bot_actions['materials']:
+                clothing_details.extend(bot_actions['materials'])
+            
+            # Descripteurs
+            if bot_actions['descriptors']:
+                clothing_details.extend(bot_actions['descriptors'])
+            
+            # Les vêtements eux-mêmes
+            clothing_details.extend(bot_actions['clothing_items'])
+            
+            clothing_desc = ", ".join(clothing_details)
+            clothing_description_parts.append(f"wearing {clothing_desc}")
+            print(f"[IMAGE] Clothing: wearing {clothing_desc}", flush=True)
+        
+        # Ajouter les accessoires
+        if bot_actions['accessories']:
+            accessories_desc = ", ".join(bot_actions['accessories'])
+            clothing_description_parts.append(accessories_desc)
+            print(f"[IMAGE] Accessories: {accessories_desc}", flush=True)
+        
+        # Ajouter la visibilité du corps
+        if bot_actions['body_visibility']:
+            clothing_description_parts.append(bot_actions['body_visibility'])
+            print(f"[IMAGE] Body visibility: {bot_actions['body_visibility']}", flush=True)
+        
+        # Ajouter toute la description des vêtements au prompt
+        if clothing_description_parts:
+            full_clothing_desc = ", ".join(clothing_description_parts)
+            prompt_parts.append(full_clothing_desc)
         
         # 5. AJOUTER LA POSE
         if bot_actions['pose']:
             prompt_parts.append(bot_actions['pose'])
-            print(f"[IMAGE] Pose added: {bot_actions['pose']}", flush=True)
+            print(f"[IMAGE] Pose: {bot_actions['pose']}", flush=True)
         
-        # SI AUCUNE ACTION DÉTECTÉE, analyser le contexte NSFW général (fallback)
-        if not any([bot_actions['activity'], bot_actions['location'], bot_actions['action']]):
-            print(f"[IMAGE] No specific action detected, analyzing NSFW context...", flush=True)
+        # FALLBACK NSFW seulement si AUCUN vêtement/accessoire détecté
+        if not any([bot_actions['clothing_items'], bot_actions['accessories'], 
+                    bot_actions['activity'], bot_actions['location'], bot_actions['action']]):
+            print(f"[IMAGE] No specific details detected, analyzing general NSFW context...", flush=True)
             
-            # Analyser tout le texte pour contexte NSFW
+            # Analyser tout le texte pour contexte NSFW UNIQUEMENT si rien d'autre
             conversation_text = " ".join(conversation_history[-10:]).lower()
             
             nsfw_context = []
             
-            # Contexte NSFW si présent
+            # Contexte NSFW générique
             if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "excité", "désire"]):
                 nsfw_context.append("sexy, seductive pose")
             
-            if any(word in conversation_text for word in ["nu", "nue", "naked", "déshabillé"]):
+            if any(word in conversation_text for word in ["nu", "nue", "naked", "déshabillé"]) and "nude" not in prompt_parts:
                 nsfw_context.append("nude, bare skin")
             
             if any(word in conversation_text for word in ["lit", "bed", "chambre"]):
                 nsfw_context.append("in bedroom, on bed")
             
-            if any(word in conversation_text for word in ["lingerie", "underwear"]):
+            if any(word in conversation_text for word in ["lingerie", "underwear"]) and "lingerie" not in str(prompt_parts):
                 nsfw_context.append("wearing lingerie")
             
             if nsfw_context:
                 prompt_parts.extend(nsfw_context)
-                print(f"[IMAGE] NSFW context added: {', '.join(nsfw_context)}", flush=True)
+                print(f"[IMAGE] Generic NSFW context added: {', '.join(nsfw_context)}", flush=True)
             else:
                 # Vraiment aucun contexte → portrait simple
                 prompt_parts.append("natural pose, attractive, professional photography")
                 print(f"[IMAGE] No context found, using neutral portrait", flush=True)
+        else:
+            print(f"[IMAGE] Using SPECIFIC details from bot description (no generic fallback)", flush=True)
         
         # Construire le prompt final
         full_prompt = ", ".join(prompt_parts)
