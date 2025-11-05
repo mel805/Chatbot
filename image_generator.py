@@ -588,32 +588,8 @@ class ImageGenerator:
         print(f"[IMAGE] Hugging Face not implemented yet", flush=True)
         return None
     
-    def _analyze_bot_actions(self, conversation_history):
-        """
-        Analyse PRaCISaMENT les descriptions du bot pour extraire TOUS les détails
-        
-        Retourne: dict avec tous les détails (vêtements, accessoires, couleurs, etc.)
-        """
-        # Extraire les 10 derniers messages DU BOT seulement
-        bot_messages = []
-        for msg in conversation_history[-15:]:
-            if isinstance(msg, dict):
-                content = msg.get('content', '')
-                role = msg.get('role', '')
-                if role == 'assistant':
-                    bot_messages.append(content.lower())
-            else:
-                msg_str = str(msg).lower()
-                if not any(msg_str.startswith(prefix) for prefix in ['user:', 'assistant:']):
-                    bot_messages.append(msg_str)
-        
-        # Analyser les 5 derniers messages du bot
-        recent_bot_text = " ".join(bot_messages[-5:])
-        
-        print(f"[IMAGE] ===== ANALYSE DU BOT =====", flush=True)
-        print(f"[IMAGE] Nombre de messages du bot trouvés: {len(bot_messages)}", flush=True)
-        print(f"[IMAGE] Texte du bot à analyser: {recent_bot_text}", flush=True)
-        print(f"[IMAGE] Longueur du texte: {len(recent_bot_text)} caractères", flush=True)
+    def _analyze_bot_actions(self, bot_text):
+        print(f"[IMAGE] Analyzing bot text for clothing/accessories...", flush=True)
         
         detected = {
             'action': None,
@@ -629,52 +605,52 @@ class ImageGenerator:
         }
         
         # ACTIONS QUOTIDIENNES
-        if any(word in recent_bot_text for word in ["cuisine", "cuisin", "cooking", "prépare a  manger", "fais a  manger"]):
+        if any(word in bot_text for word in ["cuisine", "cuisin", "cooking", "prépare a  manger", "fais a  manger"]):
             detected['action'] = "cooking in kitchen"
             detected['location'] = "kitchen"
             detected['activity'] = "cooking, holding cooking utensils, preparing food"
             
-        elif any(word in recent_bot_text for word in ["dors", "dort", "sommeil", "sleeping", "tired", "fatigue", "au lit"]):
+        elif any(word in bot_text for word in ["dors", "dort", "sommeil", "sleeping", "tired", "fatigue", "au lit"]):
             detected['action'] = "sleeping"
             detected['location'] = "bedroom, in bed"
             detected['activity'] = "lying in bed, sleeping, relaxed pose"
             
-        elif any(word in recent_bot_text for word in ["douche", "shower", "bain", "bath", "me lave"]):
+        elif any(word in bot_text for word in ["douche", "shower", "bain", "bath", "me lave"]):
             detected['action'] = "showering"
             detected['location'] = "bathroom, shower"
             detected['activity'] = "in shower, wet skin, water droplets"
             
-        elif any(word in recent_bot_text for word in ["travail", "working", "bureau", "office", "ordinateur", "computer"]):
+        elif any(word in bot_text for word in ["travail", "working", "bureau", "office", "ordinateur", "computer"]):
             detected['action'] = "working"
             detected['location'] = "office, at desk"
             detected['activity'] = "working at desk, using computer"
             
-        elif any(word in recent_bot_text for word in ["lit", "bed", "couché", "allongé", "lying"]):
+        elif any(word in bot_text for word in ["lit", "bed", "couché", "allongé", "lying"]):
             detected['action'] = "lying down"
             detected['location'] = "bedroom, on bed"
             detected['activity'] = "lying on bed, relaxed"
             
-        elif any(word in recent_bot_text for word in ["canapé", "sofa", "couch", "salon", "living room"]):
+        elif any(word in bot_text for word in ["canapé", "sofa", "couch", "salon", "living room"]):
             detected['action'] = "relaxing"
             detected['location'] = "living room, on couch"
             detected['activity'] = "sitting on couch, relaxed"
             
-        elif any(word in recent_bot_text for word in ["dehors", "outside", "jardin", "garden", "parc", "park"]):
+        elif any(word in bot_text for word in ["dehors", "outside", "jardin", "garden", "parc", "park"]):
             detected['action'] = "outside"
             detected['location'] = "outdoor, nature, garden"
             detected['activity'] = "standing outside, natural setting"
             
-        elif any(word in recent_bot_text for word in ["sport", "exercise", "gym", "entrainement"]):
+        elif any(word in bot_text for word in ["sport", "exercise", "gym", "entrainement"]):
             detected['action'] = "exercising"
             detected['location'] = "gym, workout area"
             detected['activity'] = "exercising, workout clothes, athletic pose"
             
-        elif any(word in recent_bot_text for word in ["mange", "eating", "repas", "meal", "dîne", "déjeune"]):
+        elif any(word in bot_text for word in ["mange", "eating", "repas", "meal", "dîne", "déjeune"]):
             detected['action'] = "eating"
             detected['location'] = "dining area, at table"
             detected['activity'] = "eating, at table"
             
-        elif any(word in recent_bot_text for word in ["lis", "reading", "livre", "book"]):
+        elif any(word in bot_text for word in ["lis", "reading", "livre", "book"]):
             detected['action'] = "reading"
             detected['location'] = "comfortable setting"
             detected['activity'] = "reading a book, relaxed"
@@ -714,8 +690,9 @@ class ImageGenerator:
         }
         
         for keyword, english in clothing_keywords.items():
-            if keyword in recent_bot_text:
+            if keyword in bot_text:
                 detected['clothing_items'].append(english)
+                print(f"[IMAGE] !!! VETEMENT DETECTE: '{keyword}' -> '{english}'", flush=True)
         
         # ACCESSOIRES
         accessory_keywords = {
@@ -738,8 +715,9 @@ class ImageGenerator:
         }
         
         for keyword, english in accessory_keywords.items():
-            if keyword in recent_bot_text:
+            if keyword in bot_text:
                 detected['accessories'].append(english)
+                print(f"[IMAGE] !!! ACCESSOIRE DETECTE: '{keyword}' -> '{english}'", flush=True)
         
         # COULEURS
         color_keywords = {
@@ -759,8 +737,9 @@ class ImageGenerator:
         }
         
         for keyword, english in color_keywords.items():
-            if keyword in recent_bot_text:
+            if keyword in bot_text:
                 detected['colors'].append(english)
+                print(f"[IMAGE] !!! COULEUR DETECTEE: '{keyword}' -> '{english}'", flush=True)
         
         # MATIaRES
         material_keywords = {
@@ -778,8 +757,9 @@ class ImageGenerator:
         }
         
         for keyword, english in material_keywords.items():
-            if keyword in recent_bot_text:
+            if keyword in bot_text:
                 detected['materials'].append(english)
+                print(f"[IMAGE] !!! MATIERE DETECTEE: '{keyword}' -> '{english}'", flush=True)
         
         # QUALIFICATIFS/DESCRIPTEURS
         descriptor_keywords = {
@@ -802,29 +782,29 @@ class ImageGenerator:
         }
         
         for keyword, english in descriptor_keywords.items():
-            if keyword in recent_bot_text:
+            if keyword in bot_text:
                 if english not in detected['descriptors']:
                     detected['descriptors'].append(english)
         
         # VISIBILITa DU CORPS
-        if any(word in recent_bot_text for word in ["laisse voir", "montre", "dévoile", "révèle", "voir tout", "transparente"]):
+        if any(word in bot_text for word in ["laisse voir", "montre", "dévoile", "révèle", "voir tout", "transparente"]):
             detected['body_visibility'] = "revealing, showing body"
-        elif any(word in recent_bot_text for word in ["cache", "couvre", "dissimule"]):
+        elif any(word in bot_text for word in ["cache", "couvre", "dissimule"]):
             detected['body_visibility'] = "covering, modest"
         
         # NU/NUE (a  part)
-        if any(word in recent_bot_text for word in ["nu", "nue", "naked", "nud", "déshabillé", "sans vêtement"]):
+        if any(word in bot_text for word in ["nu", "nue", "naked", "nud", "déshabillé", "sans vêtement"]):
             detected['clothing_items'] = ["nude, no clothing"]
             detected['body_visibility'] = "fully nude"
         
         # POSES specifiques
-        if any(word in recent_bot_text for word in ["assis", "sitting", "seated"]):
+        if any(word in bot_text for word in ["assis", "sitting", "seated"]):
             detected['pose'] = "sitting"
-        elif any(word in recent_bot_text for word in ["debout", "standing"]):
+        elif any(word in bot_text for word in ["debout", "standing"]):
             detected['pose'] = "standing"
-        elif any(word in recent_bot_text for word in ["allongé", "lying", "couché"]):
+        elif any(word in bot_text for word in ["allongé", "lying", "couché"]):
             detected['pose'] = "lying down"
-        elif any(word in recent_bot_text for word in ["penché", "leaning", "bent"]):
+        elif any(word in bot_text for word in ["penché", "leaning", "bent"]):
             detected['pose'] = "leaning forward"
         
         return detected
@@ -832,19 +812,39 @@ class ImageGenerator:
     async def generate_contextual_image(self, personality_data, conversation_history):
         """Generate image based on bot description in conversation"""
         
-        print(f"[IMAGE] ===== CONTEXTUAL START =====", flush=True)
+        print(f"[IMAGE] ========== CONTEXTUAL START ==========", flush=True)
+        print(f"[IMAGE] Total messages received: {len(conversation_history)}", flush=True)
         
-        # Extract BOT messages
+        # Extract BOT messages with detailed logging
         bot_messages = []
-        for msg in conversation_history[-15:]:
-            if isinstance(msg, dict) and msg.get('role') == 'assistant':
-                bot_messages.append(msg.get('content', '').lower())
         
-        bot_text = " ".join(bot_messages[-5:])
-        print(f"[IMAGE] Bot says: {bot_text[:300]}", flush=True)
+        for i, msg in enumerate(conversation_history[-20:]):  # Analyser 20 derniers messages
+            print(f"[IMAGE] Msg {i}: type={type(msg).__name__}", flush=True)
+            
+            if isinstance(msg, dict):
+                role = msg.get('role', '')
+                content = msg.get('content', '')
+                print(f"[IMAGE]   role='{role}', content='{content[:80]}'...", flush=True)
+                
+                if role == 'assistant':
+                    bot_messages.append(content.lower())
+                    print(f"[IMAGE]   -> BOT MESSAGE ADDED!", flush=True)
+            else:
+                # String - ajouter systematiquement
+                msg_str = str(msg).lower()
+                bot_messages.append(msg_str)
+                print(f"[IMAGE]   -> String added: '{msg_str[:80]}'...", flush=True)
         
-        # Analyze what bot describes
-        bot_actions = self._analyze_bot_actions(conversation_history)
+        # Combiner TOUS les messages du bot
+        bot_text = " ".join(bot_messages)
+        
+        print(f"[IMAGE] ===== BOT TEXT COMPLETE =====", flush=True)
+        print(f"[IMAGE] Messages bot extraits: {len(bot_messages)}", flush=True)
+        print(f"[IMAGE] Texte COMPLET du bot: {bot_text}", flush=True)
+        print(f"[IMAGE] Longueur: {len(bot_text)} caracteres", flush=True)
+        
+        # Analyze what bot describes - PASS THE EXTRACTED TEXT
+        bot_actions = self._analyze_bot_actions(bot_text)
         
         # Get personality traits
         visual_traits = personality_data.get('visual', '')
