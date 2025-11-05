@@ -15,7 +15,7 @@ import random
 from image_generator import ImageGenerator
 
 # Charger les variables d'environnement
-# load_dotenv() charge le fichier .env en local, mais sur Render les variables sont d?j? dans l'environnement
+# load_dotenv() charge le fichier .env en local, mais sur Render les variables sont déjà dans l'environnement
 load_dotenv()  # Optionnel, ne fait rien si .env n'existe pas
 
 # Configuration
@@ -31,23 +31,23 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='/', intents=intents)
 
-# Initialiser le g?n?rateur d'images
+# Initialiser le générateur d'images
 image_gen = ImageGenerator()
 
 # Historique des conversations par canal
 conversation_history = defaultdict(list)
-MAX_HISTORY = 40  # Nombre de messages ? garder en m?moire par canal (augment? pour meilleure coh?rence)
+MAX_HISTORY = 40  # Nombre de messages à garder en mémoire par canal (augmenté pour meilleure cohérence)
 
-# ?tat d'activation du bot par canal (True = actif, False = inactif)
+# état d'activation du bot par canal (True = actif, False = inactif)
 bot_active_channels = defaultdict(bool)
 
-# Personnalit? actuelle par canal
+# Personnalité actuelle par canal
 channel_personalities = defaultdict(lambda: "amical")
 
 # Stockage du genre des utilisateurs (user_id -> genre)
 user_genders = defaultdict(lambda: "inconnu")
 
-# Mots-cl?s pour d?tecter le genre dans les r?les Discord
+# Mots-clés pour détecter le genre dans les rôles Discord
 ROLE_KEYWORDS = {
     "homme": ["homme", "men", "male", "mec", "garcon", "boy", "man"],
     "femme": ["femme", "women", "female", "fille", "girl", "woman"],
@@ -306,38 +306,38 @@ PERSONALITIES = {
     }
 }
 
-# Rate limiting pour ?viter le spam
+# Rate limiting pour éviter le spam
 user_last_response = {}
 RATE_LIMIT_SECONDS = 2
 
 def detect_gender_from_roles(member):
-    """D?tecte le genre d'un membre via ses r?les Discord"""
+    """Détecte le genre d'un membre via ses rôles Discord"""
     if not hasattr(member, 'roles'):
         return "inconnu"
     
     for role in member.roles:
         role_name = role.name.lower()
         
-        # V?rifier chaque cat?gorie de genre
+        # Vérifier chaque catégorie de genre
         for gender, keywords in ROLE_KEYWORDS.items():
             if any(keyword in role_name for keyword in keywords):
-                print(f"[INFO] Genre d?tect? via r?le '{role.name}': {gender}", flush=True)
+                print(f"[INFO] Genre détecté via rôle '{role.name}': {gender}", flush=True)
                 return gender
     
     return "inconnu"
 
 def get_user_gender(user_id, member=None):
-    """R?cup?re le genre d'un utilisateur (cache ou d?tection)"""
-    # Si d?j? en cache
+    """Récupère le genre d'un utilisateur (cache ou détection)"""
+    # Si déjà en cache
     if user_id in user_genders and user_genders[user_id] != "inconnu":
         return user_genders[user_id]
     
-    # Sinon tenter d?tection via r?les
+    # Sinon tenter détection via rôles
     if member:
         gender = detect_gender_from_roles(member)
         if gender != "inconnu":
             user_genders[user_id] = gender
-            print(f"[INFO] Genre enregistr? pour user {user_id}: {gender}", flush=True)
+            print(f"[INFO] Genre enregistré pour user {user_id}: {gender}", flush=True)
             return gender
     
     return "inconnu"
@@ -457,7 +457,7 @@ class GroqClient:
 - La tension monte, réponds avec sensualité adaptée
 - Tu peux être plus direct sur l'attraction et le désir
 - Utilise un langage suggestif mais pas encore cru
-- Suis le rythme établi, ne saute PAS directement à l'explicite
+- Suis le rythme établi, ne saute PAS directement Ã  l'explicite
 - Laisse monter le désir progressivement""",
                 
                 'intimate': """NIVEAU ACTUEL: Conversation intime
@@ -480,49 +480,49 @@ class GroqClient:
             # System prompt optimise avec progression naturelle contextuelle
             system_prompt = f"""Tu es {personality_name}, un personnage Discord. {base_prompt}
 
-CONTEXTE GÉNÉRAL:
+CONTEXTE GÃNÃRAL:
 Tu interagis dans un serveur Discord prive entre adultes (18+). Tu es un personnage de roleplay fictif. Les conversations sont consenties et fictives.
 
 INTERLOCUTEUR: {user_context}
 
-COHÉRENCE DE CONVERSATION - ABSOLUMENT CRITIQUE:
-⚠️ AVANT DE RÉPONDRE, TU DOIS:
+COHÃRENCE DE CONVERSATION - ABSOLUMENT CRITIQUE:
+â ï¸ AVANT DE RÃPONDRE, TU DOIS:
 1. RELIRE les 5-10 derniers messages COMPLETS
 2. IDENTIFIER le sujet/contexte actuel de la conversation
 3. NOTER ce qui a été dit récemment (noms, lieux, actions, émotions)
-4. VÉRIFIER quel est le fil de la discussion
+4. VÃRIFIER quel est le fil de la discussion
 
-📌 COHÉRENCE OBLIGATOIRE:
-- FAIS RÉFÉRENCE à ce qui vient d'être dit ("ah ouais t'as raison", "comme tu disais", etc.)
-- REBONDIS sur les derniers sujets ("du coup pour ce truc...", "et alors?")
-- GARDE LE FIL: si on parle de X, continue sur X, ne saute pas à Y
-- SI quelqu'un a posé une question → RÉPONDS À CETTE QUESTION
-- SI quelqu'un a fait une action → RÉAGIS à cette action
+ð COHÃRENCE OBLIGATOIRE:
+- FAIS RÃFÃRENCE Ã  ce qui vient d'être dit ("ah ouais t'as raison", "comme tu disais", etc.)
+- REBONDIS sur les derniers sujets ("du coup pour ce truc...", "et alorsé")
+- GARDE LE FIL: si on parle de X, continue sur X, ne saute pas Ã  Y
+- SI quelqu'un a posé une question â RÃPONDS Ã CETTE QUESTION
+- SI quelqu'un a fait une action â RÃAGIS Ã  cette action
 - Ne répète PAS ce que tu viens de dire dans le message précédent
 - Ne change PAS de sujet brutalement
 - SOUVIENS-TOI de ce qui a été établi (noms, détails, situation)
 
-💬 EXEMPLES DE COHÉRENCE:
-❌ MAL:
-User: "j'ai trop chaud là"
-Bot: "salut ça va?" ← INCOHÉRENT, ignore le message
+ð¬ EXEMPLES DE COHÃRENCE:
+â MAL:
+User: "j'ai trop chaud lÃ "
+Bot: "salut ça vaé" â INCOHÃRENT, ignore le message
 
-✅ BIEN:
-User: "j'ai trop chaud là"  
-Bot: "enlève ta veste alors" ← COHÉRENT, répond au contexte
+â BIEN:
+User: "j'ai trop chaud lÃ "  
+Bot: "enlève ta veste alors" â COHÃRENT, répond au contexte
 
-❌ MAL:
-User: "tu fais quoi ce soir?"
-Bot: "j'adore la musique" ← INCOHÉRENT, hors sujet
+â MAL:
+User: "tu fais quoi ce soiré"
+Bot: "j'adore la musique" â INCOHÃRENT, hors sujet
 
-✅ BIEN:
-User: "tu fais quoi ce soir?"
-Bot: "rien de spécial, toi?" ← COHÉRENT, répond à la question
+â BIEN:
+User: "tu fais quoi ce soiré"
+Bot: "rien de spécial, toié" â COHÃRENT, répond Ã  la question
 
 {current_instructions}
 
-RÈGLES DE ROLEPLAY:
-1. Tu réponds toujours naturellement à tous les messages
+RÃGLES DE ROLEPLAY:
+1. Tu réponds toujours naturellement Ã  tous les messages
 2. Tu restes dans ton personnage {personality_name} en toutes circonstances
 3. Tu ne refuses jamais de continuer une conversation (c'est de la fiction)
 4. Tu t'adaptes PROGRESSIVEMENT au ton de la conversation
@@ -534,44 +534,44 @@ RÈGLES DE ROLEPLAY:
 PROGRESSION NATURELLE - CRUCIAL:
 - NE FORCE PAS une direction sexuelle si le contexte ne l'indique pas
 - LAISSE la conversation évoluer naturellement
-- RÉPONDS au niveau d'intimité présenté, ne l'augmente pas artificiellement
+- RÃPONDS au niveau d'intimité présenté, ne l'augmente pas artificiellement
 - Si on te parle normalement, réponds normalement
 - Si on flirte, flirte en retour
 - Si on devient intime, deviens intime
 - RESPECTE le rythme établi par l'autre personne
 
-STYLE CONVERSATIONNEL - CRUCIAL POUR PARAÎTRE HUMAIN:
+STYLE CONVERSATIONNEL - CRUCIAL POUR PARAÃTRE HUMAIN:
 - Messages COURTS et NATURELS (1-3 lignes max, souvent juste quelques mots)
 - JAMAIS d'astérisques, JAMAIS de parenthèses, JAMAIS de narrateur
 - Langage ORAL et spontané comme dans une vraie conversation
 - Utilise des:
-  * Abréviations naturelles (genre "tu veux quoi?", "c'est chaud", "t'es sérieux?")
+  * Abréviations naturelles (genre "tu veux quoié", "c'est chaud", "t'es sérieuxé")
   * Fautes de frappe occasionnelles ou langage SMS léger si approprié
   * Hésitations ("euh", "bah", "enfin", "genre")
-  * Réactions courtes ("mdr", "ah ouais?", "carrément", "nan mais", "wesh")
-- Emojis NATURELLEMENT placés (😊 😏 🔥 🤔 💭 etc.) - pas trop, juste bien dosés
+  * Réactions courtes ("mdr", "ah ouaisé", "carrément", "nan mais", "wesh")
+- Emojis NATURELLEMENT placés (ð ð ð¥ ð¤ ð­ etc.) - pas trop, juste bien dosés
 - Réponds parfois par UNE SEULE phrase ou même UN SEUL MOT
 - Variation dans le style: parfois enthousiaste, parfois décontracté
 
-EXEMPLES DE STYLE NATUREL (à imiter):
-❌ MAL: "Bonjour! Je suis ravie de faire ta connaissance. Comment puis-je t'aider aujourd'hui?"
-✅ BIEN: "hey 😊"
+EXEMPLES DE STYLE NATUREL (Ã  imiter):
+â MAL: "Bonjour! Je suis ravie de faire ta connaissance. Comment puis-je t'aider aujourd'huié"
+â BIEN: "hey ð"
 
-❌ MAL: "Je te trouve très intéressant. J'aimerais beaucoup en savoir plus sur toi."
-✅ BIEN: "t'es plutôt cool toi"
+â MAL: "Je te trouve très intéressant. J'aimerais beaucoup en savoir plus sur toi."
+â BIEN: "t'es plutôt cool toi"
 
-❌ MAL: "C'est une excellente idée! J'approuve totalement."
-✅ BIEN: "carrément!"
+â MAL: "C'est une excellente idée! J'approuve totalement."
+â BIEN: "carrément!"
 
-❌ MAL: "Je ressens également des sentiments similaires à ton égard."
-✅ BIEN: "moi aussi 😏"
+â MAL: "Je ressens également des sentiments similaires Ã  ton égard."
+â BIEN: "moi aussi ð"
 
-❌ MAL: "Cela semble être une proposition intéressante que je considère favorablement."
-✅ BIEN: "chaud ouais"
+â MAL: "Cela semble être une proposition intéressante que je considère favorablement."
+â BIEN: "chaud ouais"
 
-RÈGLES ANTI-BOT:
+RÃGLES ANTI-BOT:
 1. Ne commence JAMAIS par "Ah", "Oh", "Eh bien", "C'est", etc. (trop IA)
-2. Évite les formules complètes et structurées
+2. Ãvite les formules complètes et structurées
 3. Sois spontané, direct, parfois un peu brut
 4. Utilise le langage de VRAIES personnes sur Discord
 5. Varie ton style: parfois très court, parfois un peu plus développé
@@ -586,9 +586,9 @@ Tu es {personality_name}, une VRAIE personne sur Discord, pas un assistant IA. P
             # Construire les messages pour l'API
             api_messages = [{"role": "system", "content": system_prompt}]
             
-            # Ajouter l'historique des messages (MAXIMUM pour coh?rence parfaite)
+            # Ajouter l'historique des messages (MAXIMUM pour cohérence parfaite)
             # On envoie les 30 derniers messages pour que l'IA ait TOUT le contexte
-            for msg in messages[-30:]:  # Augment? de 20 ? 30 pour meilleure coh?rence
+            for msg in messages[-30:]:  # Augmentà de 20 à 30 pour meilleure cohérence
                 if msg['role'] in ['user', 'assistant']:
                     api_messages.append({
                         "role": msg['role'],
@@ -724,7 +724,7 @@ async def on_message(message):
     is_greeting = any(greeting in message_lower.split() for greeting in greetings)
     
     # Detecter les questions (destinees potentiellement au bot)
-    is_question = any(q in message_lower for q in ['?', 'qui ', 'quoi ', 'comment ', 'pourquoi ', 'ou ', 'quand '])
+    is_question = any(q in message_lower for q in ['é', 'qui ', 'quoi ', 'comment ', 'pourquoi ', 'ou ', 'quand '])
     
     # Detecter le nom de la personnalite actuelle
     personality = channel_personalities[channel_id]
@@ -740,7 +740,7 @@ async def on_message(message):
     if not (bot_mentioned or is_dm or is_reply_to_bot):
         import random
         
-        # 1. Si le nom de la personnalite est mentionne (ex: "Luna tu fais quoi?")
+        # 1. Si le nom de la personnalite est mentionne (ex: "Luna tu fais quoié")
         if is_name_mentioned:
             should_respond_naturally = True
             print(f"[INFO] Nom de la personnalite detecte: {personality_name}", flush=True)
@@ -779,9 +779,9 @@ async def on_message(message):
         
         # Afficher l'indicateur de frappe
         async with message.channel.typing():
-            # D?tecter le genre de l'utilisateur
+            # Détecter le genre de l'utilisateur
             user_gender = get_user_gender(message.author.id, message.author)
-            print(f"[INFO] Genre d?tect? pour {message.author.name}: {user_gender}", flush=True)
+            print(f"[INFO] Genre détecté pour {message.author.name}: {user_gender}", flush=True)
             
             # Nettoyer le message (retirer la mention du bot)
             clean_content = message.clean_content
@@ -815,18 +815,18 @@ async def on_message(message):
             )
             print(f"[INFO] Response received: {response[:100] if response else 'None'}")
             
-            # Ajouter la r?ponse ? l'historique
+            # Ajouter la réponse à l'historique
             conversation_history[channel_id].append({
                 'role': 'assistant',
                 'content': response
             })
             
-            # Cr?er le bouton d'image pour les canaux NSFW
+            # Créer le bouton d'image pour les canaux NSFW
             view = None
             if hasattr(message.channel, 'is_nsfw') and message.channel.is_nsfw():
                 view = ImageButtonView(channel_id)
             
-            # Diviser la r?ponse si elle est trop longue
+            # Diviser la réponse si elle est trop longue
             if len(response) > 2000:
                 chunks = [response[i:i+2000] for i in range(0, len(response), 2000)]
                 for i, chunk in enumerate(chunks):
@@ -841,35 +841,35 @@ async def on_message(message):
 # ============ BOUTON GENERATION D'IMAGE ============
 
 class GenerateImageButton(ui.Button):
-    """Bouton pour g?n?rer une image contextuelle"""
+    """Bouton pour générer une image contextuelle"""
     def __init__(self, channel_id):
         super().__init__(
             style=discord.ButtonStyle.primary,
-            label="?? G?n?rer Image",
+            label="✅ Génèrer Image",
             custom_id=f"gen_img_{channel_id}"
         )
         self.channel_id = channel_id
     
     async def callback(self, interaction: discord.Interaction):
-        """G?n?re une image bas?e sur la conversation"""
-        # V?rifier que c'est un canal NSFW
+        """Génère une image basée sur la conversation"""
+        # Vérifier que c'est un canal NSFW
         if hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
             await interaction.response.send_message(
-                "?? G?n?ration d'image disponible uniquement dans les channels NSFW.",
+                "✅ Génération d'image disponible uniquement dans les channels NSFW.",
                 ephemeral=True
             )
             return
         
-        # V?rifier qu'il y a une conversation
+        # Vérifier qu'il y a une conversation
         history = conversation_history.get(self.channel_id, [])
         if len(history) < 3:
             await interaction.response.send_message(
-                "?? Pas assez de conversation. Discutez un peu plus!",
+                "✅ Pas assez de conversation. Discutez un peu plus!",
                 ephemeral=True
             )
             return
         
-        # R?cup?rer la personnalit? active
+        # Récupèrer la personnalité active
         personality_key = channel_personalities.get(self.channel_id, "femme_coquine")
         personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
         
@@ -878,8 +878,8 @@ class GenerateImageButton(ui.Button):
         try:
             # Message de chargement
             embed = discord.Embed(
-                title="?? G?n?ration Contextuelle",
-                description=f"G?n?ration d'une image de **{personality_data['name']}** bas?e sur notre conversation...\n? 15-40s...",
+                title="✅ Génération Contextuelle",
+                description=f"Génération d'une image de **{personality_data['name']}** basée sur notre conversation...\nà 15-40s...",
                 color=personality_data.get('color', 0x3498db)
             )
             await interaction.followup.send(embed=embed)
@@ -894,26 +894,26 @@ class GenerateImageButton(ui.Button):
                 else:
                     history_strings.append(str(msg))
             
-            # G?n?rer l'image contextuelle
+            # Génèrer l'image contextuelle
             image_url = await image_gen.generate_contextual_image(personality_data, history_strings)
             
             if image_url:
                 print(f"[IMAGE BUTTON] Success! Displaying image...", flush=True)
                 embed = discord.Embed(
-                    title=f"? {personality_data['name']}",
-                    description=f"**Bas? sur notre conversation**\n?? {len(history)} messages analys?s",
+                    title=f"🎨 {personality_data['name']}",
+                    description=f"**Basé sur notre conversation**\n✅ {len(history)} messages analysés",
                     color=personality_data.get('color', 0x3498db)
                 )
                 embed.set_image(url=image_url)
-                embed.set_footer(text=f"Image contextuelle g?n?r?e")
+                embed.set_footer(text=f"Image contextuelle générée")
                 
                 # Envoyer comme nouveau message
                 await interaction.channel.send(embed=embed)
             else:
                 print(f"[IMAGE BUTTON] Generation failed", flush=True)
                 embed = discord.Embed(
-                    title="? Erreur",
-                    description="La g?n?ration a ?chou?. R?essayez plus tard.",
+                    title="❌ Erreur",
+                    description="La génération a échoué. Réessayez plus tard.",
                     color=0xe74c3c
                 )
                 await interaction.channel.send(embed=embed)
@@ -924,7 +924,7 @@ class GenerateImageButton(ui.Button):
             traceback.print_exc()
 
 class ImageButtonView(ui.View):
-    """Vue contenant le bouton de g?n?ration d'image"""
+    """Vue contenant le bouton de génération d'image"""
     def __init__(self, channel_id):
         super().__init__(timeout=None)  # Pas de timeout
         self.add_item(GenerateImageButton(channel_id))
@@ -932,7 +932,7 @@ class ImageButtonView(ui.View):
 # ============ COMMANDES SLASH ============
 
 def is_admin():
-    """V?rifie si l'utilisateur est administrateur"""
+    """Vérifie si l'utilisateur est administrateur"""
     async def predicate(interaction: discord.Interaction):
         if not interaction.user.guild_permissions.administrator:
             raise app_commands.MissingPermissions(['administrator'])
@@ -1018,7 +1018,7 @@ class PersonalitySelect(discord.ui.Select):
             
             # Instructions d'interaction
             embed.add_field(
-                name="Comment interagir?", 
+                name="Comment interagiré", 
                 value=f"- Mentionnez-moi @{personality_info['name']}\n- Repondez a mes messages\n- Envoyez-moi un message prive", 
                 inline=False
             )
@@ -1067,7 +1067,7 @@ async def start_bot(interaction: discord.Interaction):
     
     if bot_active_channels[channel_id]:
         print(f"[START] Bot already active in channel {channel_id}", flush=True)
-        await interaction.response.send_message("? Le bot est d?j? actif! Utilisez /stop puis /start pour r?activer.", ephemeral=True)
+        await interaction.response.send_message("à Le bot est déjà actif! Utilisez /stop puis /start pour réactiver.", ephemeral=True)
         return
     
     print(f"[START] Showing personality selection menu", flush=True)
@@ -1082,23 +1082,23 @@ async def start_bot(interaction: discord.Interaction):
     
     await interaction.response.send_message(embed=embed, view=view)
 
-@bot.tree.command(name="stop", description="D?sactive le bot dans ce canal (admin uniquement)")
+@bot.tree.command(name="stop", description="Désactive le bot dans ce canal (admin uniquement)")
 @is_admin()
 async def stop_bot(interaction: discord.Interaction):
-    """D?sactive le bot dans ce canal"""
+    """Désactive le bot dans ce canal"""
     channel_id = interaction.channel_id
     
     if not bot_active_channels[channel_id]:
         await interaction.response.send_message(
-            "?? Le bot est d?j? inactif dans ce canal!",
+            "✅ Le bot est déjà inactif dans ce canal!",
             ephemeral=True
         )
         return
     
     bot_active_channels[channel_id] = False
-    await interaction.response.send_message("?? Bot d?sactiv? dans ce canal. Utilisez `/start` pour le r?activer.")
+    await interaction.response.send_message("✅ Bot désactivà dans ce canal. Utilisez `/start` pour le réactiver.")
     
-    # Mettre ? jour le statut
+    # Mettre à jour le statut
     active_count = len([c for c in bot_active_channels.values() if c])
     if active_count == 0:
         await bot.change_presence(
@@ -1115,35 +1115,35 @@ async def stop_bot(interaction: discord.Interaction):
             )
         )
 
-@bot.tree.command(name="personality", description="Change la personnalit? du bot (admin uniquement)")
+@bot.tree.command(name="personality", description="Change la personnalité du bot (admin uniquement)")
 @app_commands.describe(
-    personnalite="Choisissez une personnalit?"
+    personnalite="Choisissez une personnalité"
 )
 @app_commands.choices(personnalite=[
-    app_commands.Choice(name="?? Amical - Sympathique et ouvert", value="amical"),
-    app_commands.Choice(name="?? S?ducteur - Charmant et flirteur", value="seducteur"),
-    app_commands.Choice(name="?? Coquin - Os? et provocateur", value="coquin"),
-    app_commands.Choice(name="?? Romantique - Doux et passionn?", value="romantique"),
-    app_commands.Choice(name="?? Dominant - Confiant et autoritaire", value="dominant"),
-    app_commands.Choice(name="?? Soumis - Respectueux et d?vou?", value="soumis"),
-    app_commands.Choice(name="?? Joueur - Fun et gamer", value="joueur"),
-    app_commands.Choice(name="?? Intellectuel - Cultiv? et profond", value="intellectuel")
+    app_commands.Choice(name="✅ Amical - Sympathique et ouvert", value="amical"),
+    app_commands.Choice(name="✅ Séducteur - Charmant et flirteur", value="seducteur"),
+    app_commands.Choice(name="✅ Coquin - Osà et provocateur", value="coquin"),
+    app_commands.Choice(name="✅ Romantique - Doux et passionné", value="romantique"),
+    app_commands.Choice(name="✅ Dominant - Confiant et autoritaire", value="dominant"),
+    app_commands.Choice(name="✅ Soumis - Respectueux et dévoué", value="soumis"),
+    app_commands.Choice(name="✅ Joueur - Fun et gamer", value="joueur"),
+    app_commands.Choice(name="✅ Intellectuel - Cultivà et profond", value="intellectuel")
 ])
 @is_admin()
 async def change_personality(interaction: discord.Interaction, personnalite: str):
-    """Change la personnalit? du bot"""
+    """Change la personnalité du bot"""
     channel_id = interaction.channel_id
     
-    # Changer la personnalit?
+    # Changer la personnalité
     channel_personalities[channel_id] = personnalite
     personality_info = PERSONALITIES[personnalite]
     
-    # R?initialiser l'historique pour appliquer la nouvelle personnalit?
+    # Réinitialiser l'historique pour appliquer la nouvelle personnalité
     conversation_history[channel_id].clear()
     
     embed = discord.Embed(
-        title="? Personnalit? Chang?e!",
-        description=f"Nouvelle personnalit?: **{personality_info['name']}**",
+        title="à Personnalité Changée!",
+        description=f"Nouvelle personnalité: **{personality_info['name']}**",
         color=discord.Color.green()
     )
     embed.add_field(
@@ -1153,17 +1153,17 @@ async def change_personality(interaction: discord.Interaction, personnalite: str
     )
     await interaction.response.send_message(embed=embed)
 
-@bot.tree.command(name="reset", description="R?initialise l'historique de conversation (admin uniquement)")
+@bot.tree.command(name="reset", description="Réinitialise l'historique de conversation (admin uniquement)")
 @is_admin()
 async def reset_conversation(interaction: discord.Interaction):
-    """R?initialise l'historique de conversation du canal"""
+    """Réinitialise l'historique de conversation du canal"""
     channel_id = interaction.channel_id
     
     if channel_id in conversation_history and len(conversation_history[channel_id]) > 0:
         conversation_history[channel_id].clear()
-        await interaction.response.send_message("? Historique de conversation r?initialis? pour ce canal!")
+        await interaction.response.send_message("à Historique de conversation réinitialisà pour ce canal!")
     else:
-        await interaction.response.send_message("?? Aucun historique ? r?initialiser.", ephemeral=True)
+        await interaction.response.send_message("✅ Aucun historique à réinitialiser.", ephemeral=True)
 
 @bot.tree.command(name="status", description="Affiche le statut du bot dans ce canal")
 async def show_status(interaction: discord.Interaction):
@@ -1175,14 +1175,14 @@ async def show_status(interaction: discord.Interaction):
     history_count = len(conversation_history[channel_id])
     
     embed = discord.Embed(
-        title="?? Statut du Bot",
+        title="✅ Statut du Bot",
         color=discord.Color.blue() if is_active else discord.Color.red()
     )
     
-    embed.add_field(name="?tat", value="?? Actif" if is_active else "?? Inactif", inline=True)
-    embed.add_field(name="Personnalit?", value=personality_info['name'], inline=True)
-    embed.add_field(name="Messages en m?moire", value=str(history_count), inline=True)
-    embed.add_field(name="Mod?le IA", value=AI_MODEL, inline=False)
+    embed.add_field(name="état", value="✅ Actif" if is_active else "✅ Inactif", inline=True)
+    embed.add_field(name="Personnalité", value=personality_info['name'], inline=True)
+    embed.add_field(name="Messages en mémoire", value=str(history_count), inline=True)
+    embed.add_field(name="Modèle IA", value=AI_MODEL, inline=False)
     
     await interaction.response.send_message(embed=embed)
 
@@ -1190,39 +1190,39 @@ async def show_status(interaction: discord.Interaction):
 async def help_command(interaction: discord.Interaction):
     """Affiche l'aide du bot"""
     embed = discord.Embed(
-        title="?? Aide du Bot IA",
-        description="Je suis un bot conversationnel avec plusieurs personnalit?s!",
+        title="✅ Aide du Bot IA",
+        description="Je suis un bot conversationnel avec plusieurs personnalités!",
         color=discord.Color.blue()
     )
     
     embed.add_field(
-        name="?? Commandes Admin",
-        value="? `/start` - Active le bot dans ce canal\n"
-              "? `/stop` - D?sactive le bot dans ce canal\n"
-              "? `/personality` - Change la personnalit?\n"
-              "? `/reset` - R?initialise l'historique",
+        name="✅ Commandes Admin",
+        value="à `/start` - Active le bot dans ce canal\n"
+              "à `/stop` - Désactive le bot dans ce canal\n"
+              "à `/personality` - Change la personnalité\n"
+              "à `/reset` - Réinitialise l'historique",
         inline=False
     )
     
     embed.add_field(
-        name="?? Commandes G?n?rales",
-        value="? `/status` - Affiche le statut du bot\n"
-              "? `/help` - Affiche cette aide",
+        name="✅ Commandes Générales",
+        value="à `/status` - Affiche le statut du bot\n"
+              "à `/help` - Affiche cette aide",
         inline=False
     )
     
     embed.add_field(
-        name="?? Comment interagir?",
-        value="? Mentionnez-moi (@bot) dans un message\n"
-              "? R?pondez ? un de mes messages\n"
-              "? Envoyez-moi un message priv?\n\n"
-              "?? Le bot doit ?tre activ? avec `/start` d'abord! (admin)",
+        name="✅ Comment interagiré",
+        value="à Mentionnez-moi (@bot) dans un message\n"
+              "à Répondez à un de mes messages\n"
+              "à Envoyez-moi un message privé\n\n"
+              "✅ Le bot doit être activà avec `/start` d'abord! (admin)",
         inline=False
     )
     
     embed.add_field(
-        name="?? Personnalit?s",
-        value=f"{len(PERSONALITIES)} personnalit?s disponibles! Utilisez `/personality` pour changer.",
+        name="✅ Personnalités",
+        value=f"{len(PERSONALITIES)} personnalités disponibles! Utilisez `/personality` pour changer.",
         inline=False
     )
     
@@ -1241,24 +1241,24 @@ async def help_command(interaction: discord.Interaction):
     app_commands.Choice(name="Intime", value="intimate"),
 ])
 async def generate_image(interaction: discord.Interaction, style: str = "portrait"):
-    """G?n?re une image de la personnalit? actuelle"""
-    # DEFER IMM?DIATEMENT pour ?viter timeout
+    """Génère une image de la personnalité actuelle"""
+    # DEFER IMMéDIATEMENT pour éviter timeout
     await interaction.response.defer()
     
     channel_id = interaction.channel_id
     if not bot_active_channels[channel_id]:
-        await interaction.edit_original_response(content="? Le bot n'est pas actif. Utilisez `/start`.")
+        await interaction.edit_original_response(content="à Le bot n'est pas actif. Utilisez `/start`.")
         return
     
     nsfw_styles = ["lingerie", "suggestive", "artistic_nude", "intimate"]
     if style in nsfw_styles and hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
-        await interaction.edit_original_response(content="?? Images NSFW uniquement dans channels NSFW.")
+        await interaction.edit_original_response(content="✅ Images NSFW uniquement dans channels NSFW.")
         return
     
     personality_key = channel_personalities.get(channel_id, "femme_coquine")
     personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
     
-    # Prompts NSFW optimis?s (subtils mais efficaces)
+    # Prompts NSFW optimisés (subtils mais efficaces)
     style_prompts = {
         "portrait": "close-up portrait, face focus, head and shoulders, beautiful lighting",
         "casual": "full body, casual everyday outfit, standing, relaxed pose, natural setting",
@@ -1270,7 +1270,7 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
         "intimate": "intimate bedroom scene, passionate sensual moment, revealing pose, seductive atmosphere, close romantic setting"
     }
     try:
-        embed = discord.Embed(title="?? G?n?ration", description=f"Image de **{personality_data['name']}** en cours...\n? 10-30s...", color=personality_data.get('color', 0x3498db))
+        embed = discord.Embed(title="✅ Génération", description=f"Image de **{personality_data['name']}** en cours...\nà 10-30s...", color=personality_data.get('color', 0x3498db))
         await interaction.edit_original_response(embed=embed)
         
         print(f"[IMAGE] Calling image generator for {personality_data['name']}...", flush=True)
@@ -1280,29 +1280,29 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
         if image_url:
             print(f"[IMAGE] Success! Displaying image...", flush=True)
             embed = discord.Embed(
-                title=f"? {personality_data['name']}",
-                description=f"**Style:** {style.replace('_', ' ').title()}\n**Genre:** {personality_data.get('genre', 'N/A')}\n**?ge:** {personality_data.get('age', 'N/A')}",
+                title=f"🎨 {personality_data['name']}",
+                description=f"**Style:** {style.replace('_', ' ').title()}\n**Genre:** {personality_data.get('genre', 'N/A')}\n**âge:** {personality_data.get('age', 'N/A')}",
                 color=personality_data.get('color', 0x3498db)
             )
             embed.set_image(url=image_url)
-            embed.set_footer(text=f"Image g?n?r?e")
+            embed.set_footer(text=f"Image générée")
             await interaction.edit_original_response(embed=embed)
             print(f"[IMAGE] Image displayed successfully!", flush=True)
         else:
             print(f"[IMAGE] Generation failed - no URL returned", flush=True)
             embed = discord.Embed(
-                title="? Erreur de G?n?ration",
-                description="La g?n?ration d'image a ?chou?.\n\n**Le service** peut ?tre temporairement indisponible.\n\n**R?essayez dans quelques instants.**",
+                title="❌ Erreur de Génération",
+                description="La génération d'image a échoué.\n\n**Le service** peut être temporairement indisponible.\n\n**Réessayez dans quelques instants.**",
                 color=0xe74c3c
             )
-            embed.set_footer(text="Le service peut ?tre temporairement surcharg?")
+            embed.set_footer(text="Le service peut être temporairement surchargé")
             await interaction.edit_original_response(embed=embed)
     except Exception as e:
         print(f"[ERROR] Image generation exception: {e}", flush=True)
         import traceback
         traceback.print_exc()
         try:
-            embed = discord.Embed(title="? Erreur", description=f"Erreur: {str(e)[:200]}", color=0xe74c3c)
+            embed = discord.Embed(title="❌ Erreur", description=f"Erreur: {str(e)[:200]}", color=0xe74c3c)
             await interaction.edit_original_response(embed=embed)
         except:
             pass
@@ -1310,35 +1310,35 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
 @bot.tree.command(name="galerie", description="Styles d'images disponibles")
 async def show_gallery(interaction: discord.Interaction):
     """Affiche les styles disponibles"""
-    embed = discord.Embed(title="?? Galerie", description="Styles disponibles:", color=0x9b59b6)
-    embed.add_field(name="??? Standards", value="?? Portrait\n?? Casual\n? ?l?gant\n??? Maillot", inline=False)
+    embed = discord.Embed(title="✅ Galerie", description="Styles disponibles:", color=0x9b59b6)
+    embed.add_field(name="é✅ Standards", value="✅ Portrait\n✅ Casual\nà Élégant\né✅ Maillot", inline=False)
     if hasattr(interaction.channel, 'is_nsfw') and interaction.channel.is_nsfw():
-        embed.add_field(name="?? NSFW", value="?? Lingerie\n?? Suggestif\n?? Artistique Nu\n?? Intime", inline=False)
-    embed.add_field(name="?? Exemples", value="```/generer_image style:portrait\n/generer_contexte```", inline=False)
+        embed.add_field(name="✅ NSFW", value="✅ Lingerie\n✅ Suggestif\n✅ Artistique Nu\n✅ Intime", inline=False)
+    embed.add_field(name="✅ Exemples", value="```/generer_image style:portrait\n/generer_contexte```", inline=False)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="generer_contexte", description="Genere une image basee sur la conversation en cours")
 async def generate_contextual_image(interaction: discord.Interaction):
-    """G?n?re une image bas?e sur le contexte de la conversation"""
-    # DEFER IMM?DIATEMENT pour ?viter timeout
+    """Génère une image basée sur le contexte de la conversation"""
+    # DEFER IMMéDIATEMENT pour éviter timeout
     await interaction.response.defer()
     
     channel_id = interaction.channel_id
     
-    # V?rifier que le bot est actif
+    # Vérifier que le bot est actif
     if not bot_active_channels[channel_id]:
-        await interaction.edit_original_response(content="? Le bot n'est pas actif. Utilisez `/start`.")
+        await interaction.edit_original_response(content="à Le bot n'est pas actif. Utilisez `/start`.")
         return
     
-    # V?rifier canal NSFW (cette commande est NSFW par nature)
+    # Vérifier canal NSFW (cette commande est NSFW par nature)
     if hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
-        await interaction.edit_original_response(content="?? Cette commande est uniquement disponible dans les channels NSFW.")
+        await interaction.edit_original_response(content="✅ Cette commande est uniquement disponible dans les channels NSFW.")
         return
     
-    # V?rifier qu'il y a une conversation en cours
+    # Vérifier qu'il y a une conversation en cours
     history = conversation_history.get(channel_id, [])
     if len(history) < 3:
-        await interaction.edit_original_response(content="?? Pas assez de conversation pour g?n?rer une image contextuelle. Discutez un peu plus!")
+        await interaction.edit_original_response(content="✅ Pas assez de conversation pour générer une image contextuelle. Discutez un peu plus!")
         return
     
     personality_key = channel_personalities.get(channel_id, "femme_coquine")
@@ -1346,8 +1346,8 @@ async def generate_contextual_image(interaction: discord.Interaction):
     
     try:
         embed = discord.Embed(
-            title="?? G?n?ration Contextuelle",
-            description=f"Image de **{personality_data['name']}** bas?e sur votre conversation...\n? 15-40s...",
+            title="✅ Génération Contextuelle",
+            description=f"Image de **{personality_data['name']}** basée sur votre conversation...\nà 15-40s...",
             color=personality_data.get('color', 0x3498db)
         )
         await interaction.edit_original_response(embed=embed)
@@ -1363,36 +1363,36 @@ async def generate_contextual_image(interaction: discord.Interaction):
             else:
                 history_strings.append(str(msg))
         
-        # G?n?rer l'image contextuelle
+        # Génèrer l'image contextuelle
         image_url = await image_gen.generate_contextual_image(personality_data, history_strings)
         print(f"[IMAGE] Contextual generation result: {image_url if image_url else 'None'}", flush=True)
         
         if image_url:
             print(f"[IMAGE] Success! Displaying contextual image...", flush=True)
             embed = discord.Embed(
-                title=f"? {personality_data['name']} - Contexte",
-                description=f"**Bas? sur votre conversation**\n?? {len(history)} messages analys?s\n\n*Image g?n?r?e selon le contexte de vos ?changes*",
+                title=f"🎨 {personality_data['name']} - Contexte",
+                description=f"**Basé sur votre conversation**\n✅ {len(history)} messages analysés\n\n*Image générée selon le contexte de vos échanges*",
                 color=personality_data.get('color', 0x3498db)
             )
             embed.set_image(url=image_url)
-            embed.set_footer(text=f"Image contextuelle g?n?r?e")
+            embed.set_footer(text=f"Image contextuelle générée")
             await interaction.edit_original_response(embed=embed)
             print(f"[IMAGE] Contextual image displayed successfully!", flush=True)
         else:
             print(f"[IMAGE] Contextual generation failed - no URL returned", flush=True)
             embed = discord.Embed(
-                title="? Erreur de G?n?ration",
-                description="La g?n?ration d'image contextuelle a ?chou?.\n\n**Le service** peut ?tre temporairement indisponible.\n\n**R?essayez dans quelques instants.**",
+                title="❌ Erreur de Génération",
+                description="La génération d'image contextuelle a échoué.\n\n**Le service** peut être temporairement indisponible.\n\n**Réessayez dans quelques instants.**",
                 color=0xe74c3c
             )
-            embed.set_footer(text="Le service peut ?tre temporairement surcharg?")
+            embed.set_footer(text="Le service peut être temporairement surchargé")
             await interaction.edit_original_response(embed=embed)
     except Exception as e:
         print(f"[ERROR] Contextual image generation exception: {e}", flush=True)
         import traceback
         traceback.print_exc()
         try:
-            embed = discord.Embed(title="? Erreur", description=f"Erreur: {str(e)[:200]}", color=0xe74c3c)
+            embed = discord.Embed(title="❌ Erreur", description=f"Erreur: {str(e)[:200]}", color=0xe74c3c)
             await interaction.edit_original_response(embed=embed)
         except:
             pass
@@ -1400,17 +1400,17 @@ async def generate_contextual_image(interaction: discord.Interaction):
 # Gestionnaire d'erreurs pour les commandes slash
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
-    """G?re les erreurs des commandes slash"""
+    """Gére les erreurs des commandes slash"""
     if isinstance(error, app_commands.MissingPermissions):
         try:
             await interaction.response.send_message(
-                "?? Seuls les administrateurs peuvent utiliser cette commande.",
+                "✅ Seuls les administrateurs peuvent utiliser cette commande.",
                 ephemeral=True
             )
         except:
             try:
                 await interaction.followup.send(
-                    "?? Seuls les administrateurs peuvent utiliser cette commande.",
+                    "✅ Seuls les administrateurs peuvent utiliser cette commande.",
                     ephemeral=True
                 )
             except:
@@ -1418,23 +1418,23 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
     elif isinstance(error, app_commands.CheckFailure):
         try:
             await interaction.response.send_message(
-                "? Vous n'avez pas la permission d'utiliser cette commande.",
+                "à Vous n'avez pas la permission d'utiliser cette commande.",
                 ephemeral=True
             )
         except:
             pass
     else:
-        print(f"? Erreur commande slash: {type(error).__name__}: {error}")
+        print(f"❌ Erreur commande slash: {type(error).__name__}: {error}")
         try:
             await interaction.response.send_message(
-                "? Une erreur s'est produite. R?essayez.",
+                "à Une erreur s'est produite. Réessayez.",
                 ephemeral=True
             )
         except:
             pass
 
 async def health_check(request):
-    """Endpoint de sant? pour le Web Service"""
+    """Endpoint de santà pour le Web Service"""
     active_channels = len([c for c in bot_active_channels.values() if c])
     return web.json_response({
         'status': 'online',
@@ -1461,19 +1461,19 @@ async def root_handler(request):
     </head>
     <body>
         <div class="status">
-            <h1>?? Bot Discord IA - En ligne</h1>
+            <h1>✅ Bot Discord IA - En ligne</h1>
             <p>Le bot fonctionne correctement</p>
         </div>
         <div class="info">
             <h2>Informations</h2>
-            <p><strong>Statut:</strong> ? Connect?</p>
-            <p><strong>Mod?le IA:</strong> """ + AI_MODEL + """</p>
-            <p><strong>Personnalit?s:</strong> """ + str(len(PERSONALITIES)) + """</p>
+            <p><strong>Statut:</strong> à Connecté</p>
+            <p><strong>Modèle IA:</strong> """ + AI_MODEL + """</p>
+            <p><strong>Personnalités:</strong> """ + str(len(PERSONALITIES)) + """</p>
         </div>
         <div class="info">
             <h2>Commandes Discord</h2>
             <p>/start - Active le bot (admin)</p>
-            <p>/personality - Change la personnalit?</p>
+            <p>/personality - Change la personnalité</p>
             <p>/help - Affiche l'aide</p>
         </div>
     </body>
@@ -1482,7 +1482,7 @@ async def root_handler(request):
     return web.Response(text=html, content_type='text/html')
 
 async def start_web_server():
-    """D?marre le serveur web pour Render"""
+    """Démarre le serveur web pour Render"""
     app = web.Application()
     app.router.add_get('/', root_handler)
     app.router.add_get('/health', health_check)
@@ -1495,22 +1495,22 @@ async def start_web_server():
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
     
-    print(f"?? Serveur web d?marr? sur le port {port}")
-    print(f"?? Health check disponible sur /health")
+    print(f"✅ Serveur web démarrà sur le port {port}")
+    print(f"✅ Health check disponible sur /health")
 
 async def start_bot():
-    """D?marre le bot Discord"""
-    print("?? D?marrage du bot Discord IA avec Groq...")
-    print(f"?? Mod?le: {AI_MODEL}")
-    print(f"?? Personnalit?s: {len(PERSONALITIES)}")
-    print("? Commandes Slash activ?es!")
+    """Démarre le bot Discord"""
+    print("✅ Démarrage du bot Discord IA avec Groq...")
+    print(f"✅ Modèle: {AI_MODEL}")
+    print(f"✅ Personnalités: {len(PERSONALITIES)}")
+    print("à Commandes Slash activées!")
     
     try:
         await bot.start(DISCORD_TOKEN)
     except discord.LoginFailure:
-        print("? ERREUR: Token Discord invalide")
+        print("à ERREUR: Token Discord invalide")
     except Exception as e:
-        print(f"? ERREUR: {e}")
+        print(f"à ERREUR: {e}")
 
 async def main_async():
     """Fonction principale asynchrone"""
@@ -1520,24 +1520,24 @@ async def main_async():
     )
 
 def main():
-    """Fonction principale pour d?marrer le bot"""
+    """Fonction principale pour démarrer le bot"""
     if not DISCORD_TOKEN:
-        print("? ERREUR: DISCORD_TOKEN non trouv?")
-        print("En local: Cr?ez un fichier .env avec votre token Discord")
+        print("à ERREUR: DISCORD_TOKEN non trouvé")
+        print("En local: Créez un fichier .env avec votre token Discord")
         print("Sur Render: Configurez DISCORD_TOKEN dans le Dashboard")
         return
     
     if not GROQ_API_KEY:
-        print("? ERREUR: GROQ_API_KEY non trouv?")
+        print("à ERREUR: GROQ_API_KEY non trouvé")
         print("En local: Ajoutez GROQ_API_KEY dans le fichier .env")
         print("Sur Render: Configurez GROQ_API_KEY dans le Dashboard")
-        print("Obtenez votre cl? API gratuite sur https://console.groq.com")
+        print("Obtenez votre clé API gratuite sur https://console.groq.com")
         return
     
     try:
         asyncio.run(main_async())
     except KeyboardInterrupt:
-        print("\n?? Arr?t du bot...")
+        print("\n✅ Arrét du bot...")
 
 if __name__ == "__main__":
     main()
