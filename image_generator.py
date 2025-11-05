@@ -595,112 +595,219 @@ class ImageGenerator:
         print(f"[IMAGE] Hugging Face not implemented yet", flush=True)
         return None
     
+    def _analyze_bot_actions(self, conversation_history):
+        """
+        Analyse les ACTIONS du bot dans la conversation pour générer l'image correspondante
+        
+        Retourne: dict avec 'action', 'location', 'clothing', 'pose', 'activity'
+        """
+        # Extraire les 10 derniers messages DU BOT seulement
+        bot_messages = []
+        for msg in conversation_history[-15:]:
+            if isinstance(msg, dict):
+                # Extraire juste le contenu du message, en retirant le nom de l'utilisateur
+                content = msg.get('content', '')
+                role = msg.get('role', '')
+                if role == 'assistant':  # Messages du bot seulement
+                    bot_messages.append(content.lower())
+            else:
+                # Si c'est une string, vérifier si ça ne commence pas par un nom d'utilisateur
+                msg_str = str(msg).lower()
+                if not any(msg_str.startswith(prefix) for prefix in ['user:', 'assistant:']):
+                    bot_messages.append(msg_str)
+        
+        # Analyser les 5 derniers messages du bot
+        recent_bot_text = " ".join(bot_messages[-5:])
+        
+        print(f"[IMAGE] Analyzing BOT actions from last 5 messages...", flush=True)
+        print(f"[IMAGE] Bot text analyzed: {recent_bot_text[:150]}...", flush=True)
+        
+        detected = {
+            'action': None,
+            'location': None,
+            'clothing': None,
+            'pose': None,
+            'activity': None
+        }
+        
+        # ACTIONS QUOTIDIENNES
+        if any(word in recent_bot_text for word in ["cuisine", "cuisin", "cooking", "prépare à manger", "fais à manger"]):
+            detected['action'] = "cooking in kitchen"
+            detected['location'] = "kitchen"
+            detected['activity'] = "cooking, holding cooking utensils, preparing food"
+            
+        elif any(word in recent_bot_text for word in ["dors", "dort", "sommeil", "sleeping", "tired", "fatigue", "au lit"]):
+            detected['action'] = "sleeping"
+            detected['location'] = "bedroom, in bed"
+            detected['activity'] = "lying in bed, sleeping, relaxed pose"
+            
+        elif any(word in recent_bot_text for word in ["douche", "shower", "bain", "bath", "me lave"]):
+            detected['action'] = "showering"
+            detected['location'] = "bathroom, shower"
+            detected['activity'] = "in shower, wet skin, water droplets"
+            
+        elif any(word in recent_bot_text for word in ["travail", "working", "bureau", "office", "ordinateur", "computer"]):
+            detected['action'] = "working"
+            detected['location'] = "office, at desk"
+            detected['activity'] = "working at desk, using computer"
+            
+        elif any(word in recent_bot_text for word in ["lit", "bed", "couché", "allongé", "lying"]):
+            detected['action'] = "lying down"
+            detected['location'] = "bedroom, on bed"
+            detected['activity'] = "lying on bed, relaxed"
+            
+        elif any(word in recent_bot_text for word in ["canapé", "sofa", "couch", "salon", "living room"]):
+            detected['action'] = "relaxing"
+            detected['location'] = "living room, on couch"
+            detected['activity'] = "sitting on couch, relaxed"
+            
+        elif any(word in recent_bot_text for word in ["dehors", "outside", "jardin", "garden", "parc", "park"]):
+            detected['action'] = "outside"
+            detected['location'] = "outdoor, nature, garden"
+            detected['activity'] = "standing outside, natural setting"
+            
+        elif any(word in recent_bot_text for word in ["sport", "exercise", "gym", "entrainement"]):
+            detected['action'] = "exercising"
+            detected['location'] = "gym, workout area"
+            detected['activity'] = "exercising, workout clothes, athletic pose"
+            
+        elif any(word in recent_bot_text for word in ["mange", "eating", "repas", "meal", "dîne", "déjeune"]):
+            detected['action'] = "eating"
+            detected['location'] = "dining area, at table"
+            detected['activity'] = "eating, at table"
+            
+        elif any(word in recent_bot_text for word in ["lis", "reading", "livre", "book"]):
+            detected['action'] = "reading"
+            detected['location'] = "comfortable setting"
+            detected['activity'] = "reading a book, relaxed"
+        
+        # VÊTEMENTS mentionnés
+        if any(word in recent_bot_text for word in ["pyjama", "pajama", "sleepwear"]):
+            detected['clothing'] = "wearing pajamas"
+        elif any(word in recent_bot_text for word in ["lingerie", "sous-vêtement", "underwear"]):
+            detected['clothing'] = "wearing lingerie"
+        elif any(word in recent_bot_text for word in ["robe", "dress"]):
+            detected['clothing'] = "wearing dress"
+        elif any(word in recent_bot_text for word in ["nu", "nue", "naked", "déshabillé"]):
+            detected['clothing'] = "nude, no clothing"
+        elif any(word in recent_bot_text for word in ["serviette", "towel"]):
+            detected['clothing'] = "wrapped in towel"
+        elif any(word in recent_bot_text for word in ["sport", "gym", "exercise"]):
+            detected['clothing'] = "wearing workout clothes"
+        
+        # POSES spécifiques
+        if any(word in recent_bot_text for word in ["assis", "sitting", "seated"]):
+            detected['pose'] = "sitting"
+        elif any(word in recent_bot_text for word in ["debout", "standing"]):
+            detected['pose'] = "standing"
+        elif any(word in recent_bot_text for word in ["allongé", "lying", "couché"]):
+            detected['pose'] = "lying down"
+        elif any(word in recent_bot_text for word in ["penché", "leaning", "bent"]):
+            detected['pose'] = "leaning forward"
+        
+        return detected
+    
     async def generate_contextual_image(self, personality_data, conversation_history):
         """
-        G?n?re une image bas?e sur le contexte de la conversation
+        G?n?re une image DYNAMIQUE bas?e sur l'ACTION du bot dans la conversation
+        L'image reflète ce que le bot EST EN TRAIN DE FAIRE
         
         Args:
-            personality_data: Dictionnaire avec name, genre, age, description
+            personality_data: Dictionnaire avec name, genre, age, description, visual
             conversation_history: Liste des derniers messages de conversation
         
         Returns:
             URL de l'image ou None si erreur
         """
-        # ANALYSE AVANC?E : Analyser TOUS les messages r?cents
-        conversation_text = " ".join(conversation_history[-15:]).lower()  # Plus de contexte
         
-        print(f"[IMAGE] Analyzing {len(conversation_history)} messages for detailed context...", flush=True)
+        print(f"[IMAGE] Analyzing {len(conversation_history)} messages for BOT ACTIONS...", flush=True)
         
-        # SYST?ME DE SCORING pour d?tecter pr?cis?ment le contexte
-        context_keywords = []
-        context_detected = []
+        # ANALYSER LES ACTIONS DU BOT
+        bot_actions = self._analyze_bot_actions(conversation_history)
         
-        # 1. NUE/D?SHABILL? (priorit? maximale si d?tect?)
-        nude_words = ["nue", "nu", "nud", "d?shabill", "sans v?tement", "corps nu", "montre tout", "voir tout", "naked", "bare", "strip", "d?nu"]
-        if any(word in conversation_text for word in nude_words):
-            context_keywords.append("nude, bare skin, natural body, no clothing, fully exposed")
-            context_detected.append("NUDE")
-        
-        # 2. LIEU/SETTING (important pour ambiance)
-        if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed", "matelas", "oreiller", "draps"]):
-            context_keywords.append("bedroom setting, on bed, intimate room")
-            context_detected.append("BEDROOM")
-        elif any(word in conversation_text for word in ["douche", "salle de bain", "baignoire", "shower", "bathroom"]):
-            context_keywords.append("bathroom, shower, wet skin, water")
-            context_detected.append("BATHROOM")
-        elif any(word in conversation_text for word in ["plage", "beach", "piscine", "pool", "eau"]):
-            context_keywords.append("beach setting, by water, outdoor")
-            context_detected.append("WATER")
-        
-        # 3. V?TEMENTS/LINGERIE
-        if any(word in conversation_text for word in ["lingerie", "sous-v?tement", "underwear", "soutien-gorge", "culotte", "string"]):
-            context_keywords.append("wearing sexy lingerie, revealing underwear, intimate clothing")
-            context_detected.append("LINGERIE")
-        elif any(word in conversation_text for word in ["robe", "jupe", "d?collet?", "moulant", "transparent", "dress"]):
-            context_keywords.append("revealing outfit, form-fitting clothes")
-            context_detected.append("CLOTHING")
-        
-        # 4. POSITIONS/POSES (tr?s important pour l'image)
-        if any(word in conversation_text for word in ["position", "pose", "allong?", "?cart?", "ouvre", "penche", "cambre", "? quatre pattes"]):
-            context_keywords.append("provocative seductive pose, suggestive position")
-            context_detected.append("POSE")
-        elif any(word in conversation_text for word in ["assis", "debout", "accroupi", "agenouill?"]):
-            context_keywords.append("specific position, deliberate stance")
-            context_detected.append("STANCE")
-        
-        # 5. ATMOSPH?RE/?MOTION
-        if any(word in conversation_text for word in ["plaisir", "jouissance", "extase", "g?mir", "soupir"]):
-            context_keywords.append("pleasure expression, ecstatic face, sensual emotion")
-            context_detected.append("PLEASURE")
-        elif any(word in conversation_text for word in ["sexy", "hot", "sensuel", "?rotique", "excit?", "chaud"]):
-            context_keywords.append("sexy, seductive, alluring, provocative")
-            context_detected.append("SEXY")
-        elif any(word in conversation_text for word in ["envie", "d?sir", "veux", "besoin"]):
-            context_keywords.append("desire, wanting, passionate expression")
-            context_detected.append("DESIRE")
-        
-        # 6. CONTACT PHYSIQUE
-        if any(word in conversation_text for word in ["touche", "caresse", "embrasse", "l?che", "suce", "frotte", "masse"]):
-            context_keywords.append("intimate touching, sensual physical contact")
-            context_detected.append("TOUCH")
-        
-        # 7. PARTIES DU CORPS (focus sp?cifique)
-        body_focus = []
-        if any(word in conversation_text for word in ["sein", "poitrine", "t?ton"]):
-            body_focus.append("chest focus")
-        if any(word in conversation_text for word in ["fesse", "cul", "derri?re"]):
-            body_focus.append("rear focus")
-        if any(word in conversation_text for word in ["jambe", "cuisse", "hanche"]):
-            body_focus.append("legs focus")
-        if body_focus:
-            context_keywords.append(", ".join(body_focus) + ", body curves emphasis")
-            context_detected.append("BODY_FOCUS")
-        
-        # 8. ACTIONS EXPLICITES
-        if any(word in conversation_text for word in ["branle", "masturbe", "p?n?tre", "baise", "fuck"]):
-            context_keywords.append("explicit intimate activity, sexual act")
-            context_detected.append("EXPLICIT")
-        
-        # Construire le prompt contextuel intelligent
+        # Récupérer les traits visuels de la personnalité (pour garder le visage cohérent)
         name = personality_data.get('name', 'Person')
         genre = personality_data.get('genre', 'Neutre')
         age_num = ''.join(filter(str.isdigit, personality_data.get('age', '25')))
-        visual_traits = personality_data.get('visual', '')
+        visual_traits = personality_data.get('visual', '')  # TRAITS VISUELS PERMANENTS
         
-        base_prompt = self._build_base_prompt(genre, age_num, personality_data.get('description', ''), visual_traits)
+        print(f"[IMAGE] Bot actions detected: {bot_actions}", flush=True)
         
-        if context_keywords:
-            # Limiter ? 4 ?l?ments pour ne pas surcharger le prompt
-            context_str = ", ".join(context_keywords[:4])
-            full_prompt = f"{base_prompt}, {context_str}, high quality, detailed"
-            print(f"[IMAGE] Context detected: {', '.join(context_detected)}", flush=True)
-            print(f"[IMAGE] Keywords: {context_str[:100]}...", flush=True)
+        # CONSTRUIRE LE PROMPT DYNAMIQUE
+        # Format: {traits visuels personnalité} + {action/activité} + {lieu} + {vêtements} + {pose}
+        
+        prompt_parts = []
+        
+        # 1. TOUJOURS inclure les traits visuels (pour garder le visage cohérent)
+        if visual_traits:
+            prompt_parts.append(visual_traits)
         else:
-            # Par d?faut neutre
-            full_prompt = f"{base_prompt}, natural pose, attractive"
-            print(f"[IMAGE] No strong context, using neutral default", flush=True)
+            # Fallback si pas de traits visuels
+            gender_map = {
+                "Femme": "beautiful woman",
+                "Homme": "handsome man",
+                "Trans": "beautiful person",
+                "Non-binaire": "attractive person",
+                "Neutre": "attractive person"
+            }
+            base_desc = gender_map.get(genre, "attractive person")
+            prompt_parts.append(f"{base_desc}, {age_num} years old")
         
-        print(f"[IMAGE] Full prompt: {full_prompt[:180]}...", flush=True)
+        # 2. AJOUTER L'ACTIVITÉ (ce que le bot FAIT)
+        if bot_actions['activity']:
+            prompt_parts.append(bot_actions['activity'])
+            print(f"[IMAGE] Activity added: {bot_actions['activity']}", flush=True)
+        
+        # 3. AJOUTER LE LIEU
+        if bot_actions['location']:
+            prompt_parts.append(bot_actions['location'])
+            print(f"[IMAGE] Location added: {bot_actions['location']}", flush=True)
+        
+        # 4. AJOUTER LES VÊTEMENTS
+        if bot_actions['clothing']:
+            prompt_parts.append(bot_actions['clothing'])
+            print(f"[IMAGE] Clothing added: {bot_actions['clothing']}", flush=True)
+        
+        # 5. AJOUTER LA POSE
+        if bot_actions['pose']:
+            prompt_parts.append(bot_actions['pose'])
+            print(f"[IMAGE] Pose added: {bot_actions['pose']}", flush=True)
+        
+        # SI AUCUNE ACTION DÉTECTÉE, analyser le contexte NSFW général (fallback)
+        if not any([bot_actions['activity'], bot_actions['location'], bot_actions['action']]):
+            print(f"[IMAGE] No specific action detected, analyzing NSFW context...", flush=True)
+            
+            # Analyser tout le texte pour contexte NSFW
+            conversation_text = " ".join(conversation_history[-10:]).lower()
+            
+            nsfw_context = []
+            
+            # Contexte NSFW si présent
+            if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "excité", "désire"]):
+                nsfw_context.append("sexy, seductive pose")
+            
+            if any(word in conversation_text for word in ["nu", "nue", "naked", "déshabillé"]):
+                nsfw_context.append("nude, bare skin")
+            
+            if any(word in conversation_text for word in ["lit", "bed", "chambre"]):
+                nsfw_context.append("in bedroom, on bed")
+            
+            if any(word in conversation_text for word in ["lingerie", "underwear"]):
+                nsfw_context.append("wearing lingerie")
+            
+            if nsfw_context:
+                prompt_parts.extend(nsfw_context)
+                print(f"[IMAGE] NSFW context added: {', '.join(nsfw_context)}", flush=True)
+            else:
+                # Vraiment aucun contexte → portrait simple
+                prompt_parts.append("natural pose, attractive, professional photography")
+                print(f"[IMAGE] No context found, using neutral portrait", flush=True)
+        
+        # Construire le prompt final
+        full_prompt = ", ".join(prompt_parts)
+        
+        print(f"[IMAGE] FINAL DYNAMIC PROMPT: {full_prompt}", flush=True)
+        print(f"[IMAGE] This image will show: {name} doing: {bot_actions.get('action', 'natural pose')}", flush=True)
         
         # G?n?rer avec le syst?me MULTI-API (5 tentatives)
         max_retries = 5
