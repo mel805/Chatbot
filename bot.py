@@ -895,17 +895,46 @@ class GenerateImageButton(ui.Button):
             image_url = await image_gen.generate_contextual_image(personality_data, history)
             
             if image_url:
-                print(f"[IMAGE BUTTON] Success! Displaying image...", flush=True)
-                embed = discord.Embed(
-                    title=f"🎨 {personality_data['name']}",
-                    description=f"**Basé sur notre conversation**\n✅ {len(history)} messages analysés",
-                    color=personality_data.get('color', 0x3498db)
-                )
-                embed.set_image(url=image_url)
-                embed.set_footer(text=f"Image contextuelle générée")
+                print(f"[IMAGE BUTTON] Success! Downloading image to upload to Discord...", flush=True)
                 
-                # Envoyer comme nouveau message
-                await interaction.channel.send(embed=embed)
+                # Télécharger l'image depuis l'URL
+                try:
+                    import io
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(image_url) as resp:
+                            if resp.status == 200:
+                                image_bytes = await resp.read()
+                                print(f"[IMAGE BUTTON] Downloaded {len(image_bytes)} bytes", flush=True)
+                                
+                                # Créer un fichier Discord à partir des bytes
+                                image_file = discord.File(io.BytesIO(image_bytes), filename=f"{personality_data['name']}_button.png")
+                                
+                                # Embed sans image URL (l'image sera attachée)
+                                embed = discord.Embed(
+                                    title=f"🎨 {personality_data['name']}",
+                                    description=f"**Basé sur notre conversation**\n✅ {len(history)} messages analysés",
+                                    color=personality_data.get('color', 0x3498db)
+                                )
+                                embed.set_image(url=f"attachment://{personality_data['name']}_button.png")
+                                embed.set_footer(text=f"Image contextuelle générée")
+                                
+                                # Envoyer comme nouveau message avec fichier attaché
+                                await interaction.channel.send(embed=embed, file=image_file)
+                                print(f"[IMAGE BUTTON] Image uploaded and displayed successfully!", flush=True)
+                            else:
+                                raise Exception(f"Failed to download image: HTTP {resp.status}")
+                except Exception as download_error:
+                    print(f"[ERROR] Failed to download/upload button image: {download_error}", flush=True)
+                    # Fallback: essayer avec l'URL directe
+                    embed = discord.Embed(
+                        title=f"🎨 {personality_data['name']}",
+                        description=f"**Basé sur notre conversation**\n✅ {len(history)} messages analysés",
+                        color=personality_data.get('color', 0x3498db)
+                    )
+                    embed.set_image(url=image_url)
+                    embed.set_footer(text=f"Image contextuelle générée")
+                    await interaction.channel.send(embed=embed)
+                    print(f"[IMAGE BUTTON] Fallback: Image displayed with URL", flush=True)
             else:
                 print(f"[IMAGE BUTTON] Generation failed", flush=True)
                 embed = discord.Embed(
@@ -1275,16 +1304,46 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
         print(f"[IMAGE] Generation result: {image_url if image_url else 'None'}", flush=True)
         
         if image_url:
-            print(f"[IMAGE] Success! Displaying image...", flush=True)
-            embed = discord.Embed(
-                title=f"🎨 {personality_data['name']}",
-                description=f"**Style:** {style.replace('_', ' ').title()}\n**Genre:** {personality_data.get('genre', 'N/A')}\n**ge:** {personality_data.get('age', 'N/A')}",
-                color=personality_data.get('color', 0x3498db)
-            )
-            embed.set_image(url=image_url)
-            embed.set_footer(text=f"Image générée")
-            await interaction.edit_original_response(embed=embed)
-            print(f"[IMAGE] Image displayed successfully!", flush=True)
+            print(f"[IMAGE] Success! Downloading image to upload to Discord...", flush=True)
+            
+            # Télécharger l'image depuis l'URL
+            try:
+                import io
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(image_url) as resp:
+                        if resp.status == 200:
+                            image_bytes = await resp.read()
+                            print(f"[IMAGE] Downloaded {len(image_bytes)} bytes", flush=True)
+                            
+                            # Créer un fichier Discord à partir des bytes
+                            image_file = discord.File(io.BytesIO(image_bytes), filename=f"{personality_data['name']}_{style}.png")
+                            
+                            # Embed sans image URL (l'image sera attachée)
+                            embed = discord.Embed(
+                                title=f"🎨 {personality_data['name']}",
+                                description=f"**Style:** {style.replace('_', ' ').title()}\n**Genre:** {personality_data.get('genre', 'N/A')}\n**ge:** {personality_data.get('age', 'N/A')}",
+                                color=personality_data.get('color', 0x3498db)
+                            )
+                            embed.set_image(url=f"attachment://{personality_data['name']}_{style}.png")
+                            embed.set_footer(text=f"Image générée")
+                            
+                            # Envoyer avec le fichier attaché
+                            await interaction.edit_original_response(embed=embed, attachments=[image_file])
+                            print(f"[IMAGE] Image uploaded and displayed successfully!", flush=True)
+                        else:
+                            raise Exception(f"Failed to download image: HTTP {resp.status}")
+            except Exception as download_error:
+                print(f"[ERROR] Failed to download/upload image: {download_error}", flush=True)
+                # Fallback: essayer avec l'URL directe
+                embed = discord.Embed(
+                    title=f"🎨 {personality_data['name']}",
+                    description=f"**Style:** {style.replace('_', ' ').title()}\n**Genre:** {personality_data.get('genre', 'N/A')}\n**ge:** {personality_data.get('age', 'N/A')}",
+                    color=personality_data.get('color', 0x3498db)
+                )
+                embed.set_image(url=image_url)
+                embed.set_footer(text=f"Image générée")
+                await interaction.edit_original_response(embed=embed)
+                print(f"[IMAGE] Fallback: Image displayed with URL", flush=True)
         else:
             print(f"[IMAGE] Generation failed - no URL returned", flush=True)
             embed = discord.Embed(
@@ -1362,16 +1421,46 @@ async def generate_contextual_image(interaction: discord.Interaction):
         print(f"[IMAGE] Contextual generation result: {image_url if image_url else 'None'}", flush=True)
         
         if image_url:
-            print(f"[IMAGE] Success! Displaying contextual image...", flush=True)
-            embed = discord.Embed(
-                title=f"🎨 {personality_data['name']} - Contexte",
-                description=f"**Basé sur votre conversation**\n✅ {len(history)} messages analysés\n\n*Image générée selon le contexte de vos échanges*",
-                color=personality_data.get('color', 0x3498db)
-            )
-            embed.set_image(url=image_url)
-            embed.set_footer(text=f"Image contextuelle générée")
-            await interaction.edit_original_response(embed=embed)
-            print(f"[IMAGE] Contextual image displayed successfully!", flush=True)
+            print(f"[IMAGE] Success! Downloading contextual image to upload to Discord...", flush=True)
+            
+            # Télécharger l'image depuis l'URL
+            try:
+                import io
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(image_url) as resp:
+                        if resp.status == 200:
+                            image_bytes = await resp.read()
+                            print(f"[IMAGE] Downloaded {len(image_bytes)} bytes", flush=True)
+                            
+                            # Créer un fichier Discord à partir des bytes
+                            image_file = discord.File(io.BytesIO(image_bytes), filename=f"{personality_data['name']}_context.png")
+                            
+                            # Embed sans image URL (l'image sera attachée)
+                            embed = discord.Embed(
+                                title=f"🎨 {personality_data['name']} - Contexte",
+                                description=f"**Basé sur votre conversation**\n✅ {len(history)} messages analysés\n\n*Image générée selon le contexte de vos échanges*",
+                                color=personality_data.get('color', 0x3498db)
+                            )
+                            embed.set_image(url=f"attachment://{personality_data['name']}_context.png")
+                            embed.set_footer(text=f"Image contextuelle générée")
+                            
+                            # Envoyer avec le fichier attaché
+                            await interaction.edit_original_response(embed=embed, attachments=[image_file])
+                            print(f"[IMAGE] Contextual image uploaded and displayed successfully!", flush=True)
+                        else:
+                            raise Exception(f"Failed to download image: HTTP {resp.status}")
+            except Exception as download_error:
+                print(f"[ERROR] Failed to download/upload contextual image: {download_error}", flush=True)
+                # Fallback: essayer avec l'URL directe
+                embed = discord.Embed(
+                    title=f"🎨 {personality_data['name']} - Contexte",
+                    description=f"**Basé sur votre conversation**\n✅ {len(history)} messages analysés\n\n*Image générée selon le contexte de vos échanges*",
+                    color=personality_data.get('color', 0x3498db)
+                )
+                embed.set_image(url=image_url)
+                embed.set_footer(text=f"Image contextuelle générée")
+                await interaction.edit_original_response(embed=embed)
+                print(f"[IMAGE] Fallback: Contextual image displayed with URL", flush=True)
         else:
             print(f"[IMAGE] Contextual generation failed - no URL returned", flush=True)
             embed = discord.Embed(
