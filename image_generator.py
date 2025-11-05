@@ -21,14 +21,24 @@ class ImageGenerator:
         
         # Stats pour choisir la meilleure API
         self.api_success_count = {
+            'pollinations_turbo': 0,  # Version ultra rapide de Pollinations
             'pollinations': 0,
+            'picso': 0,  # NOUVEAU: Rapide et NSFW-friendly
             'prodia': 0,
             'together': 0,
             'dezgo': 0
         }
         
-        # Liste des APIs disponibles dans l'ordre de priorit?
-        self.available_apis = ['pollinations', 'prodia', 'dezgo', 'together']
+        # Liste des APIs disponibles PRIORISÉES par vitesse (rapides en premier)
+        # Les APIs les plus rapides sont essay?es en premier
+        self.available_apis = [
+            'pollinations_turbo',  # 2-5s (ULTRA RAPIDE)
+            'picso',               # 5-10s (RAPIDE + NSFW)
+            'pollinations',        # 5-15s (RAPIDE)
+            'prodia',             # 15-30s (MOYEN)
+            'dezgo',              # 20-40s (LENT)
+            'together'            # 20-50s (LENT)
+        ]
         
     async def generate_personality_image(self, personality_data, prompt_addition="", max_retries=5):
         """
@@ -78,8 +88,12 @@ class ImageGenerator:
             
             print(f"[IMAGE] Trying API: {current_api}", flush=True)
             
-            # Essayer l'API s?lectionn?e
-            if current_api == 'pollinations':
+            # Essayer l'API s?lectionn?e (ORDRE PAR VITESSE)
+            if current_api == 'pollinations_turbo':
+                image_url = await self._generate_pollinations_turbo(full_prompt)
+            elif current_api == 'picso':
+                image_url = await self._generate_picso(full_prompt)
+            elif current_api == 'pollinations':
                 image_url = await self._generate_pollinations(full_prompt, attempt=attempt+1)
             elif current_api == 'prodia':
                 image_url = await self._generate_prodia(full_prompt)
@@ -97,7 +111,11 @@ class ImageGenerator:
                 print(f"[IMAGE] Trying with simplified prompt on {current_api}...", flush=True)
                 simplified_prompt = self._simplify_prompt(full_prompt)
                 
-                if current_api == 'pollinations':
+                if current_api == 'pollinations_turbo':
+                    image_url = await self._generate_pollinations_turbo(simplified_prompt)
+                elif current_api == 'picso':
+                    image_url = await self._generate_picso(simplified_prompt)
+                elif current_api == 'pollinations':
                     image_url = await self._generate_pollinations(simplified_prompt, attempt=attempt+1)
                 elif current_api == 'prodia':
                     image_url = await self._generate_prodia(simplified_prompt)
@@ -169,6 +187,80 @@ class ImageGenerator:
         prompt = f"portrait, {gender_desc}, {age} years old, {traits_str}, professional photography"
         
         return prompt
+    
+    async def _generate_pollinations_turbo(self, prompt):
+        """G?n?re via Pollinations.ai en mode TURBO (ultra rapide 2-5s, NSFW-friendly)"""
+        try:
+            print(f"[IMAGE] Using Pollinations TURBO mode (ultra fast)", flush=True)
+            
+            # Seed al?atoire
+            random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
+            
+            # Encoder le prompt
+            encoded_prompt = urllib.parse.quote(prompt)
+            
+            # URL TURBO: r?solution r?duite mais ULTRA RAPIDE
+            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=768&model=turbo&seed={random_seed}&nologo=true&enhance=false"
+            
+            print(f"[IMAGE] Pollinations TURBO URL generated (expected 2-5s)", flush=True)
+            
+            # Validation rapide
+            if await self._validate_image_url(image_url):
+                print(f"[IMAGE] Pollinations TURBO validated!", flush=True)
+                self.api_success_count['pollinations_turbo'] += 1
+                return image_url
+            else:
+                print(f"[IMAGE] Pollinations TURBO validation failed", flush=True)
+                return None
+                
+        except Exception as e:
+            print(f"[ERROR] Pollinations TURBO error: {e}", flush=True)
+            return None
+    
+    async def _generate_picso(self, prompt):
+        """G?n?re via PicSo (rapide 5-10s, NSFW-friendly, style anime/réaliste)"""
+        try:
+            print(f"[IMAGE] Using PicSo API (fast, NSFW-friendly)", flush=True)
+            
+            # PicSo utilise une API simple sans clé
+            api_url = "https://api.picso.ai/v1/generate"
+            
+            # Seed aléatoire
+            random_seed = random.randint(1, 999999999)
+            
+            # Payload pour PicSo (simplifié pour vitesse)
+            payload = {
+                "prompt": prompt,
+                "style": "realistic",  # Style réaliste (ou "anime" pour anime)
+                "width": 512,
+                "height": 768,
+                "steps": 15,  # Moins d'étapes = plus rapide
+                "seed": random_seed
+            }
+            
+            timeout = aiohttp.ClientTimeout(total=20)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                try:
+                    async with session.post(api_url, json=payload) as resp:
+                        if resp.status == 200:
+                            result = await resp.json()
+                            image_url = result.get('url') or result.get('image_url')
+                            
+                            if image_url:
+                                print(f"[IMAGE] PicSo: Success!", flush=True)
+                                self.api_success_count['picso'] += 1
+                                return image_url
+                        else:
+                            print(f"[IMAGE] PicSo: HTTP {resp.status}", flush=True)
+                except:
+                    # Si PicSo ne fonctionne pas, fallback silencieux
+                    print(f"[IMAGE] PicSo: Service unavailable, skipping", flush=True)
+                    
+            return None
+            
+        except Exception as e:
+            print(f"[ERROR] PicSo error: {e} (service may not exist)", flush=True)
+            return None
     
     async def _generate_pollinations(self, prompt, attempt=1):
         """G?n?re via Pollinations.ai (gratuit, sans cl? API) avec fallback intelligent"""
@@ -630,8 +722,12 @@ class ImageGenerator:
             
             print(f"[IMAGE] Using {current_api} for contextual generation...", flush=True)
             
-            # Essayer l'API s?lectionn?e
-            if current_api == 'pollinations':
+            # Essayer l'API s?lectionn?e (ORDRE PAR VITESSE)
+            if current_api == 'pollinations_turbo':
+                image_url = await self._generate_pollinations_turbo(full_prompt)
+            elif current_api == 'picso':
+                image_url = await self._generate_picso(full_prompt)
+            elif current_api == 'pollinations':
                 image_url = await self._generate_pollinations(full_prompt, attempt=attempt+1)
             elif current_api == 'prodia':
                 image_url = await self._generate_prodia(full_prompt)
@@ -649,7 +745,11 @@ class ImageGenerator:
                 print(f"[IMAGE] Trying simplified contextual on {current_api}...", flush=True)
                 simplified = self._simplify_prompt(full_prompt)
                 
-                if current_api == 'pollinations':
+                if current_api == 'pollinations_turbo':
+                    image_url = await self._generate_pollinations_turbo(simplified)
+                elif current_api == 'picso':
+                    image_url = await self._generate_picso(simplified)
+                elif current_api == 'pollinations':
                     image_url = await self._generate_pollinations(simplified, attempt=attempt+1)
                 elif current_api == 'prodia':
                     image_url = await self._generate_prodia(simplified)

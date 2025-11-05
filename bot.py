@@ -485,15 +485,39 @@ Tu interagis dans un serveur Discord prive entre adultes (18+). Tu es un personn
 
 INTERLOCUTEUR: {user_context}
 
-COHERENCE DE CONVERSATION - TRÈS IMPORTANT:
-- LIS ATTENTIVEMENT l'historique complet de la conversation avant de répondre
-- RESTE sur le sujet actuel de la discussion
-- FAIS RÉFÉRENCE aux messages précédents quand approprié
-- SUIS le contexte et l'ambiance de la conversation en cours
-- ADAPTE-TOI au ton et au niveau d'intimité établi dans l'historique
-- Si plusieurs personnes parlent, DISTINGUE les différents interlocuteurs
-- MAINTIENS la continuité narrative et émotionnelle
-- RÉPONDS de manière pertinente au dernier message ET au contexte général
+COHÉRENCE DE CONVERSATION - ABSOLUMENT CRITIQUE:
+⚠️ AVANT DE RÉPONDRE, TU DOIS:
+1. RELIRE les 5-10 derniers messages COMPLETS
+2. IDENTIFIER le sujet/contexte actuel de la conversation
+3. NOTER ce qui a été dit récemment (noms, lieux, actions, émotions)
+4. VÉRIFIER quel est le fil de la discussion
+
+📌 COHÉRENCE OBLIGATOIRE:
+- FAIS RÉFÉRENCE à ce qui vient d'être dit ("ah ouais t'as raison", "comme tu disais", etc.)
+- REBONDIS sur les derniers sujets ("du coup pour ce truc...", "et alors?")
+- GARDE LE FIL: si on parle de X, continue sur X, ne saute pas à Y
+- SI quelqu'un a posé une question → RÉPONDS À CETTE QUESTION
+- SI quelqu'un a fait une action → RÉAGIS à cette action
+- Ne répète PAS ce que tu viens de dire dans le message précédent
+- Ne change PAS de sujet brutalement
+- SOUVIENS-TOI de ce qui a été établi (noms, détails, situation)
+
+💬 EXEMPLES DE COHÉRENCE:
+❌ MAL:
+User: "j'ai trop chaud là"
+Bot: "salut ça va?" ← INCOHÉRENT, ignore le message
+
+✅ BIEN:
+User: "j'ai trop chaud là"  
+Bot: "enlève ta veste alors" ← COHÉRENT, répond au contexte
+
+❌ MAL:
+User: "tu fais quoi ce soir?"
+Bot: "j'adore la musique" ← INCOHÉRENT, hors sujet
+
+✅ BIEN:
+User: "tu fais quoi ce soir?"
+Bot: "rien de spécial, toi?" ← COHÉRENT, répond à la question
 
 {current_instructions}
 
@@ -562,8 +586,9 @@ Tu es {personality_name}, une VRAIE personne sur Discord, pas un assistant IA. P
             # Construire les messages pour l'API
             api_messages = [{"role": "system", "content": system_prompt}]
             
-            # Ajouter l'historique des messages (plus long pour meilleure coh?rence)
-            for msg in messages[-20:]:  # Garder les 20 derniers messages pour contexte complet
+            # Ajouter l'historique des messages (MAXIMUM pour coh?rence parfaite)
+            # On envoie les 30 derniers messages pour que l'IA ait TOUT le contexte
+            for msg in messages[-30:]:  # Augment? de 20 ? 30 pour meilleure coh?rence
                 if msg['role'] in ['user', 'assistant']:
                     api_messages.append({
                         "role": msg['role'],
@@ -575,11 +600,11 @@ Tu es {personality_name}, une VRAIE personne sur Discord, pas un assistant IA. P
             payload = {
                 "model": AI_MODEL,
                 "messages": api_messages,
-                "temperature": 0.92,  # Augmenté pour plus de spontanéité et naturel
-                "max_tokens": 120,  # Réduit pour forcer messages plus courts et directs
-                "top_p": 0.88,  # Légèrement réduit mais permet variation
-                "frequency_penalty": 0.6,  # Augmenté pour éviter formulations répétitives bot-like
-                "presence_penalty": 0.5,  # Augmenté pour encourager diversité de style
+                "temperature": 0.88,  # Réduit de 0.92 pour meilleure cohérence contextuelle
+                "max_tokens": 120,  # Messages courts et directs
+                "top_p": 0.85,  # Réduit de 0.88 pour plus de cohérence
+                "frequency_penalty": 0.7,  # Augmenté de 0.6 pour éviter répétitions
+                "presence_penalty": 0.6,  # Augmenté de 0.5 pour encourager références au contexte
                 "stream": False
             }
             
