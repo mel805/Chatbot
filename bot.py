@@ -905,7 +905,7 @@ class GenerateImageButton(ui.Button):
                     color=personality_data.get('color', 0x3498db)
                 )
                 embed.set_image(url=image_url)
-                embed.set_footer(text=f"G?n?r? avec Pollinations.ai ? Contextuel & NSFW")
+                embed.set_footer(text=f"Image contextuelle g?n?r?e")
                 
                 # Envoyer comme nouveau message
                 await interaction.channel.send(embed=embed)
@@ -1285,17 +1285,17 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
                 color=personality_data.get('color', 0x3498db)
             )
             embed.set_image(url=image_url)
-            embed.set_footer(text=f"G?n?r? avec Pollinations.ai (Flux) ? Gratuit et illimit?")
+            embed.set_footer(text=f"Image g?n?r?e")
             await interaction.edit_original_response(embed=embed)
             print(f"[IMAGE] Image displayed successfully!", flush=True)
         else:
             print(f"[IMAGE] Generation failed - no URL returned", flush=True)
             embed = discord.Embed(
                 title="? Erreur de G?n?ration",
-                description="La g?n?ration d'image a ?chou?.\n\n**Pollinations.ai** peut ?tre temporairement indisponible.\n\n**R?essayez dans quelques instants.**",
+                description="La g?n?ration d'image a ?chou?.\n\n**Le service** peut ?tre temporairement indisponible.\n\n**R?essayez dans quelques instants.**",
                 color=0xe74c3c
             )
-            embed.set_footer(text="Service gratuit Pollinations.ai ? Peut ?tre surcharg?")
+            embed.set_footer(text="Le service peut ?tre temporairement surcharg?")
             await interaction.edit_original_response(embed=embed)
     except Exception as e:
         print(f"[ERROR] Image generation exception: {e}", flush=True)
@@ -1375,17 +1375,17 @@ async def generate_contextual_image(interaction: discord.Interaction):
                 color=personality_data.get('color', 0x3498db)
             )
             embed.set_image(url=image_url)
-            embed.set_footer(text=f"G?n?r? avec Pollinations.ai (Flux) ? Contextuel & NSFW")
+            embed.set_footer(text=f"Image contextuelle g?n?r?e")
             await interaction.edit_original_response(embed=embed)
             print(f"[IMAGE] Contextual image displayed successfully!", flush=True)
         else:
             print(f"[IMAGE] Contextual generation failed - no URL returned", flush=True)
             embed = discord.Embed(
                 title="? Erreur de G?n?ration",
-                description="La g?n?ration d'image contextuelle a ?chou?.\n\n**Pollinations.ai** peut ?tre temporairement indisponible.\n\n**R?essayez dans quelques instants.**",
+                description="La g?n?ration d'image contextuelle a ?chou?.\n\n**Le service** peut ?tre temporairement indisponible.\n\n**R?essayez dans quelques instants.**",
                 color=0xe74c3c
             )
-            embed.set_footer(text="Service gratuit Pollinations.ai ? Peut ?tre surcharg?")
+            embed.set_footer(text="Le service peut ?tre temporairement surcharg?")
             await interaction.edit_original_response(embed=embed)
     except Exception as e:
         print(f"[ERROR] Contextual image generation exception: {e}", flush=True)
