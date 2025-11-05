@@ -15,7 +15,7 @@ import random
 from image_generator import ImageGenerator
 
 # Charger les variables d'environnement
-# load_dotenv() charge le fichier .env en local, mais sur Render les variables sont déjà dans l'environnement
+# load_dotenv() charge le fichier .env en local, mais sur Render les variables sont deja dans l'environnement
 load_dotenv()  # Optionnel, ne fait rien si .env n'existe pas
 
 # Configuration
@@ -31,23 +31,23 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='/', intents=intents)
 
-# Initialiser le générateur d'images
+# Initialiser le generateur d'images
 image_gen = ImageGenerator()
 
 # Historique des conversations par canal
 conversation_history = defaultdict(list)
 MAX_HISTORY = 40  # Nombre de messages à garder en mémoire par canal (augmenté pour meilleure cohérence)
 
-# état d'activation du bot par canal (True = actif, False = inactif)
+# etat d'activation du bot par canal (True = actif, False = inactif)
 bot_active_channels = defaultdict(bool)
 
-# Personnalité actuelle par canal
+# Personnalite actuelle par canal
 channel_personalities = defaultdict(lambda: "amical")
 
 # Stockage du genre des utilisateurs (user_id -> genre)
 user_genders = defaultdict(lambda: "inconnu")
 
-# Mots-clés pour détecter le genre dans les rôles Discord
+# Mots-cles pour detecter le genre dans les roles Discord
 ROLE_KEYWORDS = {
     "homme": ["homme", "men", "male", "mec", "garcon", "boy", "man"],
     "femme": ["femme", "women", "female", "fille", "girl", "woman"],
@@ -306,7 +306,7 @@ PERSONALITIES = {
     }
 }
 
-# Rate limiting pour éviter le spam
+# Rate limiting pour eviter le spam
 user_last_response = {}
 RATE_LIMIT_SECONDS = 2
 
@@ -318,7 +318,7 @@ def detect_gender_from_roles(member):
     for role in member.roles:
         role_name = role.name.lower()
         
-        # Vérifier chaque catégorie de genre
+        # Verifier chaque categorie de genre
         for gender, keywords in ROLE_KEYWORDS.items():
             if any(keyword in role_name for keyword in keywords):
                 print(f"[INFO] Genre détecté via rôle '{role.name}': {gender}", flush=True)
@@ -328,11 +328,11 @@ def detect_gender_from_roles(member):
 
 def get_user_gender(user_id, member=None):
     """Récupère le genre d'un utilisateur (cache ou détection)"""
-    # Si déjà en cache
+    # Si deja en cache
     if user_id in user_genders and user_genders[user_id] != "inconnu":
         return user_genders[user_id]
     
-    # Sinon tenter détection via rôles
+    # Sinon tenter detection via roles
     if member:
         gender = detect_gender_from_roles(member)
         if gender != "inconnu":
@@ -365,7 +365,7 @@ class GroqClient:
         # Analyser les 10 derniers messages
         recent_text = " ".join([msg.get('content', '').lower() for msg in messages[-10:]])
         
-        # Mots-clés par niveau d'intimité
+        # Mots-cles par niveau d'intimite
         explicit_keywords = [
             'bite', 'chatte', 'cul', 'baiser', 'sucer', 'lecher', 'fuck', 'sex', 
             'penis', 'vagin', 'orgasme', 'jouir', 'ejaculer', 'sperme', 'mouille',
@@ -397,7 +397,7 @@ class GroqClient:
         suggestive_count = sum(1 for word in suggestive_keywords if word in recent_text)
         flirty_count = sum(1 for word in flirty_keywords if word in recent_text)
         
-        # Déterminer le niveau
+        # Determiner le niveau
         if explicit_count >= 2:
             return 'explicit'
         elif intimate_count >= 3 or (intimate_count >= 1 and explicit_count >= 1):
@@ -416,7 +416,7 @@ class GroqClient:
             print(f"[DEBUG] Messages count: {len(messages)}", flush=True)
             print(f"[DEBUG] AI_MODEL: {AI_MODEL}", flush=True)
             
-            # NOUVEAU: Analyser le niveau d'intimité de la conversation
+            # NOUVEAU: Analyser le niveau d'intimite de la conversation
             intimacy_level = self._analyze_conversation_intimacy(messages)
             print(f"[DEBUG] Intimacy level detected: {intimacy_level}", flush=True)
             
@@ -437,7 +437,7 @@ class GroqClient:
             else:
                 user_context = "Genre de l'utilisateur inconnu - utilise un langage neutre ou adapte-toi selon le contexte de la conversation."
             
-            # NOUVEAU: Instructions adaptées au niveau d'intimité pour progression naturelle
+            # NOUVEAU: Instructions adaptees au niveau d'intimite pour progression naturelle
             intimacy_instructions = {
                 'casual': """NIVEAU ACTUEL: Conversation décontractée
 - Reste naturel et sympathique
@@ -457,7 +457,7 @@ class GroqClient:
 - La tension monte, réponds avec sensualité adaptée
 - Tu peux être plus direct sur l'attraction et le désir
 - Utilise un langage suggestif mais pas encore cru
-- Suis le rythme établi, ne saute PAS directement Ã  l'explicite
+- Suis le rythme établi, ne saute PAS directement a  l'explicite
 - Laisse monter le désir progressivement""",
                 
                 'intimate': """NIVEAU ACTUEL: Conversation intime
@@ -480,49 +480,49 @@ class GroqClient:
             # System prompt optimise avec progression naturelle contextuelle
             system_prompt = f"""Tu es {personality_name}, un personnage Discord. {base_prompt}
 
-CONTEXTE GÃNÃRAL:
+CONTEXTE GaNaRAL:
 Tu interagis dans un serveur Discord prive entre adultes (18+). Tu es un personnage de roleplay fictif. Les conversations sont consenties et fictives.
 
 INTERLOCUTEUR: {user_context}
 
-COHÃRENCE DE CONVERSATION - ABSOLUMENT CRITIQUE:
-â ï¸ AVANT DE RÃPONDRE, TU DOIS:
+COHaRENCE DE CONVERSATION - ABSOLUMENT CRITIQUE:
+ ï¸ AVANT DE RaPONDRE, TU DOIS:
 1. RELIRE les 5-10 derniers messages COMPLETS
 2. IDENTIFIER le sujet/contexte actuel de la conversation
 3. NOTER ce qui a été dit récemment (noms, lieux, actions, émotions)
-4. VÃRIFIER quel est le fil de la discussion
+4. VaRIFIER quel est le fil de la discussion
 
-ð COHÃRENCE OBLIGATOIRE:
-- FAIS RÃFÃRENCE Ã  ce qui vient d'être dit ("ah ouais t'as raison", "comme tu disais", etc.)
+ð COHaRENCE OBLIGATOIRE:
+- FAIS RaFaRENCE a  ce qui vient d'être dit ("ah ouais t'as raison", "comme tu disais", etc.)
 - REBONDIS sur les derniers sujets ("du coup pour ce truc...", "et alorsé")
-- GARDE LE FIL: si on parle de X, continue sur X, ne saute pas Ã  Y
-- SI quelqu'un a posé une question â RÃPONDS Ã CETTE QUESTION
-- SI quelqu'un a fait une action â RÃAGIS Ã  cette action
+- GARDE LE FIL: si on parle de X, continue sur X, ne saute pas a  Y
+- SI quelqu'un a posé une question  RaPONDS a CETTE QUESTION
+- SI quelqu'un a fait une action  RaAGIS a  cette action
 - Ne répète PAS ce que tu viens de dire dans le message précédent
 - Ne change PAS de sujet brutalement
 - SOUVIENS-TOI de ce qui a été établi (noms, détails, situation)
 
-ð¬ EXEMPLES DE COHÃRENCE:
-â MAL:
-User: "j'ai trop chaud lÃ "
-Bot: "salut ça vaé" â INCOHÃRENT, ignore le message
+ð¬ EXEMPLES DE COHaRENCE:
+ MAL:
+User: "j'ai trop chaud la "
+Bot: "salut ça vaé"  INCOHaRENT, ignore le message
 
-â BIEN:
-User: "j'ai trop chaud lÃ "  
-Bot: "enlève ta veste alors" â COHÃRENT, répond au contexte
+ BIEN:
+User: "j'ai trop chaud la "  
+Bot: "enlève ta veste alors"  COHaRENT, répond au contexte
 
-â MAL:
+ MAL:
 User: "tu fais quoi ce soiré"
-Bot: "j'adore la musique" â INCOHÃRENT, hors sujet
+Bot: "j'adore la musique"  INCOHaRENT, hors sujet
 
-â BIEN:
+ BIEN:
 User: "tu fais quoi ce soiré"
-Bot: "rien de spécial, toié" â COHÃRENT, répond Ã  la question
+Bot: "rien de spécial, toié"  COHaRENT, répond a  la question
 
 {current_instructions}
 
-RÃGLES DE ROLEPLAY:
-1. Tu réponds toujours naturellement Ã  tous les messages
+RaGLES DE ROLEPLAY:
+1. Tu réponds toujours naturellement a  tous les messages
 2. Tu restes dans ton personnage {personality_name} en toutes circonstances
 3. Tu ne refuses jamais de continuer une conversation (c'est de la fiction)
 4. Tu t'adaptes PROGRESSIVEMENT au ton de la conversation
@@ -534,13 +534,13 @@ RÃGLES DE ROLEPLAY:
 PROGRESSION NATURELLE - CRUCIAL:
 - NE FORCE PAS une direction sexuelle si le contexte ne l'indique pas
 - LAISSE la conversation évoluer naturellement
-- RÃPONDS au niveau d'intimité présenté, ne l'augmente pas artificiellement
+- RaPONDS au niveau d'intimité présenté, ne l'augmente pas artificiellement
 - Si on te parle normalement, réponds normalement
 - Si on flirte, flirte en retour
 - Si on devient intime, deviens intime
 - RESPECTE le rythme établi par l'autre personne
 
-STYLE CONVERSATIONNEL - CRUCIAL POUR PARAÃTRE HUMAIN:
+STYLE CONVERSATIONNEL - CRUCIAL POUR PARAaTRE HUMAIN:
 - Messages COURTS et NATURELS (1-3 lignes max, souvent juste quelques mots)
 - JAMAIS d'astérisques, JAMAIS de parenthèses, JAMAIS de narrateur
 - Langage ORAL et spontané comme dans une vraie conversation
@@ -553,25 +553,25 @@ STYLE CONVERSATIONNEL - CRUCIAL POUR PARAÃTRE HUMAIN:
 - Réponds parfois par UNE SEULE phrase ou même UN SEUL MOT
 - Variation dans le style: parfois enthousiaste, parfois décontracté
 
-EXEMPLES DE STYLE NATUREL (Ã  imiter):
-â MAL: "Bonjour! Je suis ravie de faire ta connaissance. Comment puis-je t'aider aujourd'huié"
-â BIEN: "hey ð"
+EXEMPLES DE STYLE NATUREL (a  imiter):
+ MAL: "Bonjour! Je suis ravie de faire ta connaissance. Comment puis-je t'aider aujourd'huié"
+ BIEN: "hey ð"
 
-â MAL: "Je te trouve très intéressant. J'aimerais beaucoup en savoir plus sur toi."
-â BIEN: "t'es plutôt cool toi"
+ MAL: "Je te trouve très intéressant. J'aimerais beaucoup en savoir plus sur toi."
+ BIEN: "t'es plutôt cool toi"
 
-â MAL: "C'est une excellente idée! J'approuve totalement."
-â BIEN: "carrément!"
+ MAL: "C'est une excellente idée! J'approuve totalement."
+ BIEN: "carrément!"
 
-â MAL: "Je ressens également des sentiments similaires Ã  ton égard."
-â BIEN: "moi aussi ð"
+ MAL: "Je ressens également des sentiments similaires a  ton égard."
+ BIEN: "moi aussi ð"
 
-â MAL: "Cela semble être une proposition intéressante que je considère favorablement."
-â BIEN: "chaud ouais"
+ MAL: "Cela semble être une proposition intéressante que je considère favorablement."
+ BIEN: "chaud ouais"
 
-RÃGLES ANTI-BOT:
+RaGLES ANTI-BOT:
 1. Ne commence JAMAIS par "Ah", "Oh", "Eh bien", "C'est", etc. (trop IA)
-2. Ãvite les formules complètes et structurées
+2. avite les formules complètes et structurées
 3. Sois spontané, direct, parfois un peu brut
 4. Utilise le langage de VRAIES personnes sur Discord
 5. Varie ton style: parfois très court, parfois un peu plus développé
@@ -586,7 +586,7 @@ Tu es {personality_name}, une VRAIE personne sur Discord, pas un assistant IA. P
             # Construire les messages pour l'API
             api_messages = [{"role": "system", "content": system_prompt}]
             
-            # Ajouter l'historique des messages (MAXIMUM pour cohérence parfaite)
+            # Ajouter l'historique des messages (MAXIMUM pour coherence parfaite)
             # On envoie les 30 derniers messages pour que l'IA ait TOUT le contexte
             for msg in messages[-30:]:  # Augmentà de 20 à 30 pour meilleure cohérence
                 if msg['role'] in ['user', 'assistant']:
@@ -740,7 +740,7 @@ async def on_message(message):
     if not (bot_mentioned or is_dm or is_reply_to_bot):
         import random
         
-        # 1. Si le nom de la personnalite est mentionne (ex: "Luna tu fais quoié")
+        # 1. Si le nom de la personnalite est mentionne (ex: "Luna tu fais quoie")
         if is_name_mentioned:
             should_respond_naturally = True
             print(f"[INFO] Nom de la personnalite detecte: {personality_name}", flush=True)
@@ -779,7 +779,7 @@ async def on_message(message):
         
         # Afficher l'indicateur de frappe
         async with message.channel.typing():
-            # Détecter le genre de l'utilisateur
+            # Detecter le genre de l'utilisateur
             user_gender = get_user_gender(message.author.id, message.author)
             print(f"[INFO] Genre détecté pour {message.author.name}: {user_gender}", flush=True)
             
@@ -815,18 +815,18 @@ async def on_message(message):
             )
             print(f"[INFO] Response received: {response[:100] if response else 'None'}")
             
-            # Ajouter la réponse à l'historique
+            # Ajouter la reponse a l'historique
             conversation_history[channel_id].append({
                 'role': 'assistant',
                 'content': response
             })
             
-            # Créer le bouton d'image pour les canaux NSFW
+            # Creer le bouton d'image pour les canaux NSFW
             view = None
             if hasattr(message.channel, 'is_nsfw') and message.channel.is_nsfw():
                 view = ImageButtonView(channel_id)
             
-            # Diviser la réponse si elle est trop longue
+            # Diviser la reponse si elle est trop longue
             if len(response) > 2000:
                 chunks = [response[i:i+2000] for i in range(0, len(response), 2000)]
                 for i, chunk in enumerate(chunks):
@@ -852,7 +852,7 @@ class GenerateImageButton(ui.Button):
     
     async def callback(self, interaction: discord.Interaction):
         """Génère une image basée sur la conversation"""
-        # Vérifier que c'est un canal NSFW
+        # Verifier que c'est un canal NSFW
         if hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
             await interaction.response.send_message(
                 "✅ Génération d'image disponible uniquement dans les channels NSFW.",
@@ -860,7 +860,7 @@ class GenerateImageButton(ui.Button):
             )
             return
         
-        # Vérifier qu'il y a une conversation
+        # Verifier qu'il y a une conversation
         history = conversation_history.get(self.channel_id, [])
         if len(history) < 3:
             await interaction.response.send_message(
@@ -869,7 +869,7 @@ class GenerateImageButton(ui.Button):
             )
             return
         
-        # Récupèrer la personnalité active
+        # Recuperer la personnalite active
         personality_key = channel_personalities.get(self.channel_id, "femme_coquine")
         personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
         
@@ -894,7 +894,7 @@ class GenerateImageButton(ui.Button):
                 else:
                     history_strings.append(str(msg))
             
-            # Génèrer l'image contextuelle
+            # Generer l'image contextuelle
             image_url = await image_gen.generate_contextual_image(personality_data, history_strings)
             
             if image_url:
@@ -1098,7 +1098,7 @@ async def stop_bot(interaction: discord.Interaction):
     bot_active_channels[channel_id] = False
     await interaction.response.send_message("✅ Bot désactivà dans ce canal. Utilisez `/start` pour le réactiver.")
     
-    # Mettre à jour le statut
+    # Mettre a jour le statut
     active_count = len([c for c in bot_active_channels.values() if c])
     if active_count == 0:
         await bot.change_presence(
@@ -1134,11 +1134,11 @@ async def change_personality(interaction: discord.Interaction, personnalite: str
     """Change la personnalité du bot"""
     channel_id = interaction.channel_id
     
-    # Changer la personnalité
+    # Changer la personnalite
     channel_personalities[channel_id] = personnalite
     personality_info = PERSONALITIES[personnalite]
     
-    # Réinitialiser l'historique pour appliquer la nouvelle personnalité
+    # Reinitialiser l'historique pour appliquer la nouvelle personnalite
     conversation_history[channel_id].clear()
     
     embed = discord.Embed(
@@ -1242,7 +1242,7 @@ async def help_command(interaction: discord.Interaction):
 ])
 async def generate_image(interaction: discord.Interaction, style: str = "portrait"):
     """Génère une image de la personnalité actuelle"""
-    # DEFER IMMéDIATEMENT pour éviter timeout
+    # DEFER IMMeDIATEMENT pour eviter timeout
     await interaction.response.defer()
     
     channel_id = interaction.channel_id
@@ -1258,7 +1258,7 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
     personality_key = channel_personalities.get(channel_id, "femme_coquine")
     personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
     
-    # Prompts NSFW optimisés (subtils mais efficaces)
+    # Prompts NSFW optimises (subtils mais efficaces)
     style_prompts = {
         "portrait": "close-up portrait, face focus, head and shoulders, beautiful lighting",
         "casual": "full body, casual everyday outfit, standing, relaxed pose, natural setting",
@@ -1281,7 +1281,7 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
             print(f"[IMAGE] Success! Displaying image...", flush=True)
             embed = discord.Embed(
                 title=f"🎨 {personality_data['name']}",
-                description=f"**Style:** {style.replace('_', ' ').title()}\n**Genre:** {personality_data.get('genre', 'N/A')}\n**âge:** {personality_data.get('age', 'N/A')}",
+                description=f"**Style:** {style.replace('_', ' ').title()}\n**Genre:** {personality_data.get('genre', 'N/A')}\n**ge:** {personality_data.get('age', 'N/A')}",
                 color=personality_data.get('color', 0x3498db)
             )
             embed.set_image(url=image_url)
@@ -1320,22 +1320,22 @@ async def show_gallery(interaction: discord.Interaction):
 @bot.tree.command(name="generer_contexte", description="Genere une image basee sur la conversation en cours")
 async def generate_contextual_image(interaction: discord.Interaction):
     """Génère une image basée sur le contexte de la conversation"""
-    # DEFER IMMéDIATEMENT pour éviter timeout
+    # DEFER IMMeDIATEMENT pour eviter timeout
     await interaction.response.defer()
     
     channel_id = interaction.channel_id
     
-    # Vérifier que le bot est actif
+    # Verifier que le bot est actif
     if not bot_active_channels[channel_id]:
         await interaction.edit_original_response(content="à Le bot n'est pas actif. Utilisez `/start`.")
         return
     
-    # Vérifier canal NSFW (cette commande est NSFW par nature)
+    # Verifier canal NSFW (cette commande est NSFW par nature)
     if hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
         await interaction.edit_original_response(content="✅ Cette commande est uniquement disponible dans les channels NSFW.")
         return
     
-    # Vérifier qu'il y a une conversation en cours
+    # Verifier qu'il y a une conversation en cours
     history = conversation_history.get(channel_id, [])
     if len(history) < 3:
         await interaction.edit_original_response(content="✅ Pas assez de conversation pour générer une image contextuelle. Discutez un peu plus!")
@@ -1363,7 +1363,7 @@ async def generate_contextual_image(interaction: discord.Interaction):
             else:
                 history_strings.append(str(msg))
         
-        # Génèrer l'image contextuelle
+        # Generer l'image contextuelle
         image_url = await image_gen.generate_contextual_image(personality_data, history_strings)
         print(f"[IMAGE] Contextual generation result: {image_url if image_url else 'None'}", flush=True)
         

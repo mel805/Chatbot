@@ -29,15 +29,12 @@ class ImageGenerator:
             'dezgo': 0
         }
         
-        # Liste des APIs disponibles PRIORISÃES par vitesse (rapides en premier)
-        # Les APIs les plus rapides sont essayées en premier
+        # Liste des APIs disponibles PRIORISaES par vitesse (rapides en premier)
+        # Les APIs les plus rapides sont essayees en premier
         self.available_apis = [
-            'pollinations_turbo',  # 2-5s (ULTRA RAPIDE)
-            'picso',               # 5-10s (RAPIDE + NSFW)
-            'pollinations',        # 5-15s (RAPIDE)
-            'prodia',             # 15-30s (MOYEN)
-            'dezgo',              # 20-40s (LENT)
-            'together'            # 20-50s (LENT)
+            'pollinations_turbo',  # 2-5s ultra rapide
+            'pollinations',        # 5-15s rapide
+            'prodia',             # 15-30s moyen
         ]
         
     async def generate_personality_image(self, personality_data, prompt_addition="", max_retries=5):
@@ -53,14 +50,14 @@ class ImageGenerator:
             URL de l'image ou None si erreur
         """
         
-        # Construire le prompt basà sur la personnalité
+        # Construire le prompt basa sur la personnalite
         name = personality_data.get('name', 'Person')
         genre = personality_data.get('genre', 'Neutre')
         age = personality_data.get('age', '25 ans')
         description = personality_data.get('description', '')
         visual_traits = personality_data.get('visual', '')  # Caractéristiques visuelles uniques
         
-        # Extraire l'âge numérique
+        # Extraire l'ge numerique
         age_num = ''.join(filter(str.isdigit, age))
         
         # Construire le prompt Stable Diffusion avec traits visuels uniques
@@ -69,10 +66,10 @@ class ImageGenerator:
         
         print(f"[IMAGE] Generating image for {name} with prompt: {full_prompt[:100]}...", flush=True)
         
-        # SYSTéME MULTI-API avec rotation intelligente pour 100% de réussite
+        # SYSTeME MULTI-API avec rotation intelligente pour 100% de reussite
         image_url = None
         
-        # Déterminer l'ordre des APIs à essayer (rotation selon succés précédents)
+        # Determiner l'ordre des APIs a essayer (rotation selon succes precedents)
         api_order = sorted(self.available_apis, 
                           key=lambda x: self.api_success_count[x], 
                           reverse=True)
@@ -82,13 +79,13 @@ class ImageGenerator:
         for attempt in range(max_retries):
             print(f"[IMAGE] === Attempt {attempt + 1}/{max_retries} ===", flush=True)
             
-            # Choisir l'API à utiliser pour cette tentative
+            # Choisir l'API a utiliser pour cette tentative
             api_index = attempt % len(api_order)
             current_api = api_order[api_index]
             
             print(f"[IMAGE] Trying API: {current_api}", flush=True)
             
-            # Essayer l'API sélectionnée (ORDRE PAR VITESSE)
+            # Essayer l'API selectionnee (ORDRE PAR VITESSE)
             if current_api == 'pollinations_turbo':
                 image_url = await self._generate_pollinations_turbo(full_prompt)
             elif current_api == 'picso':
@@ -103,35 +100,31 @@ class ImageGenerator:
                 image_url = await self._generate_together(full_prompt)
             
             if image_url:
-                print(f"[IMAGE] â SUCCESS with {current_api} on attempt {attempt + 1}!", flush=True)
+                print(f"[IMAGE]  SUCCESS with {current_api} on attempt {attempt + 1}!", flush=True)
                 return image_url
             
-            # Si le prompt est complexe et on a échouà 2 fois, simplifier
+            # Si le prompt est complexe et on a echoua 2 fois, simplifier
             if attempt >= 2 and len(full_prompt) > 200:
                 print(f"[IMAGE] Trying with simplified prompt on {current_api}...", flush=True)
                 simplified_prompt = self._simplify_prompt(full_prompt)
                 
                 if current_api == 'pollinations_turbo':
                     image_url = await self._generate_pollinations_turbo(simplified_prompt)
-                elif current_api == 'picso':
-                    image_url = await self._generate_picso(simplified_prompt)
                 elif current_api == 'pollinations':
                     image_url = await self._generate_pollinations(simplified_prompt, attempt=attempt+1)
                 elif current_api == 'prodia':
                     image_url = await self._generate_prodia(simplified_prompt)
-                elif current_api == 'dezgo':
-                    image_url = await self._generate_dezgo(simplified_prompt)
                 
                 if image_url:
-                    print(f"[IMAGE] â SUCCESS with simplified prompt on {current_api}!", flush=True)
+                    print(f"[IMAGE]  SUCCESS with simplified prompt on {current_api}!", flush=True)
                     return image_url
             
-            # Fallback Replicate si disponible et derniére tentative
+            # Fallback Replicate si disponible et derniere tentative
             if self.replicate_key and attempt >= 4:
                 print(f"[IMAGE] All free APIs failed, trying Replicate (paid)...", flush=True)
                 image_url = await self._generate_replicate(full_prompt)
                 if image_url:
-                    print(f"[IMAGE] â SUCCESS with Replicate!", flush=True)
+                    print(f"[IMAGE]  SUCCESS with Replicate!", flush=True)
                     return image_url
             
             # Attendre avant prochaine tentative
@@ -152,14 +145,14 @@ class ImageGenerator:
     def _build_base_prompt(self, genre, age, description, visual_traits=""):
         """Construit le prompt de base selon la personnalité"""
         
-        # Si des traits visuels spécifiques sont fournis, les utiliser en priorité
+        # Si des traits visuels specifiques sont fournis, les utiliser en priorite
         if visual_traits:
             print(f"[IMAGE] Using specific visual traits: {visual_traits[:80]}...", flush=True)
             # Prompt plus simple et plus fiable
             prompt = f"{visual_traits}, {age} years old, portrait photography"
             return prompt
         
-        # Sinon, utiliser l'ancienne méthode (fallback)
+        # Sinon, utiliser l'ancienne methode (fallback)
         gender_map = {
             "Femme": "beautiful sensual woman, feminine figure, attractive",
             "Homme": "handsome man, masculine, athletic build",
@@ -183,7 +176,7 @@ class ImageGenerator:
         
         traits_str = ", ".join(traits) if traits else "attractive"
         
-        # Prompt complet (simplifié)
+        # Prompt complet (simplifie)
         prompt = f"portrait, {gender_desc}, {age} years old, {traits_str}, professional photography"
         
         return prompt
@@ -193,13 +186,13 @@ class ImageGenerator:
         try:
             print(f"[IMAGE] Using Pollinations TURBO mode (ultra fast)", flush=True)
             
-            # Seed alçatoire
+            # Seed alcatoire
             random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
             
             # Encoder le prompt
             encoded_prompt = urllib.parse.quote(prompt)
             
-            # URL TURBO: résolution réduite mais ULTRA RAPIDE
+            # URL TURBO: resolution reduite mais ULTRA RAPIDE
             image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}éwidth=512&height=768&model=turbo&seed={random_seed}&nologo=true&enhance=false"
             
             print(f"[IMAGE] Pollinations TURBO URL generated (expected 2-5s)", flush=True)
@@ -222,13 +215,13 @@ class ImageGenerator:
         try:
             print(f"[IMAGE] Using PicSo API (fast, NSFW-friendly)", flush=True)
             
-            # PicSo utilise une API simple sans clé
+            # PicSo utilise une API simple sans cle
             api_url = "https://api.picso.ai/v1/generate"
             
-            # Seed aléatoire
+            # Seed aleatoire
             random_seed = random.randint(1, 999999999)
             
-            # Payload pour PicSo (simplifié pour vitesse)
+            # Payload pour PicSo (simplifie pour vitesse)
             payload = {
                 "prompt": prompt,
                 "style": "realistic",  # Style réaliste (ou "anime" pour anime)
@@ -267,37 +260,37 @@ class ImageGenerator:
         try:
             print(f"[IMAGE] Using Pollinations.ai FREE API (attempt {attempt})", flush=True)
             
-            # Génèrer un seed VRAIMENT alçatoire pour éviter images identiques
+            # Generer un seed VRAIMENT alcatoire pour eviter images identiques
             random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
             print(f"[IMAGE] Using random seed: {random_seed}", flush=True)
             
             # Encoder le prompt pour URL
             encoded_prompt = urllib.parse.quote(prompt)
             
-            # STRATéGIE MULTI-FALLBACK pour garantir 100% de réussite
+            # STRATeGIE MULTI-FALLBACK pour garantir 100% de reussite
             strategies = [
-                # Stratégie 1: Flux avec enhance (meilleure qualité)
+                # Strategie 1: Flux avec enhance (meilleure qualite)
                 {"model": "flux", "enhance": "true", "width": 768, "height": 1024},
-                # Stratégie 2: Flux sans enhance (plus rapide)
+                # Strategie 2: Flux sans enhance (plus rapide)
                 {"model": "flux", "enhance": "false", "width": 768, "height": 1024},
-                # Stratégie 3: Flux avec résolution réduite (plus fiable)
+                # Strategie 3: Flux avec resolution reduite (plus fiable)
                 {"model": "flux", "enhance": "true", "width": 512, "height": 768},
-                # Stratégie 4: Turbo (le plus rapide)
+                # Strategie 4: Turbo (le plus rapide)
                 {"model": "turbo", "enhance": "false", "width": 768, "height": 1024},
             ]
             
-            # Choisir la stratégie selon la tentative
+            # Choisir la strategie selon la tentative
             strategy_index = min(attempt - 1, len(strategies) - 1)
             strategy = strategies[strategy_index]
             
-            # Construire l'URL avec la stratégie choisie
+            # Construire l'URL avec la strategie choisie
             params = f"width={strategy['width']}&height={strategy['height']}&model={strategy['model']}&seed={random_seed}&nologo=true&enhance={strategy['enhance']}"
             image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}é{params}"
             
             print(f"[IMAGE] Strategy {strategy_index + 1}: {strategy['model']} ({strategy['width']}x{strategy['height']}) enhance={strategy['enhance']}", flush=True)
             print(f"[IMAGE] URL generated, validating...", flush=True)
             
-            # VALIDATION SOUPLE: On accepte méme avec timeout
+            # VALIDATION SOUPLE: On accepte meme avec timeout
             if await self._validate_image_url(image_url):
                 print(f"[IMAGE] Image validated successfully!", flush=True)
                 return image_url
@@ -338,7 +331,7 @@ class ImageGenerator:
                         result = await resp.json()
                         prediction_url = result.get('urls', {}).get('get')
                         
-                        # Attendre génération (max 60s)
+                        # Attendre generation (max 60s)
                         for _ in range(30):
                             await asyncio.sleep(2)
                             async with session.get(prediction_url, headers=headers) as check_resp:
@@ -364,18 +357,18 @@ class ImageGenerator:
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 # Essayer GET au lieu de HEAD pour Pollinations.ai
                 async with session.get(url, allow_redirects=True) as resp:
-                    # Vérifier le code de statut
+                    # Verifier le code de statut
                     if resp.status != 200:
                         print(f"[IMAGE] Validation failed: HTTP {resp.status}", flush=True)
                         return False
                     
-                    # Vérifier le type de contenu
+                    # Verifier le type de contenu
                     content_type = resp.headers.get('Content-Type', '')
                     if not content_type.startswith('image/'):
                         print(f"[IMAGE] Validation failed: Not an image (Content-Type: {content_type})", flush=True)
                         return False
                     
-                    # Vérifier que nous avons reéu des données
+                    # Verifier que nous avons reeu des donnees
                     content_length = resp.headers.get('Content-Length', '0')
                     if int(content_length) < 1000:  # Image trop petite = probablement erreur
                         print(f"[IMAGE] Validation failed: Image too small ({content_length} bytes)", flush=True)
@@ -385,18 +378,18 @@ class ImageGenerator:
                     return True
         except asyncio.TimeoutError:
             print(f"[IMAGE] Validation timeout after {timeout_seconds}s - Accepting URL anyway", flush=True)
-            # CHANGEMENT: On accepte l'URL méme en cas de timeout car Pollinations.ai peut être lent
+            # CHANGEMENT: On accepte l'URL meme en cas de timeout car Pollinations.ai peut etre lent
             return True
         except Exception as e:
             print(f"[IMAGE] Validation error: {e} - Accepting URL anyway", flush=True)
-            # En cas d'erreur, on accepte quand méme (mieux vaut essayer que ne rien afficher)
+            # En cas d'erreur, on accepte quand meme (mieux vaut essayer que ne rien afficher)
             return True
     
     def _simplify_prompt(self, prompt):
         """Simplifie un prompt trop complexe pour améliorer la génération"""
-        # Garder seulement les éléments essentiels
+        # Garder seulement les elements essentiels
         words = prompt.split(',')
-        # Garder les 5 premiers éléments les plus importants
+        # Garder les 5 premiers elements les plus importants
         essential = words[:5]
         simplified = ', '.join(essential).strip()
         print(f"[IMAGE] Simplified prompt from {len(prompt)} to {len(simplified)} chars", flush=True)
@@ -407,10 +400,10 @@ class ImageGenerator:
         try:
             print(f"[IMAGE] Using Prodia.com FREE API (NSFW-friendly)", flush=True)
             
-            # Prodia utilise un systéme en 2 étapes: génération puis récupération
+            # Prodia utilise un systeme en 2 etapes: generation puis recuperation
             api_url = "https://api.prodia.com/v1/sd/generate"
             
-            # Seed alçatoire
+            # Seed alcatoire
             random_seed = random.randint(1, 999999999)
             
             # Payload pour Prodia
@@ -428,7 +421,7 @@ class ImageGenerator:
             
             timeout = aiohttp.ClientTimeout(total=60)
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                # Lancer la génération
+                # Lancer la generation
                 async with session.post(api_url, json=payload) as resp:
                     if resp.status == 200:
                         result = await resp.json()
@@ -440,7 +433,7 @@ class ImageGenerator:
                         
                         print(f"[IMAGE] Prodia: Job {job_id} started, waiting...", flush=True)
                         
-                        # Attendre la génération (max 40s)
+                        # Attendre la generation (max 40s)
                         for i in range(20):
                             await asyncio.sleep(2)
                             
@@ -501,7 +494,7 @@ class ImageGenerator:
                             # Pour l'instant, on va utiliser un service d'upload temporaire
                             print(f"[IMAGE] Dezgo: Image received ({len(image_data)} bytes)", flush=True)
                             
-                            # Upload sur catbox.moe (service gratuit d'hébergement)
+                            # Upload sur catbox.moe (service gratuit d'hebergement)
                             upload_url = await self._upload_to_catbox(image_data)
                             
                             if upload_url:
@@ -544,8 +537,8 @@ class ImageGenerator:
     async def _generate_together(self, prompt):
         """Génère via Together.ai API (gratuit avec quota)"""
         try:
-            # Cette API nécessite une clé API gratuite
-            # Pour l'instant on la skip si pas de clé
+            # Cette API necessite une cle API gratuite
+            # Pour l'instant on la skip si pas de cle
             together_key = os.getenv('TOGETHER_API_KEY', '')
             if not together_key:
                 print(f"[IMAGE] Together.ai: No API key, skipping", flush=True)
@@ -597,7 +590,7 @@ class ImageGenerator:
     
     def _analyze_bot_actions(self, conversation_history):
         """
-        Analyse PRÃCISÃMENT les descriptions du bot pour extraire TOUS les détails
+        Analyse PRaCISaMENT les descriptions du bot pour extraire TOUS les détails
         
         Retourne: dict avec tous les détails (vêtements, accessoires, couleurs, etc.)
         """
@@ -617,8 +610,10 @@ class ImageGenerator:
         # Analyser les 5 derniers messages du bot
         recent_bot_text = " ".join(bot_messages[-5:])
         
-        print(f"[IMAGE] Analyzing BOT descriptions from last 5 messages...", flush=True)
-        print(f"[IMAGE] Bot text: {recent_bot_text[:200]}...", flush=True)
+        print(f"[IMAGE] ===== ANALYSE DU BOT =====", flush=True)
+        print(f"[IMAGE] Nombre de messages du bot trouvés: {len(bot_messages)}", flush=True)
+        print(f"[IMAGE] Texte du bot à analyser: {recent_bot_text}", flush=True)
+        print(f"[IMAGE] Longueur du texte: {len(recent_bot_text)} caractères", flush=True)
         
         detected = {
             'action': None,
@@ -634,7 +629,7 @@ class ImageGenerator:
         }
         
         # ACTIONS QUOTIDIENNES
-        if any(word in recent_bot_text for word in ["cuisine", "cuisin", "cooking", "prépare Ã  manger", "fais Ã  manger"]):
+        if any(word in recent_bot_text for word in ["cuisine", "cuisin", "cooking", "prépare a  manger", "fais a  manger"]):
             detected['action'] = "cooking in kitchen"
             detected['location'] = "kitchen"
             detected['activity'] = "cooking, holding cooking utensils, preparing food"
@@ -684,7 +679,7 @@ class ImageGenerator:
             detected['location'] = "comfortable setting"
             detected['activity'] = "reading a book, relaxed"
         
-        # EXTRACTION PRÃCISE DES VÃTEMENTS
+        # EXTRACTION PRaCISE DES VaTEMENTS
         clothing_keywords = {
             "robe": "dress",
             "dress": "dress",
@@ -767,7 +762,7 @@ class ImageGenerator:
             if keyword in recent_bot_text:
                 detected['colors'].append(english)
         
-        # MATIÃRES
+        # MATIaRES
         material_keywords = {
             "soie": "silk",
             "silk": "silk",
@@ -811,18 +806,18 @@ class ImageGenerator:
                 if english not in detected['descriptors']:
                     detected['descriptors'].append(english)
         
-        # VISIBILITÃ DU CORPS
+        # VISIBILITa DU CORPS
         if any(word in recent_bot_text for word in ["laisse voir", "montre", "dévoile", "révèle", "voir tout", "transparente"]):
             detected['body_visibility'] = "revealing, showing body"
         elif any(word in recent_bot_text for word in ["cache", "couvre", "dissimule"]):
             detected['body_visibility'] = "covering, modest"
         
-        # NU/NUE (Ã  part)
+        # NU/NUE (a  part)
         if any(word in recent_bot_text for word in ["nu", "nue", "naked", "nud", "déshabillé", "sans vêtement"]):
             detected['clothing_items'] = ["nude, no clothing"]
             detected['body_visibility'] = "fully nude"
         
-        # POSES spécifiques
+        # POSES specifiques
         if any(word in recent_bot_text for word in ["assis", "sitting", "seated"]):
             detected['pose'] = "sitting"
         elif any(word in recent_bot_text for word in ["debout", "standing"]):
@@ -835,220 +830,105 @@ class ImageGenerator:
         return detected
     
     async def generate_contextual_image(self, personality_data, conversation_history):
-        """
-        Génère une image DYNAMIQUE basée sur l'ACTION du bot dans la conversation
-        L'image reflète ce que le bot EST EN TRAIN DE FAIRE
+        """Generate image based on bot description in conversation"""
         
-        Args:
-            personality_data: Dictionnaire avec name, genre, age, description, visual
-            conversation_history: Liste des derniers messages de conversation
+        print(f"[IMAGE] ===== CONTEXTUAL START =====", flush=True)
         
-        Returns:
-            URL de l'image ou None si erreur
-        """
+        # Extract BOT messages
+        bot_messages = []
+        for msg in conversation_history[-15:]:
+            if isinstance(msg, dict) and msg.get('role') == 'assistant':
+                bot_messages.append(msg.get('content', '').lower())
         
-        print(f"[IMAGE] Analyzing {len(conversation_history)} messages for BOT ACTIONS...", flush=True)
+        bot_text = " ".join(bot_messages[-5:])
+        print(f"[IMAGE] Bot says: {bot_text[:300]}", flush=True)
         
-        # ANALYSER LES ACTIONS DU BOT
+        # Analyze what bot describes
         bot_actions = self._analyze_bot_actions(conversation_history)
         
-        # Récupérer les traits visuels de la personnalité (pour garder le visage cohérent)
-        name = personality_data.get('name', 'Person')
-        genre = personality_data.get('genre', 'Neutre')
-        age_num = ''.join(filter(str.isdigit, personality_data.get('age', '25')))
-        visual_traits = personality_data.get('visual', '')  # TRAITS VISUELS PERMANENTS
+        # Get personality traits
+        visual_traits = personality_data.get('visual', '')
         
-        print(f"[IMAGE] Bot actions detected: {bot_actions}", flush=True)
+        # BUILD PROMPT - CLOTHING FIRST AND EXPLICIT
+        parts = []
         
-        # CONSTRUIRE LE PROMPT DYNAMIQUE
-        # Format: {traits visuels personnalité} + {action/activité} + {lieu} + {vêtements} + {pose}
-        
-        prompt_parts = []
-        
-        # 1. TOUJOURS inclure les traits visuels (pour garder le visage cohérent)
-        if visual_traits:
-            prompt_parts.append(visual_traits)
-        else:
-            # Fallback si pas de traits visuels
-            gender_map = {
-                "Femme": "beautiful woman",
-                "Homme": "handsome man",
-                "Trans": "beautiful person",
-                "Non-binaire": "attractive person",
-                "Neutre": "attractive person"
-            }
-            base_desc = gender_map.get(genre, "attractive person")
-            prompt_parts.append(f"{base_desc}, {age_num} years old")
-        
-        # 2. AJOUTER L'ACTIVITÃ (ce que le bot FAIT)
-        if bot_actions['activity']:
-            prompt_parts.append(bot_actions['activity'])
-            print(f"[IMAGE] Activity: {bot_actions['activity']}", flush=True)
-        
-        # 3. AJOUTER LE LIEU
-        if bot_actions['location']:
-            prompt_parts.append(bot_actions['location'])
-            print(f"[IMAGE] Location: {bot_actions['location']}", flush=True)
-        
-        # 4. CONSTRUIRE LA DESCRIPTION DES VÃTEMENTS COMPLÃTE
-        clothing_description_parts = []
-        
-        # Ajouter les vêtements avec leurs qualificatifs
+        # 1. CLOTHING - ABSOLUTE PRIORITY
         if bot_actions['clothing_items']:
-            # Combiner couleurs + matières + descripteurs + vêtements
-            clothing_details = []
+            print("[IMAGE] CLOTHING DETECTED!", flush=True)
             
-            # Couleurs en premier
+            clothing_list = []
             if bot_actions['colors']:
-                clothing_details.extend(bot_actions['colors'])
-            
-            # Matières
+                clothing_list.extend(bot_actions['colors'])
             if bot_actions['materials']:
-                clothing_details.extend(bot_actions['materials'])
-            
-            # Descripteurs
+                clothing_list.extend(bot_actions['materials'])
             if bot_actions['descriptors']:
-                clothing_details.extend(bot_actions['descriptors'])
+                clothing_list.extend(bot_actions['descriptors'])
+            clothing_list.extend(bot_actions['clothing_items'])
             
-            # Les vêtements eux-mêmes
-            clothing_details.extend(bot_actions['clothing_items'])
+            clothing_desc = ", ".join(clothing_list)
             
-            clothing_desc = ", ".join(clothing_details)
-            clothing_description_parts.append(f"wearing {clothing_desc}")
-            print(f"[IMAGE] Clothing: wearing {clothing_desc}", flush=True)
+            # FORCE clothing explicitly (repeat 3 times)
+            parts.append(f"wearing {clothing_desc}")
+            parts.append(f"dressed in {clothing_desc}")
+            parts.append("fully clothed, NOT nude, NOT topless, wearing clothing")
+            
+            print(f"[IMAGE] Clothing: {clothing_desc}", flush=True)
         
-        # Ajouter les accessoires
+        # 2. Accessories
         if bot_actions['accessories']:
-            accessories_desc = ", ".join(bot_actions['accessories'])
-            clothing_description_parts.append(accessories_desc)
-            print(f"[IMAGE] Accessories: {accessories_desc}", flush=True)
+            acc_desc = ", ".join(bot_actions['accessories'])
+            parts.append(f"wearing {acc_desc}")
+            print(f"[IMAGE] Accessories: {acc_desc}", flush=True)
         
-        # Ajouter la visibilité du corps
-        if bot_actions['body_visibility']:
-            clothing_description_parts.append(bot_actions['body_visibility'])
-            print(f"[IMAGE] Body visibility: {bot_actions['body_visibility']}", flush=True)
+        # 3. Face traits (hair, eyes only)
+        if visual_traits:
+            traits = [t.strip() for t in visual_traits.split(',')]
+            face = []
+            for t in traits:
+                if any(w in t.lower() for w in ['hair', 'eye']):
+                    face.append(t)
+            if face:
+                parts.append(", ".join(face[:2]))
         
-        # Ajouter toute la description des vêtements au prompt
-        if clothing_description_parts:
-            full_clothing_desc = ", ".join(clothing_description_parts)
-            prompt_parts.append(full_clothing_desc)
+        # 4. Location
+        if bot_actions['location']:
+            parts.append(bot_actions['location'])
         
-        # 5. AJOUTER LA POSE
+        # 5. Activity
+        if bot_actions['activity']:
+            parts.append(bot_actions['activity'])
+        
+        # 6. Pose
         if bot_actions['pose']:
-            prompt_parts.append(bot_actions['pose'])
-            print(f"[IMAGE] Pose: {bot_actions['pose']}", flush=True)
+            parts.append(bot_actions['pose'])
         
-        # FALLBACK NSFW seulement si AUCUN vêtement/accessoire détecté
-        if not any([bot_actions['clothing_items'], bot_actions['accessories'], 
-                    bot_actions['activity'], bot_actions['location'], bot_actions['action']]):
-            print(f"[IMAGE] No specific details detected, analyzing general NSFW context...", flush=True)
-            
-            # Analyser tout le texte pour contexte NSFW UNIQUEMENT si rien d'autre
-            conversation_text = " ".join(conversation_history[-10:]).lower()
-            
-            nsfw_context = []
-            
-            # Contexte NSFW générique
-            if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "excité", "désire"]):
-                nsfw_context.append("sexy, seductive pose")
-            
-            if any(word in conversation_text for word in ["nu", "nue", "naked", "déshabillé"]) and "nude" not in prompt_parts:
-                nsfw_context.append("nude, bare skin")
-            
-            if any(word in conversation_text for word in ["lit", "bed", "chambre"]):
-                nsfw_context.append("in bedroom, on bed")
-            
-            if any(word in conversation_text for word in ["lingerie", "underwear"]) and "lingerie" not in str(prompt_parts):
-                nsfw_context.append("wearing lingerie")
-            
-            if nsfw_context:
-                prompt_parts.extend(nsfw_context)
-                print(f"[IMAGE] Generic NSFW context added: {', '.join(nsfw_context)}", flush=True)
-            else:
-                # Vraiment aucun contexte â portrait simple
-                prompt_parts.append("natural pose, attractive, professional photography")
-                print(f"[IMAGE] No context found, using neutral portrait", flush=True)
-        else:
-            print(f"[IMAGE] Using SPECIFIC details from bot description (no generic fallback)", flush=True)
+        # Quality
+        parts.append("high quality, detailed, realistic")
         
-        # Construire le prompt final
-        full_prompt = ", ".join(prompt_parts)
+        full_prompt = ", ".join(parts)
         
-        print(f"[IMAGE] FINAL DYNAMIC PROMPT: {full_prompt}", flush=True)
-        print(f"[IMAGE] This image will show: {name} doing: {bot_actions.get('action', 'natural pose')}", flush=True)
+        print(f"[IMAGE] FINAL PROMPT: {full_prompt}", flush=True)
         
-        # Génèrer avec le systéme MULTI-API (5 tentatives)
-        max_retries = 5
-        image_url = None
+        # Generate with APIs
+        for attempt in range(5):
+            api = self.available_apis[attempt % len(self.available_apis)]
+            
+            print(f"[IMAGE] Try {attempt+1} with {api}", flush=True)
+            
+            if api == 'pollinations_turbo':
+                url = await self._generate_pollinations_turbo(full_prompt)
+            elif api == 'pollinations':
+                url = await self._generate_pollinations(full_prompt, attempt+1)
+            elif api == 'prodia':
+                url = await self._generate_prodia(full_prompt)
+            
+            if url:
+                print(f"[IMAGE] SUCCESS!", flush=True)
+                return url
+            
+            await asyncio.sleep(1)
         
-        # Ordre des APIs par taux de succés
-        api_order = sorted(self.available_apis, 
-                          key=lambda x: self.api_success_count[x], 
-                          reverse=True)
-        
-        print(f"[IMAGE] Contextual generation - API order: {api_order}", flush=True)
-        
-        for attempt in range(max_retries):
-            print(f"[IMAGE] === Contextual attempt {attempt + 1}/{max_retries} ===", flush=True)
-            
-            # Rotation des APIs
-            api_index = attempt % len(api_order)
-            current_api = api_order[api_index]
-            
-            print(f"[IMAGE] Using {current_api} for contextual generation...", flush=True)
-            
-            # Essayer l'API sélectionnée (ORDRE PAR VITESSE)
-            if current_api == 'pollinations_turbo':
-                image_url = await self._generate_pollinations_turbo(full_prompt)
-            elif current_api == 'picso':
-                image_url = await self._generate_picso(full_prompt)
-            elif current_api == 'pollinations':
-                image_url = await self._generate_pollinations(full_prompt, attempt=attempt+1)
-            elif current_api == 'prodia':
-                image_url = await self._generate_prodia(full_prompt)
-            elif current_api == 'dezgo':
-                image_url = await self._generate_dezgo(full_prompt)
-            elif current_api == 'together':
-                image_url = await self._generate_together(full_prompt)
-            
-            if image_url:
-                print(f"[IMAGE] â Contextual SUCCESS with {current_api}!", flush=True)
-                return image_url
-            
-            # Simplifier si échec répété
-            if attempt >= 2 and len(full_prompt) > 200:
-                print(f"[IMAGE] Trying simplified contextual on {current_api}...", flush=True)
-                simplified = self._simplify_prompt(full_prompt)
-                
-                if current_api == 'pollinations_turbo':
-                    image_url = await self._generate_pollinations_turbo(simplified)
-                elif current_api == 'picso':
-                    image_url = await self._generate_picso(simplified)
-                elif current_api == 'pollinations':
-                    image_url = await self._generate_pollinations(simplified, attempt=attempt+1)
-                elif current_api == 'prodia':
-                    image_url = await self._generate_prodia(simplified)
-                elif current_api == 'dezgo':
-                    image_url = await self._generate_dezgo(simplified)
-                
-                if image_url:
-                    print(f"[IMAGE] â Contextual SUCCESS with simplified on {current_api}!", flush=True)
-                    return image_url
-            
-            # Fallback Replicate
-            if self.replicate_key and attempt >= 4:
-                image_url = await self._generate_replicate(full_prompt)
-                if image_url:
-                    print(f"[IMAGE] â Contextual SUCCESS with Replicate!", flush=True)
-                    return image_url
-            
-            if attempt < max_retries - 1:
-                wait_time = 1 + (attempt // 2)
-                await asyncio.sleep(wait_time)
-        
-        # FALLBACK FINAL garanti
-        print(f"[IMAGE] === FINAL CONTEXTUAL FALLBACK ===", flush=True)
-        random_seed = random.randint(1, 999999999)
-        encoded_prompt = urllib.parse.quote(self._simplify_prompt(full_prompt))
-        fallback_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}éwidth=512&height=768&model=turbo&seed={random_seed}&nologo=true"
-        return fallback_url
+        # Final fallback
+        seed = random.randint(1, 999999999)
+        encoded = urllib.parse.quote(self._simplify_prompt(full_prompt))
+        return f"https://image.pollinations.ai/prompt/{encoded}?width=512&height=768&model=turbo&seed={seed}&nologo=true"
