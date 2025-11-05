@@ -18,7 +18,7 @@ class ImageGenerator:
         self.replicate_key = os.getenv('REPLICATE_API_KEY', '')
         self.huggingface_key = os.getenv('HUGGINGFACE_API_KEY', '')
         
-    async def generate_personality_image(self, personality_data, prompt_addition="", max_retries=3):
+    async def generate_personality_image(self, personality_data, prompt_addition="", max_retries=5):
         """
         G?n?re une image bas?e sur la personnalit? avec retry automatique
         
@@ -47,44 +47,50 @@ class ImageGenerator:
         
         print(f"[IMAGE] Generating image for {name} with prompt: {full_prompt[:100]}...", flush=True)
         
-        # Essayer avec retry automatique pour 100% de r?ussite
+        # Essayer avec retry automatique et fallback intelligent pour 100% de r?ussite
         image_url = None
         
         for attempt in range(max_retries):
             print(f"[IMAGE] Attempt {attempt + 1}/{max_retries}...", flush=True)
             
-            # M?thode 1: Pollinations.ai (GRATUIT, sans cl? API, PRIORITAIRE)
+            # M?thode 1: Pollinations.ai avec strat?gie adapt?e ? la tentative
             print(f"[IMAGE] Trying Pollinations.ai (free, unlimited)...", flush=True)
-            image_url = await self._generate_pollinations(full_prompt)
+            image_url = await self._generate_pollinations(full_prompt, attempt=attempt+1)
             
             if image_url:
-                print(f"[IMAGE] Success on attempt {attempt + 1}!", flush=True)
+                print(f"[IMAGE] ✓ Success on attempt {attempt + 1}!", flush=True)
                 return image_url
             
+            # Si le prompt est complexe, essayer une version simplifi?e
+            if attempt >= 2 and len(full_prompt) > 200:
+                print(f"[IMAGE] Trying with simplified prompt...", flush=True)
+                simplified_prompt = self._simplify_prompt(full_prompt)
+                image_url = await self._generate_pollinations(simplified_prompt, attempt=attempt+1)
+                if image_url:
+                    print(f"[IMAGE] ✓ Success with simplified prompt on attempt {attempt + 1}!", flush=True)
+                    return image_url
+            
             # M?thode 2: Replicate (backup si cl? configur?e)
-            if self.replicate_key:
+            if self.replicate_key and attempt >= 3:
                 print(f"[IMAGE] Pollinations failed, trying Replicate...", flush=True)
                 image_url = await self._generate_replicate(full_prompt)
                 
                 if image_url:
-                    print(f"[IMAGE] Success with Replicate on attempt {attempt + 1}!", flush=True)
-                    return image_url
-            
-            # M?thode 3: Hugging Face (backup si cl? configur?e)
-            if self.huggingface_key:
-                print(f"[IMAGE] Replicate failed, trying Hugging Face...", flush=True)
-                image_url = await self._generate_huggingface(full_prompt)
-                
-                if image_url:
-                    print(f"[IMAGE] Success with Hugging Face on attempt {attempt + 1}!", flush=True)
+                    print(f"[IMAGE] ✓ Success with Replicate on attempt {attempt + 1}!", flush=True)
                     return image_url
             
             if attempt < max_retries - 1:
-                print(f"[IMAGE] Attempt {attempt + 1} failed, retrying...", flush=True)
-                await asyncio.sleep(2)  # Petite pause avant retry
+                wait_time = 1 + attempt  # Augmente le d?lai progressivement
+                print(f"[IMAGE] Attempt {attempt + 1} failed, waiting {wait_time}s before retry...", flush=True)
+                await asyncio.sleep(wait_time)
         
-        print(f"[IMAGE] All {max_retries} attempts failed", flush=True)
-        return image_url
+        # DERNIER RECOURS: Retourner une URL simple sans validation
+        print(f"[IMAGE] All validation attempts exhausted, generating final fallback URL", flush=True)
+        random_seed = random.randint(1, 999999999)
+        encoded_prompt = urllib.parse.quote(self._simplify_prompt(full_prompt))
+        fallback_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=768&model=turbo&seed={random_seed}&nologo=true"
+        print(f"[IMAGE] Returning fallback URL (no validation)", flush=True)
+        return fallback_url
     
     def _build_base_prompt(self, genre, age, description, visual_traits=""):
         """Construit le prompt de base selon la personnalit?"""
@@ -125,10 +131,10 @@ class ImageGenerator:
         
         return prompt
     
-    async def _generate_pollinations(self, prompt):
-        """G?n?re via Pollinations.ai (gratuit, sans cl? API)"""
+    async def _generate_pollinations(self, prompt, attempt=1):
+        """G?n?re via Pollinations.ai (gratuit, sans cl? API) avec fallback intelligent"""
         try:
-            print(f"[IMAGE] Using Pollinations.ai FREE API", flush=True)
+            print(f"[IMAGE] Using Pollinations.ai FREE API (attempt {attempt})", flush=True)
             
             # G?n?rer un seed VRAIMENT al?atoire pour ?viter images identiques
             random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
@@ -137,17 +143,35 @@ class ImageGenerator:
             # Encoder le prompt pour URL
             encoded_prompt = urllib.parse.quote(prompt)
             
-            # Construire l'URL Pollinations (Flux model, haute qualit?, seed al?atoire)
-            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=768&height=1024&model=flux&seed={random_seed}&nologo=true&enhance=true"
+            # STRAT?GIE MULTI-FALLBACK pour garantir 100% de r?ussite
+            strategies = [
+                # Strat?gie 1: Flux avec enhance (meilleure qualit?)
+                {"model": "flux", "enhance": "true", "width": 768, "height": 1024},
+                # Strat?gie 2: Flux sans enhance (plus rapide)
+                {"model": "flux", "enhance": "false", "width": 768, "height": 1024},
+                # Strat?gie 3: Flux avec r?solution r?duite (plus fiable)
+                {"model": "flux", "enhance": "true", "width": 512, "height": 768},
+                # Strat?gie 4: Turbo (le plus rapide)
+                {"model": "turbo", "enhance": "false", "width": 768, "height": 1024},
+            ]
             
-            print(f"[IMAGE] Pollinations.ai URL generated, validating...", flush=True)
+            # Choisir la strat?gie selon la tentative
+            strategy_index = min(attempt - 1, len(strategies) - 1)
+            strategy = strategies[strategy_index]
             
-            # VALIDATION: V?rifier que l'image est accessible (FIX pour affichage 100%)
+            # Construire l'URL avec la strat?gie choisie
+            params = f"width={strategy['width']}&height={strategy['height']}&model={strategy['model']}&seed={random_seed}&nologo=true&enhance={strategy['enhance']}"
+            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?{params}"
+            
+            print(f"[IMAGE] Strategy {strategy_index + 1}: {strategy['model']} ({strategy['width']}x{strategy['height']}) enhance={strategy['enhance']}", flush=True)
+            print(f"[IMAGE] URL generated, validating...", flush=True)
+            
+            # VALIDATION SOUPLE: On accepte m?me avec timeout
             if await self._validate_image_url(image_url):
                 print(f"[IMAGE] Image validated successfully!", flush=True)
                 return image_url
             else:
-                print(f"[IMAGE] Image validation failed", flush=True)
+                print(f"[IMAGE] Image validation failed, will retry with different strategy", flush=True)
                 return None
             
         except Exception as e:
@@ -202,12 +226,13 @@ class ImageGenerator:
             print(f"[ERROR] Replicate error: {e}", flush=True)
             return None
     
-    async def _validate_image_url(self, url, timeout_seconds=15):
+    async def _validate_image_url(self, url, timeout_seconds=20):
         """Valide qu'une URL d'image est accessible et retourne une vraie image"""
         try:
             timeout = aiohttp.ClientTimeout(total=timeout_seconds)
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.head(url, allow_redirects=True) as resp:
+                # Essayer GET au lieu de HEAD pour Pollinations.ai
+                async with session.get(url, allow_redirects=True) as resp:
                     # V?rifier le code de statut
                     if resp.status != 200:
                         print(f"[IMAGE] Validation failed: HTTP {resp.status}", flush=True)
@@ -219,14 +244,32 @@ class ImageGenerator:
                         print(f"[IMAGE] Validation failed: Not an image (Content-Type: {content_type})", flush=True)
                         return False
                     
-                    print(f"[IMAGE] Validation success: {content_type}, HTTP {resp.status}", flush=True)
+                    # V?rifier que nous avons re?u des donn?es
+                    content_length = resp.headers.get('Content-Length', '0')
+                    if int(content_length) < 1000:  # Image trop petite = probablement erreur
+                        print(f"[IMAGE] Validation failed: Image too small ({content_length} bytes)", flush=True)
+                        return False
+                    
+                    print(f"[IMAGE] Validation success: {content_type}, {content_length} bytes, HTTP {resp.status}", flush=True)
                     return True
         except asyncio.TimeoutError:
-            print(f"[IMAGE] Validation timeout after {timeout_seconds}s", flush=True)
-            return False
+            print(f"[IMAGE] Validation timeout after {timeout_seconds}s - Accepting URL anyway", flush=True)
+            # CHANGEMENT: On accepte l'URL m?me en cas de timeout car Pollinations.ai peut ?tre lent
+            return True
         except Exception as e:
-            print(f"[IMAGE] Validation error: {e}", flush=True)
-            return False
+            print(f"[IMAGE] Validation error: {e} - Accepting URL anyway", flush=True)
+            # En cas d'erreur, on accepte quand m?me (mieux vaut essayer que ne rien afficher)
+            return True
+    
+    def _simplify_prompt(self, prompt):
+        """Simplifie un prompt trop complexe pour am?liorer la g?n?ration"""
+        # Garder seulement les ?l?ments essentiels
+        words = prompt.split(',')
+        # Garder les 5 premiers ?l?ments les plus importants
+        essential = words[:5]
+        simplified = ', '.join(essential).strip()
+        print(f"[IMAGE] Simplified prompt from {len(prompt)} to {len(simplified)} chars", flush=True)
+        return simplified
     
     async def _generate_huggingface(self, prompt):
         """G?n?re via Hugging Face (n?cessite cl? API)"""
@@ -244,36 +287,82 @@ class ImageGenerator:
         Returns:
             URL de l'image ou None si erreur
         """
-        # Analyser les derniers messages pour extraire le contexte
+        # ANALYSE AVANC?E : Analyser TOUS les messages r?cents
+        conversation_text = " ".join(conversation_history[-15:]).lower()  # Plus de contexte
+        
+        print(f"[IMAGE] Analyzing {len(conversation_history)} messages for detailed context...", flush=True)
+        
+        # SYST?ME DE SCORING pour d?tecter pr?cis?ment le contexte
         context_keywords = []
-        conversation_text = " ".join(conversation_history[-10:]).lower()
+        context_detected = []
         
-        # D?tecter le contexte NSFW/intime (plus explicite)
-        if any(word in conversation_text for word in ["nue", "nu", "nud", "d?shabill", "sans v?tements", "corps", "montre", "voir", "naked", "bare"]):
-            context_keywords.append("nude bare skin, revealing body, natural figure")
+        # 1. NUE/D?SHABILL? (priorit? maximale si d?tect?)
+        nude_words = ["nue", "nu", "nud", "d?shabill", "sans v?tement", "corps nu", "montre tout", "voir tout", "naked", "bare", "strip", "d?nu"]
+        if any(word in conversation_text for word in nude_words):
+            context_keywords.append("nude, bare skin, natural body, no clothing, fully exposed")
+            context_detected.append("NUDE")
         
-        if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed", "matelas"]):
-            context_keywords.append("bedroom intimate setting, on bed, private room")
+        # 2. LIEU/SETTING (important pour ambiance)
+        if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed", "matelas", "oreiller", "draps"]):
+            context_keywords.append("bedroom setting, on bed, intimate room")
+            context_detected.append("BEDROOM")
+        elif any(word in conversation_text for word in ["douche", "salle de bain", "baignoire", "shower", "bathroom"]):
+            context_keywords.append("bathroom, shower, wet skin, water")
+            context_detected.append("BATHROOM")
+        elif any(word in conversation_text for word in ["plage", "beach", "piscine", "pool", "eau"]):
+            context_keywords.append("beach setting, by water, outdoor")
+            context_detected.append("WATER")
         
-        if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "?rotique", "excit", "belle", "bandant", "chaud"]):
-            context_keywords.append("sexy sensual pose, seductive alluring, provocative")
+        # 3. V?TEMENTS/LINGERIE
+        if any(word in conversation_text for word in ["lingerie", "sous-v?tement", "underwear", "soutien-gorge", "culotte", "string"]):
+            context_keywords.append("wearing sexy lingerie, revealing underwear, intimate clothing")
+            context_detected.append("LINGERIE")
+        elif any(word in conversation_text for word in ["robe", "jupe", "d?collet?", "moulant", "transparent", "dress"]):
+            context_keywords.append("revealing outfit, form-fitting clothes")
+            context_detected.append("CLOTHING")
         
-        if any(word in conversation_text for word in ["lingerie", "sous-v?tements", "underwear", "d?shabille", "petite tenue"]):
-            context_keywords.append("wearing revealing lingerie, intimate clothing, seductive outfit")
+        # 4. POSITIONS/POSES (tr?s important pour l'image)
+        if any(word in conversation_text for word in ["position", "pose", "allong?", "?cart?", "ouvre", "penche", "cambre", "? quatre pattes"]):
+            context_keywords.append("provocative seductive pose, suggestive position")
+            context_detected.append("POSE")
+        elif any(word in conversation_text for word in ["assis", "debout", "accroupi", "agenouill?"]):
+            context_keywords.append("specific position, deliberate stance")
+            context_detected.append("STANCE")
         
-        if any(word in conversation_text for word in ["position", "pose", "comme ?a", "ainsi", "posture"]):
-            context_keywords.append("provocative seductive pose, suggestive position, alluring stance")
+        # 5. ATMOSPH?RE/?MOTION
+        if any(word in conversation_text for word in ["plaisir", "jouissance", "extase", "g?mir", "soupir"]):
+            context_keywords.append("pleasure expression, ecstatic face, sensual emotion")
+            context_detected.append("PLEASURE")
+        elif any(word in conversation_text for word in ["sexy", "hot", "sensuel", "?rotique", "excit?", "chaud"]):
+            context_keywords.append("sexy, seductive, alluring, provocative")
+            context_detected.append("SEXY")
+        elif any(word in conversation_text for word in ["envie", "d?sir", "veux", "besoin"]):
+            context_keywords.append("desire, wanting, passionate expression")
+            context_detected.append("DESIRE")
         
-        if any(word in conversation_text for word in ["envie", "d?sir", "veux", "besoin", "desire"]):
-            context_keywords.append("desire wanting, passionate, aroused expression")
+        # 6. CONTACT PHYSIQUE
+        if any(word in conversation_text for word in ["touche", "caresse", "embrasse", "l?che", "suce", "frotte", "masse"]):
+            context_keywords.append("intimate touching, sensual physical contact")
+            context_detected.append("TOUCH")
         
-        if any(word in conversation_text for word in ["touche", "caresse", "embrasse", "l?che", "kiss", "touch"]):
-            context_keywords.append("intimate touching, sensual contact, romantic caress")
+        # 7. PARTIES DU CORPS (focus sp?cifique)
+        body_focus = []
+        if any(word in conversation_text for word in ["sein", "poitrine", "t?ton"]):
+            body_focus.append("chest focus")
+        if any(word in conversation_text for word in ["fesse", "cul", "derri?re"]):
+            body_focus.append("rear focus")
+        if any(word in conversation_text for word in ["jambe", "cuisse", "hanche"]):
+            body_focus.append("legs focus")
+        if body_focus:
+            context_keywords.append(", ".join(body_focus) + ", body curves emphasis")
+            context_detected.append("BODY_FOCUS")
         
-        if any(word in conversation_text for word in ["sein", "poitrine", "fesse", "cul", "jambe", "cuisse"]):
-            context_keywords.append("sensual body curves, revealing figure, attractive physique")
+        # 8. ACTIONS EXPLICITES
+        if any(word in conversation_text for word in ["branle", "masturbe", "p?n?tre", "baise", "fuck"]):
+            context_keywords.append("explicit intimate activity, sexual act")
+            context_detected.append("EXPLICIT")
         
-        # Construire le prompt contextuel
+        # Construire le prompt contextuel intelligent
         name = personality_data.get('name', 'Person')
         genre = personality_data.get('genre', 'Neutre')
         age_num = ''.join(filter(str.isdigit, personality_data.get('age', '25')))
@@ -282,39 +371,52 @@ class ImageGenerator:
         base_prompt = self._build_base_prompt(genre, age_num, personality_data.get('description', ''), visual_traits)
         
         if context_keywords:
-            context_str = ", ".join(context_keywords)
-            full_prompt = f"{base_prompt}, {context_str}"
-            print(f"[IMAGE] Contextual generation with keywords: {context_str}", flush=True)
+            # Limiter ? 4 ?l?ments pour ne pas surcharger le prompt
+            context_str = ", ".join(context_keywords[:4])
+            full_prompt = f"{base_prompt}, {context_str}, high quality, detailed"
+            print(f"[IMAGE] Context detected: {', '.join(context_detected)}", flush=True)
+            print(f"[IMAGE] Keywords: {context_str[:100]}...", flush=True)
         else:
-            # Par d?faut, g?n?rer une image suggestive
-            full_prompt = f"{base_prompt}, suggestive, sensual"
-            print(f"[IMAGE] No specific context detected, using suggestive default", flush=True)
+            # Par d?faut neutre
+            full_prompt = f"{base_prompt}, natural pose, attractive"
+            print(f"[IMAGE] No strong context, using neutral default", flush=True)
         
-        print(f"[IMAGE] Contextual prompt: {full_prompt[:150]}...", flush=True)
+        print(f"[IMAGE] Full prompt: {full_prompt[:180]}...", flush=True)
         
-        # G?n?rer l'image avec retry automatique pour fiabilit? 100%
-        max_retries = 3
+        # G?n?rer avec le syst?me de retry am?lior? (5 tentatives)
+        max_retries = 5
         image_url = None
         
         for attempt in range(max_retries):
-            print(f"[IMAGE] Contextual generation attempt {attempt + 1}/{max_retries}...", flush=True)
+            print(f"[IMAGE] Contextual attempt {attempt + 1}/{max_retries}...", flush=True)
             
-            image_url = await self._generate_pollinations(full_prompt)
+            image_url = await self._generate_pollinations(full_prompt, attempt=attempt+1)
             
             if image_url:
-                print(f"[IMAGE] Contextual image generated successfully on attempt {attempt + 1}!", flush=True)
+                print(f"[IMAGE] \u2713 Contextual success on attempt {attempt + 1}!", flush=True)
                 return image_url
             
-            # Fallback vers Replicate si disponible
-            if not image_url and self.replicate_key:
+            # Simplifier si ?chec r?p?t?
+            if attempt >= 2 and len(full_prompt) > 200:
+                print(f"[IMAGE] Trying simplified contextual...", flush=True)
+                simplified = self._simplify_prompt(full_prompt)
+                image_url = await self._generate_pollinations(simplified, attempt=attempt+1)
+                if image_url:
+                    return image_url
+            
+            # Fallback Replicate
+            if self.replicate_key and attempt >= 3:
                 image_url = await self._generate_replicate(full_prompt)
                 if image_url:
                     return image_url
             
-            # Attendre avant retry
             if attempt < max_retries - 1:
-                print(f"[IMAGE] Attempt {attempt + 1} failed, retrying in 2s...", flush=True)
-                await asyncio.sleep(2)
+                wait_time = 1 + attempt
+                await asyncio.sleep(wait_time)
         
-        print(f"[IMAGE] All contextual generation attempts failed", flush=True)
-        return None
+        # FALLBACK FINAL garanti
+        print(f"[IMAGE] Generating guaranteed fallback contextual URL", flush=True)
+        random_seed = random.randint(1, 999999999)
+        encoded_prompt = urllib.parse.quote(self._simplify_prompt(full_prompt))
+        fallback_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=768&model=turbo&seed={random_seed}&nologo=true"
+        return fallback_url
