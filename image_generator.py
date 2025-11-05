@@ -138,7 +138,7 @@ class ImageGenerator:
         print(f"[IMAGE] Generating guaranteed Pollinations fallback URL", flush=True)
         random_seed = random.randint(1, 999999999)
         encoded_prompt = urllib.parse.quote(self._simplify_prompt(full_prompt))
-        fallback_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}éwidth=512&height=768&model=turbo&seed={random_seed}&nologo=true"
+        fallback_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=768&model=turbo&seed={random_seed}&nologo=true"
         print(f"[IMAGE] Returning final fallback URL", flush=True)
         return fallback_url
     
@@ -193,7 +193,7 @@ class ImageGenerator:
             encoded_prompt = urllib.parse.quote(prompt)
             
             # URL TURBO: resolution reduite mais ULTRA RAPIDE
-            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}éwidth=512&height=768&model=turbo&seed={random_seed}&nologo=true&enhance=false"
+            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=768&model=turbo&seed={random_seed}&nologo=true&enhance=false"
             
             print(f"[IMAGE] Pollinations TURBO URL generated (expected 2-5s)", flush=True)
             
@@ -285,7 +285,7 @@ class ImageGenerator:
             
             # Construire l'URL avec la strategie choisie
             params = f"width={strategy['width']}&height={strategy['height']}&model={strategy['model']}&seed={random_seed}&nologo=true&enhance={strategy['enhance']}"
-            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}é{params}"
+            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?{params}"
             
             print(f"[IMAGE] Strategy {strategy_index + 1}: {strategy['model']} ({strategy['width']}x{strategy['height']}) enhance={strategy['enhance']}", flush=True)
             print(f"[IMAGE] URL generated, validating...", flush=True)
