@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: discord-bot-ia
+    runtime: python
+    buildCommand: bash build.sh
+    startCommand: python3 -u bot.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
