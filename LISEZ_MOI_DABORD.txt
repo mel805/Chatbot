@@ -1,0 +1,55 @@
+⚠️⚠️⚠️ ERREUR "requirements.txt non trouvé" ? ⚠️⚠️⚠️
+
+SOLUTION RAPIDE:
+
+1. Ouvrez un terminal/invite de commande
+
+2. Allez dans le dossier contenant tous les fichiers du bot:
+   
+   cd /chemin/vers/le/dossier
+   
+   (Remplacez "/chemin/vers/le/dossier" par le vrai chemin)
+
+3. Vérifiez que vous êtes au bon endroit:
+   
+   ls        (Linux/Mac)
+   dir       (Windows)
+   
+   Vous devez voir: bot.py, requirements.txt, README.md, etc.
+
+4. ENSUITE installez les dépendances:
+   
+   pip install -r requirements.txt
+
+5. Configurez vos tokens:
+   
+   cp .env.example .env        (Linux/Mac)
+   copy .env.example .env      (Windows)
+   
+   Puis éditez .env avec vos tokens Discord et Groq
+
+6. Lancez le bot:
+   
+   python bot.py
+
+═══════════════════════════════════════════════════════════
+
+POUR PLUS DE DÉTAILS: Consultez INSTALLATION.md
+
+═══════════════════════════════════════════════════════════
+
+TOKENS NÉCESSAIRES:
+
+1. Token Discord:
+   → https://discord.com/developers/applications
+   → Créez une app/bot
+   → Copiez le token
+   → Activez "Message Content Intent"
+
+2. Clé API Groq (GRATUIT):
+   → https://console.groq.com
+   → Créez un compte
+   → Créez une API Key
+   → Copiez-la
+
+═══════════════════════════════════════════════════════════

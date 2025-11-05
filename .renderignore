@@ -1,0 +1,50 @@
+# Fichiers ? ignorer lors du d?ploiement Render
+
+# Environnement local
+.env
+.env.local
+.env.*.local
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environnements virtuels
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Tests
+tests/
+test_*.py
+*_test.py
+
+# Documentation de d?veloppement (optionnel)
+# docs/
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs locaux
+*.log
+logs/
+
+# Base de donn?es locale
+*.db
+*.sqlite
+*.sqlite3

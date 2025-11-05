@@ -1,0 +1,67 @@
+?? TESTEZ LES NOUVELLES FONCTIONNALIT?S D'IMAGES
+
+? ATTENDEZ 2-3 MINUTES (Render red?marre)
+
+================================================================================
+
+? PROBL?MES R?SOLUS:
+
+1. ?? Images toujours identiques
+   ? Seed al?atoire dynamique
+   ? Chaque image sera UNIQUE!
+
+2. ?? Censure NSFW
+   ? Prompts explicites renforc?s
+   ? Images vraiment NSFW maintenant
+
+3. ?? Lien avec conversation
+   ? Nouvelle commande /generer_contexte
+   ? Image g?n?r?e selon vos ?changes!
+
+================================================================================
+
+?? COMMANDES ? TESTER:
+
+1?? G?n?ration Simple (images uniques ? chaque fois):
+   /generer_image style:lingerie
+   /generer_image style:suggestive
+   /generer_image style:artistic_nude
+   /generer_image style:intimate
+
+2?? G?n?ration Contextuelle (NOUVEAU!):
+   - Discutez d'abord avec le bot (minimum 3 messages)
+   - Utilisez des mots comme: nue, lit, chambre, envie, touche, etc.
+   - Lancez: /generer_contexte
+   ? L'image sera g?n?r?e selon votre conversation!
+
+3?? Voir tous les styles:
+   /galerie
+
+================================================================================
+
+?? EXEMPLE DE TEST CONTEXTUEL:
+
+Vous: "tu es o??"
+Bot: "dans ma chambre ??"
+Vous: "sur ton lit?"
+Bot: "oui ??"
+Vous: "montre-moi"
+Bot: "d'accord ??"
+Vous: /generer_contexte
+
+? Image g?n?r?e: Luna sur un lit, chambre, pose intime!
+
+================================================================================
+
+?? CE QUI A CHANG?:
+
+? Seed al?atoire ? Images diff?rentes ? chaque fois
+? Prompts NSFW ? Plus explicites (uncensored, explicit, nude, erotic)
+? G?n?ration contextuelle ? Bas?e sur conversation (d?tecte 7 types de contextes)
+? 8 styles ? 4 SFW + 4 NSFW explicites
+
+================================================================================
+
+?? TESTEZ DANS 2-3 MINUTES!
+
+Lisez IMAGES_AMELIOREES.md pour tous les d?tails! ??

@@ -1,0 +1,166 @@
+{
+  "version": "2.0",
+  "name": "Discord Bot IA - Groq Edition",
+  "description": "Bot Discord conversationnel avec 8 personnalit?s et contr?le admin",
+  
+  "personalities": {
+    "amical": {
+      "name": "Amical ??",
+      "emoji": "??",
+      "description": "Sympathique, ouvert d'esprit et ? l'?coute",
+      "suitable_for": "Conversations g?n?rales, ambiance d?contract?e"
+    },
+    "seducteur": {
+      "name": "S?ducteur ??",
+      "emoji": "??",
+      "description": "Charmant, flirteur et confiant",
+      "suitable_for": "Conversations l?g?res, ambiance s?duction"
+    },
+    "coquin": {
+      "name": "Coquin ??",
+      "emoji": "??",
+      "description": "Os?, direct et provocateur",
+      "suitable_for": "Conversations adultes explicites"
+    },
+    "romantique": {
+      "name": "Romantique ??",
+      "emoji": "??",
+      "description": "Doux, passionn? et ?motionnel",
+      "suitable_for": "Conversations intimes et romantiques"
+    },
+    "dominant": {
+      "name": "Dominant ??",
+      "emoji": "??",
+      "description": "Confiant, assertif et autoritaire",
+      "suitable_for": "Jeux de r?le D/s, conversations de contr?le"
+    },
+    "soumis": {
+      "name": "Soumis ??",
+      "emoji": "??",
+      "description": "Respectueux, ob?issant et d?vou?",
+      "suitable_for": "Jeux de r?le D/s, conversations de soumission"
+    },
+    "joueur": {
+      "name": "Joueur ??",
+      "emoji": "??",
+      "description": "Fun, d?contract? et gamer",
+      "suitable_for": "Discussions gaming, ambiance fun"
+    },
+    "intellectuel": {
+      "name": "Intellectuel ??",
+      "emoji": "??",
+      "description": "Cultiv?, sophistiqu? et profond",
+      "suitable_for": "Discussions philosophiques, d?bats"
+    }
+  },
+  
+  "groq_models": {
+    "recommended": [
+      {
+        "name": "llama-3.1-70b-versatile",
+        "description": "Meilleur ?quilibre qualit?/vitesse (par d?faut)",
+        "speed": "???",
+        "quality": "?????"
+      },
+      {
+        "name": "mixtral-8x7b-32768",
+        "description": "Excellent avec contexte ?tendu",
+        "speed": "???",
+        "quality": "?????"
+      }
+    ],
+    "fast": [
+      {
+        "name": "llama-3.1-8b-instant",
+        "description": "Ultra rapide pour conversations simples",
+        "speed": "?????",
+        "quality": "????"
+      },
+      {
+        "name": "gemma2-9b-it",
+        "description": "Bon pour conversations l?g?res",
+        "speed": "????",
+        "quality": "????"
+      }
+    ],
+    "powerful": [
+      {
+        "name": "llama-3.2-90b-text-preview",
+        "description": "Le plus puissant (peut ?tre plus lent)",
+        "speed": "??",
+        "quality": "?????"
+      }
+    ]
+  },
+  
+  "settings": {
+    "max_history": 20,
+    "rate_limit_seconds": 2,
+    "max_response_tokens": 500,
+    "temperature": 0.9,
+    "top_p": 0.95
+  },
+  
+  "admin_commands": [
+    "!start - Active le bot dans le canal",
+    "!stop - D?sactive le bot dans le canal",
+    "!personality [nom] - Change la personnalit?",
+    "!reset - R?initialise l'historique",
+    "!status - Affiche le statut du bot"
+  ],
+  
+  "user_commands": [
+    "!help_bot - Affiche l'aide compl?te"
+  ],
+  
+  "features": {
+    "multiple_personalities": true,
+    "admin_only_control": true,
+    "per_channel_activation": true,
+    "conversation_memory": true,
+    "multi_user_support": true,
+    "fast_responses": true,
+    "free_api": true,
+    "24_7_ready": true
+  },
+  
+  "hosting_options": [
+    {
+      "name": "Oracle Cloud (VPS)",
+      "cost": "Gratuit",
+      "recommended": true,
+      "uptime": "99.9%",
+      "difficulty": "Moyenne"
+    },
+    {
+      "name": "Raspberry Pi",
+      "cost": "60? (une fois)",
+      "recommended": true,
+      "uptime": "99%",
+      "difficulty": "Facile"
+    },
+    {
+      "name": "Contabo VPS",
+      "cost": "5?/mois",
+      "recommended": true,
+      "uptime": "99.9%",
+      "difficulty": "Moyenne"
+    },
+    {
+      "name": "PC personnel",
+      "cost": "Gratuit",
+      "recommended": false,
+      "uptime": "Variable",
+      "difficulty": "Tr?s facile"
+    }
+  ],
+  
+  "links": {
+    "discord_developers": "https://discord.com/developers/applications",
+    "groq_console": "https://console.groq.com",
+    "oracle_cloud": "https://www.oracle.com/cloud/free/",
+    "documentation": "README.md",
+    "quick_guide": "GUIDE_RAPIDE.md",
+    "hosting_guide": "HEBERGEMENT_24_7.md"
+  }
+}
