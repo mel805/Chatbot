@@ -93,11 +93,33 @@ class ImageGenerator:
         # pour ?viter le style anim?/cartoon
         realism_keywords = "photorealistic, realistic photo, real person, high quality photograph, professional photoshoot, natural lighting, realistic skin texture, detailed face"
         
+        # CRITIQUE: Forcer l'apparence ADULTE selon l'?ge
+        # Extraire l'?ge num?rique
+        age_num = int(''.join(filter(str.isdigit, str(age))) or "25")
+        
+        # Construire des indicateurs d'?ge FORTS selon la tranche d'?ge
+        if age_num >= 40:
+            # 40+ ans : TRES mature
+            age_keywords = f"{age_num} years old adult, mature adult woman/man, middle-aged, mature face, adult features, experienced adult, fully grown adult"
+            print(f"[IMAGE] Age enforcement: {age_num}+ years (MATURE ADULT)", flush=True)
+        elif age_num >= 30:
+            # 30-39 ans : Mature
+            age_keywords = f"{age_num} years old adult, mature adult, adult person, grown adult, adult face, adult body, fully mature"
+            print(f"[IMAGE] Age enforcement: {age_num} years (ADULT)", flush=True)
+        elif age_num >= 25:
+            # 25-29 ans : Jeune adulte
+            age_keywords = f"{age_num} years old adult, young adult, adult person, grown adult, adult features, mature young adult"
+            print(f"[IMAGE] Age enforcement: {age_num} years (YOUNG ADULT)", flush=True)
+        else:
+            # 18-24 ans : Adulte
+            age_keywords = f"{age_num} years old adult, adult person, young adult, grown adult, adult body"
+            print(f"[IMAGE] Age enforcement: {age_num} years (ADULT)", flush=True)
+        
         # Si des traits visuels sp?cifiques sont fournis, les utiliser en priorit?
         if visual_traits:
             print(f"[IMAGE] Using specific visual traits: {visual_traits[:80]}...", flush=True)
-            # Prompt avec REALISME RENFORCE
-            prompt = f"{visual_traits}, {age} years old, {realism_keywords}"
+            # Prompt avec REALISME RENFORCE + AGE FORCE
+            prompt = f"{visual_traits}, {age_keywords}, {realism_keywords}"
             return prompt
         
         # Sinon, utiliser l'ancienne m?thode (fallback)
@@ -124,8 +146,8 @@ class ImageGenerator:
         
         traits_str = ", ".join(traits) if traits else "attractive"
         
-        # Prompt complet avec REALISME RENFORCE
-        prompt = f"{gender_desc}, {age} years old, {traits_str}, {realism_keywords}"
+        # Prompt complet avec REALISME RENFORCE + AGE FORCE
+        prompt = f"{gender_desc}, {age_keywords}, {traits_str}, {realism_keywords}"
         
         return prompt
     
@@ -139,8 +161,14 @@ class ImageGenerator:
             print(f"[IMAGE] Using random seed: {random_seed}", flush=True)
             
             # AJOUTER NEGATIVE PROMPT pour ?viter le style anim?/cartoon
-            negative_keywords = "NOT anime, NOT cartoon, NOT illustration, NOT drawing, NOT 3D render, NOT CGI"
-            full_prompt_with_negative = f"{prompt}. {negative_keywords}"
+            style_negative = "NOT anime, NOT cartoon, NOT illustration, NOT drawing, NOT 3D render, NOT CGI"
+            
+            # CRITIQUE: AJOUTER NEGATIVE PROMPT STRICT pour ?viter TOUTE apparence enfantine/jeune
+            age_negative = "NOT child, NOT kid, NOT young child, NOT teen, NOT teenager, NOT minor, NOT underage, NOT baby face, NOT youthful appearance, NOT juvenile, NOT adolescent, NOT prepubescent"
+            
+            # Combiner tous les n?gatifs
+            full_negative = f"{style_negative}, {age_negative}"
+            full_prompt_with_negative = f"{prompt}. {full_negative}"
             
             # Encoder le prompt pour URL
             encoded_prompt = urllib.parse.quote(full_prompt_with_negative)
@@ -150,6 +178,7 @@ class ImageGenerator:
             
             print(f"[IMAGE] Pollinations.ai URL generated successfully", flush=True)
             print(f"[IMAGE] Style enforcement: Photorealistic with anti-anime keywords", flush=True)
+            print(f"[IMAGE] Age safety: Strict adult-only enforcement with anti-child keywords", flush=True)
             return image_url
             
         except Exception as e:
