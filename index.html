@@ -1531,7 +1531,7 @@ Aucun membre en attente
 </div>
 <div class="field-group" style="padding-top:0 !important; margin-top:0 !important;">
 <label>Délai d'inactivité avant kick</label>
-<select v-model="inactivityDelayMode" @change="updateDelayFromMode" style="margin-top:5px;">
+<select v-if="editingInactivity" v-model="inactivityDelayMode" @change="updateDelayFromMode" style="margin-top:5px;">
 <option value="0.0007">1 minute (test)</option>
 <option value="1">1 jour</option>
 <option value="7">1 semaine</option>
@@ -1542,7 +1542,7 @@ Aucun membre en attente
 <option value="custom">Personnalisé</option>
 </select>
 <input v-else :value="getDelayLabel(inactivity.delayDays)" readonly style="margin-top:5px;background:#1a1a1a;">
-<div v-if=" inactivityDelayMode==='custom'" style="margin-top:10px;">
+<div v-if="editingInactivity && inactivityDelayMode==='custom'" style="margin-top:10px;">
 <label style="font-size:13px;">Nombre de jours personnalisé :</label>
 <input type="number" v-model.number="inactivityCustomDays" min="1" max="365" style="margin-top:5px;">
 </div>
@@ -1550,7 +1550,7 @@ Aucun membre en attente
 </div>
 <div class="field-group" style="padding-top:0 !important; margin-top:0 !important;">
 <label>Rôle "Inactif" (donné automatiquement via /inactif)</label>
-<select v-model="inactivity.inactiveRoleId" style="margin-top:5px;">
+<select v-if="editingInactivity" v-model="inactivity.inactiveRoleId" style="margin-top:5px;">
 <option :value="null">Aucun (créez un rôle "Inactif")</option>
 <option v-for="(role,roleId) in roles" :key="roleId" :value="roleId">{{getRoleName(roleId)}}</option>
 </select>
@@ -1559,7 +1559,7 @@ Aucun membre en attente
 </div>
 <div class="field-group" style="padding-top:0 !important; margin-top:0 !important;">
 <label>Rôles exempts du kick (ne seront jamais kickés)</label>
-<select v-model="inactivity.excludedRoleIds" multiple style="margin-top:5px;height:120px;">
+<select v-if="editingInactivity" v-model="inactivity.excludedRoleIds" multiple style="margin-top:5px;height:120px;">
 <option v-for="(role,roleId) in roles" :key="roleId" :value="roleId">{{getRoleName(roleId)}}</option>
 </select>
 <div v-else style="margin-top:5px;">
@@ -1571,6 +1571,11 @@ Aucun rôle exempt
 </div>
 </div>
 <p style="margin-top:5px;font-size:12px;opacity:0.7;">Le rôle "Inactif" est automatiquement exempt s'il est configuré</p>
+</div>
+<div style="margin-top:20px;display:flex;gap:10px;">
+<button v-if="!editingInactivity" @click="editingInactivity=true" class="btn btn-primary">✏️ Modifier</button>
+<button v-if="editingInactivity" @click="saveInactivity()" class="btn btn-success">💾 Sauvegarder</button>
+<button v-if="editingInactivity" @click="editingInactivity=false;loadInactivity()" class="btn btn-danger">❌ Annuler</button>
 </div>
 </div>
 </div>
@@ -1956,8 +1961,8 @@ tickT:'config',tickEnabled:false,tickCounter:0,tickets:{categoryId:'',panelChann
 channels:{},roles:{},members:{},memberRoles:{},
 staffRoles:[],newStaffRole:'',
 
-autokick:{enabled:false,roleId:'',delayMs:0,pendingJoiners:{}},inactivity:{enabled:false,delayDays:30,excludedRoleIds:[],inactiveRoleId:null},inactivityDelayMode:'30',inactivityCustomDays:30,inactivityStats:{},inactivityMembers:[],
-autokickDelayHours:48,
+autokick:{enabled:false,roleId:'',delayMs:0,pendingJoiners:{}},inactivity:{enabled:false,delayDays:30,excludedRoleIds:[],inactiveRoleId:null},inactivityDelayMode:'30',inactivityCustomDays:30,inactivityStats:{},editingInactivity:false,
+autokickDelayHours:48,editingAutokick:false,
 autothread:{channels:[],naming:{},archive:{},counter:0},
 disboard:{lastBumpAt:0,lastBumpChannelId:'',reminded:false,remindersEnabled:false,remindChannelId:''},
 
