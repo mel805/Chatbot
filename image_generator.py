@@ -231,7 +231,7 @@ class ImageGenerator:
             "lingerie": ["lingerie", "sous-v?tements", "underwear", "soutien-gorge", "bra", "culotte", "panties"],
             "maillot": ["maillot de bain", "bikini", "swimsuit"],
             "nuisette": ["nuisette", "d?shabill?", "nightgown", "negligee"],
-            "bas": ["bas", "collants", "stockings", "tights"],
+            "bas_vetement": ["bas r?sille", "bas nylon", "collants", "stockings", "tights"],  # Renomm? pour ?viter conflit avec "baiser"
             "chaussures": ["talons", "heels", "chaussures", "shoes"],
             "accessoires": ["chapeau", "foulard", "bijoux", "jewelry", "collier", "necklace"]
         }
@@ -286,27 +286,108 @@ class ImageGenerator:
                 context_keywords.append("nude bare skin, revealing body, natural figure")
                 print(f"[IMAGE] Nudity context detected (no clothing mentioned)", flush=True)
         
-        # PRIORITE 2: D?tecter l'environnement
+        # PRIORITE 2: D?tecter les ACTIONS INTIMES SPECIFIQUES (avant les g?n?riques)
+        # Ces d?tections ont la priorit? car elles sont plus pr?cises visuellement
+        
+        action_detected = False
+        
+        # D?tection d'actions ORALES (bouche, l?cher, sucer, etc.)
+        oral_keywords = ["bouche", "l?che", "l?cher", "suce", "sucer", "avale", "avaler", 
+                        "langue", "l?vres sur", "embrasse le", "goute", "go?ter",
+                        "mouth", "lick", "licking", "suck", "sucking", "oral", "tongue", "taste"]
+        
+        if any(keyword in conversation_text for keyword in oral_keywords):
+            # V?rifier si c'est une action orale intime (pas juste un baiser sur la joue)
+            intimate_oral_context = ["bite", "queue", "sexe", "penis", "cock", "dick", 
+                                     "chatte", "pussy", "clit", "t?ton", "nipple",
+                                     "prendre dans", "avaler", "toute enti?re", "te sucer", 
+                                     "te l?cher", "te prendre", "pipe", "fellation", "blowjob"]
+            
+            is_intimate_oral = any(ctx in conversation_text for ctx in intimate_oral_context)
+            
+            if is_intimate_oral:
+                context_keywords.append("intimate oral scene, mouth open, tongue out, sensual oral action, explicit oral pose")
+                action_detected = True
+                print(f"[IMAGE] SPECIFIC ACTION: Intimate oral activity detected", flush=True)
+            else:
+                # Action orale g?n?rique (baiser, l?cher le cou, etc.)
+                context_keywords.append("kissing scene, sensual licking, intimate mouth contact")
+                action_detected = True
+                print(f"[IMAGE] ACTION: General oral/kissing activity detected", flush=True)
+        
+        # D?tection de P?N?TRATION
+        penetration_keywords = ["p?n?tre", "p?n?trer", "rentre en", "enfonce", "enfoncer",
+                               "dedans", "en moi", "en toi", "inside", "penetrat", "thrust"]
+        
+        if any(keyword in conversation_text for keyword in penetration_keywords):
+            context_keywords.append("explicit penetration scene, intimate intercourse, sexual position, explicit sexual act")
+            action_detected = True
+            print(f"[IMAGE] SPECIFIC ACTION: Penetration activity detected", flush=True)
+        
+        # D?tection de POSITIONS SP?CIFIQUES
+        position_keywords = {
+            "quatre pattes": "on all fours position, doggystyle pose, bent over",
+            "genoux": "on knees position, kneeling pose, submissive kneel",
+            "jambes ?cart": "legs spread wide, open legs position, exposed pose",
+            "allong": "lying down position, on back pose, horizontal pose",
+            "assis sur": "sitting on lap, straddling position, mounted pose",
+            "debout contre": "standing against wall, pressed against, upright position"
+        }
+        
+        for pos_keyword, visual_desc in position_keywords.items():
+            if pos_keyword in conversation_text:
+                context_keywords.append(visual_desc)
+                action_detected = True
+                print(f"[IMAGE] SPECIFIC POSITION: {pos_keyword} detected", flush=True)
+                break
+        
+        # D?tection de MASTURBATION (v?rifier contexte r?flexif/auto-plaisir)
+        masturbation_keywords = ["masturbe", "caresse moi", "me caresse", "touche moi", "me touche", 
+                                "touche toi", "te touches", "doigt", "doigter",
+                                "frotte", "stimule", "masturbat", "finger", "rub", "touch myself",
+                                "me toucher", "te toucher"]
+        
+        if any(keyword in conversation_text for keyword in masturbation_keywords):
+            context_keywords.append("self-pleasure scene, intimate touching, sensual masturbation pose, hand between legs")
+            action_detected = True
+            print(f"[IMAGE] SPECIFIC ACTION: Masturbation activity detected", flush=True)
+        
+        # D?tection d'EXPOSITION (montrer, exhiber)
+        exposure_keywords = ["montre", "regarde", "vois", "exhibe", "expose", "d?voile",
+                            "show", "look at", "watch", "display", "reveal"]
+        body_parts = ["sein", "seins", "poitrine", "fesse", "fesses", "chatte", "sexe", 
+                     "t?ton", "corps", "breast", "ass", "pussy", "body"]
+        
+        has_exposure = any(exp in conversation_text for exp in exposure_keywords)
+        has_body_part = any(part in conversation_text for part in body_parts)
+        
+        if has_exposure and has_body_part:
+            context_keywords.append("exhibitionist pose, showing body, revealing intimate parts, display pose")
+            action_detected = True
+            print(f"[IMAGE] SPECIFIC ACTION: Exhibition/showing detected", flush=True)
+        
+        # PRIORITE 3: D?tecter l'environnement
         if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed", "matelas"]):
             context_keywords.append("bedroom intimate setting, on bed, private room")
         
-        # PRIORITE 3: D?tecter l'ambiance/attitude
-        if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "?rotique", "excit", "belle", "bandant", "chaud"]):
-            context_keywords.append("sexy sensual pose, seductive alluring, provocative")
+        # PRIORITE 4: D?tecter l'ambiance/attitude (seulement si pas d'action sp?cifique)
+        if not action_detected:
+            if any(word in conversation_text for word in ["sexy", "hot", "sensuel", "?rotique", "excit", "belle", "bandant", "chaud"]):
+                context_keywords.append("sexy sensual pose, seductive alluring, provocative")
+            
+            # D?tecter les poses g?n?riques
+            if any(word in conversation_text for word in ["position", "pose", "comme ?a", "ainsi", "posture"]):
+                context_keywords.append("provocative seductive pose, suggestive position, alluring stance")
+            
+            # D?tecter les ?motions
+            if any(word in conversation_text for word in ["envie", "d?sir", "veux", "besoin", "desire"]):
+                context_keywords.append("desire wanting, passionate, aroused expression")
+            
+            # D?tecter les actions intimes g?n?riques
+            if any(word in conversation_text for word in ["touche", "caresse", "embrasse", "kiss", "touch"]):
+                context_keywords.append("intimate touching, sensual contact, romantic caress")
         
-        # D?tecter les poses sp?cifiques
-        if any(word in conversation_text for word in ["position", "pose", "comme ?a", "ainsi", "posture", "allong", "debout", "assis"]):
-            context_keywords.append("provocative seductive pose, suggestive position, alluring stance")
-        
-        # D?tecter les ?motions
-        if any(word in conversation_text for word in ["envie", "d?sir", "veux", "besoin", "desire"]):
-            context_keywords.append("desire wanting, passionate, aroused expression")
-        
-        # D?tecter les actions intimes
-        if any(word in conversation_text for word in ["touche", "caresse", "embrasse", "l?che", "kiss", "touch"]):
-            context_keywords.append("intimate touching, sensual contact, romantic caress")
-        
-        # D?tecter les parties du corps mentionn?es
+        # D?tecter les parties du corps mentionn?es (toujours actif)
         if any(word in conversation_text for word in ["sein", "poitrine", "fesse", "cul", "jambe", "cuisse"]):
             context_keywords.append("sensual body curves, revealing figure, attractive physique")
         
