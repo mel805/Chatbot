@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Inactivity API</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #0d0d0d; color: #fff; }
+        .section { background: #1a1a1a; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        pre { background: #0a0a0a; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test API Inactivité</h1>
+    
+    <div class="section">
+        <h2>1. Test API Configuration</h2>
+        <button onclick="testConfigAPI()">Tester GET /api/inactivity</button>
+        <pre id="config-result">Cliquez sur le bouton pour tester...</pre>
+    </div>
+    
+    <div class="section">
+        <h2>2. Test API Membres Discord</h2>
+        <button onclick="testMembersAPI()">Tester GET /api/discord/members</button>
+        <pre id="members-result">Cliquez sur le bouton pour tester...</pre>
+    </div>
+    
+    <div class="section">
+        <h2>3. Test API Membres Inactivité</h2>
+        <button onclick="testInactivityMembersAPI()">Tester GET /api/inactivity/members</button>
+        <pre id="inactivity-members-result">Cliquez sur le bouton pour tester...</pre>
+    </div>
+    
+    <div class="section">
+        <h2>4. Test Résolution Noms</h2>
+        <button onclick="testNameResolution()">Tester résolution noms</button>
+        <pre id="name-result">Cliquez sur le bouton pour tester...</pre>
+    </div>
+
+    <script>
+        async function testConfigAPI() {
+            const result = document.getElementById('config-result');
+            try {
+                result.textContent = 'Chargement...';
+                const response = await fetch('/api/inactivity');
+                const data = await response.json();
+                result.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = 'ERREUR: ' + error.message;
+            }
+        }
+        
+        async function testMembersAPI() {
+            const result = document.getElementById('members-result');
+            try {
+                result.textContent = 'Chargement...';
+                const response = await fetch('/api/discord/members');
+                const data = await response.json();
+                result.textContent = `Total: ${Object.keys(data).length} membres\n\n` +
+                    `Premiers 5:\n${JSON.stringify(Object.entries(data).slice(0, 5), null, 2)}`;
+            } catch (error) {
+                result.textContent = 'ERREUR: ' + error.message;
+            }
+        }
+        
+        async function testInactivityMembersAPI() {
+            const result = document.getElementById('inactivity-members-result');
+            try {
+                result.textContent = 'Chargement...';
+                const response = await fetch('/api/inactivity/members');
+                const data = await response.json();
+                result.textContent = `Total: ${data.length} membres suivis\n\n` +
+                    `Premiers 3:\n${JSON.stringify(data.slice(0, 3), null, 2)}`;
+            } catch (error) {
+                result.textContent = 'ERREUR: ' + error.message;
+            }
+        }
+        
+        async function testNameResolution() {
+            const result = document.getElementById('name-result');
+            try {
+                result.textContent = 'Chargement...';
+                
+                // Charger les membres
+                const membersRes = await fetch('/api/discord/members');
+                const members = await membersRes.json();
+                
+                // Charger les membres inactivité
+                const inactivityRes = await fetch('/api/inactivity/members');
+                const inactivityMembers = await inactivityRes.json();
+                
+                // Tester résolution des 5 premiers
+                const tests = inactivityMembers.slice(0, 5).map(member => {
+                    const userId = member.userId;
+                    const name = members[userId] || 'ID: ' + userId;
+                    return `${userId} => ${name}`;
+                });
+                
+                result.textContent = `Membres Discord chargés: ${Object.keys(members).length}\n` +
+                    `Membres inactivité: ${inactivityMembers.length}\n\n` +
+                    `Résolution des 5 premiers:\n${tests.join('\n')}`;
+            } catch (error) {
+                result.textContent = 'ERREUR: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
