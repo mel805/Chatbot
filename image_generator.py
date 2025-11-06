@@ -89,11 +89,15 @@ class ImageGenerator:
     def _build_base_prompt(self, genre, age, description, visual_traits=""):
         """Construit le prompt de base selon la personnalit?"""
         
+        # IMPORTANT: Toujours ajouter des indicateurs de REALISME FORT
+        # pour ?viter le style anim?/cartoon
+        realism_keywords = "photorealistic, realistic photo, real person, high quality photograph, professional photoshoot, natural lighting, realistic skin texture, detailed face"
+        
         # Si des traits visuels sp?cifiques sont fournis, les utiliser en priorit?
         if visual_traits:
             print(f"[IMAGE] Using specific visual traits: {visual_traits[:80]}...", flush=True)
-            # Prompt plus simple et plus fiable
-            prompt = f"{visual_traits}, {age} years old, portrait photography"
+            # Prompt avec REALISME RENFORCE
+            prompt = f"{visual_traits}, {age} years old, {realism_keywords}"
             return prompt
         
         # Sinon, utiliser l'ancienne m?thode (fallback)
@@ -120,8 +124,8 @@ class ImageGenerator:
         
         traits_str = ", ".join(traits) if traits else "attractive"
         
-        # Prompt complet (simplifi?)
-        prompt = f"portrait, {gender_desc}, {age} years old, {traits_str}, professional photography"
+        # Prompt complet avec REALISME RENFORCE
+        prompt = f"{gender_desc}, {age} years old, {traits_str}, {realism_keywords}"
         
         return prompt
     
@@ -134,13 +138,18 @@ class ImageGenerator:
             random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
             print(f"[IMAGE] Using random seed: {random_seed}", flush=True)
             
+            # AJOUTER NEGATIVE PROMPT pour ?viter le style anim?/cartoon
+            negative_keywords = "NOT anime, NOT cartoon, NOT illustration, NOT drawing, NOT 3D render, NOT CGI"
+            full_prompt_with_negative = f"{prompt}. {negative_keywords}"
+            
             # Encoder le prompt pour URL
-            encoded_prompt = urllib.parse.quote(prompt)
+            encoded_prompt = urllib.parse.quote(full_prompt_with_negative)
             
             # Construire l'URL Pollinations (Flux model, haute qualit?, seed al?atoire)
             image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=768&height=1024&model=flux&seed={random_seed}&nologo=true&enhance=true"
             
             print(f"[IMAGE] Pollinations.ai URL generated successfully", flush=True)
+            print(f"[IMAGE] Style enforcement: Photorealistic with anti-anime keywords", flush=True)
             return image_url
             
         except Exception as e:
