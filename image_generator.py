@@ -140,11 +140,15 @@ class ImageGenerator:
         # REALISME apr?s l'?ge
         realism_keywords = "PHOTOREALISTIC PHOTO, realistic photograph, real human person, high quality professional photograph, natural photographic lighting, realistic human skin texture, detailed realistic face, natural appearance"
         
-        # Si des traits visuels sp?cifiques sont fournis, les utiliser en priorit?
+        # Si des traits visuels sp?cifiques sont fournis, les RENFORCER pour coh?rence
         if visual_traits:
             print(f"[IMAGE] Using specific visual traits: {visual_traits[:80]}...", flush=True)
-            # ?GE EN PREMIER (anti-CSAM), puis r?alisme, puis traits
-            prompt = f"{age_prefix}, {realism_keywords}, {visual_traits}, {age_keywords}"
+            # RENFORCER les traits visuels pour coh?rence entre images
+            # R?p?ter les traits cl?s 2x pour que l'IA les priorise
+            visual_reinforced = f"{visual_traits}, CONSISTENT APPEARANCE, {visual_traits}"
+            # ?GE EN PREMIER (anti-CSAM), puis r?alisme, puis traits RENFORC?S
+            prompt = f"{age_prefix}, {realism_keywords}, {visual_reinforced}, {age_keywords}, SAME PERSON, consistent facial features"
+            print(f"[IMAGE COHERENCE] Visual traits reinforced for consistency", flush=True)
             return prompt
         
         # Sinon, utiliser l'ancienne m?thode (fallback)
@@ -172,7 +176,9 @@ class ImageGenerator:
         traits_str = ", ".join(traits) if traits else "attractive"
         
         # ?GE EN PREMIER (anti-CSAM), puis r?alisme, puis genre, traits
-        prompt = f"{age_prefix}, {realism_keywords}, {gender_desc}, {age_keywords}, {traits_str}"
+        # AJOUTER coh?rence visuelle m?me sans traits sp?cifiques
+        prompt = f"{age_prefix}, {realism_keywords}, {gender_desc}, {age_keywords}, {traits_str}, CONSISTENT APPEARANCE, stable facial features"
+        print(f"[IMAGE COHERENCE] Added consistency keywords for stable appearance", flush=True)
         
         return prompt
     
@@ -566,19 +572,50 @@ class ImageGenerator:
         # Analyser les derniers messages pour extraire le contexte
         context_keywords = []
         
-        # Extraire le texte de la conversation (g?rer dict ou str)
-        # IMPORTANT: Prendre TOUS les messages (pas juste 10) pour mieux capturer le contexte
-        conversation_texts = []
-        for msg in conversation_history:  # Tous les messages, pas juste [-10:]
-            if isinstance(msg, dict):
-                conversation_texts.append(msg.get('content', ''))
-            else:
-                conversation_texts.append(str(msg))
-        conversation_text = " ".join(conversation_texts).lower()
+        # PRIORIT?: Analyser LE DERNIER MESSAGE de l'utilisateur (pas toute la conversation)
+        # Cela ?vite la sur-sexualisation et g?n?re selon la derni?re demande pr?cise
         
-        print(f"[IMAGE CONTEXT] Analyzing {len(conversation_texts)} messages...", flush=True)
-        print(f"[IMAGE CONTEXT] Conversation text length: {len(conversation_text)} chars", flush=True)
-        print(f"[IMAGE CONTEXT] Last 200 chars: ...{conversation_text[-200:]}", flush=True)
+        # Extraire le dernier message utilisateur
+        last_user_message = ""
+        if conversation_history:
+            # Prendre le dernier message (le plus r?cent)
+            last_msg = conversation_history[-1]
+            if isinstance(last_msg, dict):
+                last_user_message = last_msg.get('content', '')
+            else:
+                last_user_message = str(last_msg)
+        
+        # Analyser aussi les 2-3 derniers messages pour contexte suppl?mentaire
+        recent_texts = []
+        for msg in conversation_history[-3:]:  # 3 derniers messages max
+            if isinstance(msg, dict):
+                recent_texts.append(msg.get('content', ''))
+            else:
+                recent_texts.append(str(msg))
+        recent_conversation = " ".join(recent_texts).lower()
+        
+        # Le dernier message est prioritaire
+        last_user_message_lower = last_user_message.lower()
+        
+        print(f"[IMAGE CONTEXT] Analyzing last user message...", flush=True)
+        print(f"[IMAGE CONTEXT] Last message: {last_user_message[:150]}...", flush=True)
+        print(f"[IMAGE CONTEXT] Recent context (3 msgs): {len(recent_conversation)} chars", flush=True)
+        
+        # D?TECTER si la demande est EXPLICITE ou INNOCENTE
+        explicit_keywords = ["bite", "queue", "sexe", "penis", "cock", "dick", "chatte", "pussy",
+                            "p?n?tre", "baise", "fuck", "suce", "l?che", "pipe", "fellation",
+                            "cul", "anal", "sodomie", "masturbe", "doigt", "explicit"]
+        
+        is_explicit_request = any(keyword in last_user_message_lower for keyword in explicit_keywords)
+        
+        if is_explicit_request:
+            print(f"[IMAGE CONTEXT] ⚠️ EXPLICIT request detected - will generate NSFW", flush=True)
+            # Analyser tout le contexte pour actions explicites
+            conversation_text = recent_conversation
+        else:
+            print(f"[IMAGE CONTEXT] ✅ INNOCENT request - will generate SFW/suggestive only", flush=True)
+            # Pour demande innocente, utiliser SEULEMENT le dernier message
+            conversation_text = last_user_message_lower
         
         # PRIORITE 1: D?tecter les v?tements sp?cifiques mentionn?s
         # Cela permet de capturer "robe l?g?re", "chemise", "jupe", etc.
@@ -673,13 +710,18 @@ class ImageGenerator:
             
             is_intimate_oral = any(ctx in conversation_text for ctx in intimate_oral_context)
             
-            if is_intimate_oral:
+            # SEULEMENT ajouter prompts explicites si demande est explicite
+            if is_intimate_oral and is_explicit_request:
                 # PROMPT ULTRA EXPLICITE pour VRAIE sc?ne de fellation/oral sex
                 explicit_oral_prompt = "NSFW explicit hardcore fellatio scene, woman giving blowjob, dick in mouth, actively sucking penis, tongue licking cock shaft, POV oral sex, close-up explicit blowjob, mouth filled with dick, deepthroat scene, explicit cumming oral, graphic XXX oral penetration, pornographic blowjob photo, real explicit fellatio action, hardcore oral sex scene, uncensored NSFW blowjob"
                 context_keywords.append(explicit_oral_prompt)
                 action_detected = True
                 print(f"[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Oral sex / Fellation", flush=True)
                 print(f"[IMAGE CONTEXT] Added explicit oral prompt to generation", flush=True)
+            elif is_intimate_oral and not is_explicit_request:
+                # Demande innocente avec mots oraux (ex: "prend dans ma bouche une glace")
+                # Ne PAS g?n?rer d'image explicite
+                print(f"[IMAGE CONTEXT] ⚠️ Oral keywords but INNOCENT request - skipping explicit", flush=True)
             else:
                 # Action orale g?n?rique (baiser, l?cher le cou, etc.)
                 context_keywords.append("kissing scene, sensual licking, intimate mouth contact")
@@ -692,7 +734,8 @@ class ImageGenerator:
                                "entre dans", "dans ton cul", "dans ta chatte", "dans mon cul", "dans ma chatte",
                                "te prend", "te baise", "baise", "fuck"]
         
-        if any(keyword in conversation_text for keyword in penetration_keywords):
+        # SEULEMENT ajouter p?n?tration si demande explicite
+        if is_explicit_request and any(keyword in conversation_text for keyword in penetration_keywords):
             # PROMPT ULTRA EXPLICITE pour VRAIE sc?ne de p?n?tration/sex
             explicit_penetration_prompt = "NSFW explicit hardcore sex scene, dick penetrating pussy, active fucking, penis inside vagina visible, explicit sexual intercourse POV, graphic penetration close-up, XXX hardcore fucking scene, pornographic sex photo, uncensored penetration shot, real explicit fucking action, genitals clearly visible, hardcore NSFW intercourse, explicit vaginal penetration, pornographic sex position"
             context_keywords.append(explicit_penetration_prompt)
@@ -737,7 +780,8 @@ class ImageGenerator:
                                 "frotte", "stimule", "masturbat", "finger", "rub", "touch myself",
                                 "me toucher", "te toucher"]
         
-        if any(keyword in conversation_text for keyword in masturbation_keywords):
+        # SEULEMENT ajouter masturbation si demande explicite
+        if is_explicit_request and any(keyword in conversation_text for keyword in masturbation_keywords):
             # PROMPT ULTRA EXPLICITE pour VRAIE sc?ne de masturbation
             explicit_masturbation_prompt = "NSFW explicit hardcore masturbation scene, fingers inside pussy, hand stroking cock, actively fingering herself, graphic self-pleasure POV, explicit masturbation close-up, visible pussy/dick being touched, XXX solo masturbation photo, pornographic self-pleasure scene, uncensored genital stimulation, real explicit touching genitals, hardcore NSFW solo sex, fingering pussy clearly visible, explicit masturbation action"
             context_keywords.append(explicit_masturbation_prompt)
@@ -753,7 +797,8 @@ class ImageGenerator:
         has_exposure = any(exp in conversation_text for exp in exposure_keywords)
         has_body_part = any(part in conversation_text for part in body_parts)
         
-        if has_exposure and has_body_part:
+        # SEULEMENT ajouter exhibition si demande explicite
+        if is_explicit_request and has_exposure and has_body_part:
             # PROMPT ULTRA EXPLICITE pour VRAIE exposition des parties intimes
             explicit_exhibition_prompt = "NSFW explicit hardcore nude pose, pussy spread wide open visible, breasts fully exposed, full frontal nudity genitals shown, explicit genital display close-up, XXX nude exhibition photo, pornographic body display, uncensored pussy/breasts/ass visible, real explicit nude modeling, hardcore NSFW full nudity, graphic genital exposure, detailed vulva/penis view, pornographic nude pose"
             context_keywords.append(explicit_exhibition_prompt)
