@@ -1179,6 +1179,13 @@ async def help_command(interaction: discord.Interaction):
     app_commands.Choice(name="Suggestif", value="suggestive"),
     app_commands.Choice(name="Artistique Nu", value="artistic_nude"),
     app_commands.Choice(name="Intime", value="intimate"),
+    # NOUVEAUX STYLES EXPLICITES HARDCORE
+    app_commands.Choice(name="🔥 Fellation", value="explicit_blowjob"),
+    app_commands.Choice(name="🔥 Penetration", value="explicit_fuck"),
+    app_commands.Choice(name="🔥 Sodomie", value="explicit_anal"),
+    app_commands.Choice(name="🔥 Leche Chatte", value="explicit_pussy_lick"),
+    app_commands.Choice(name="🔥 Masturbation", value="explicit_masturbation"),
+    app_commands.Choice(name="🔥 Exhibition", value="explicit_exhibition"),
 ])
 async def generate_image(interaction: discord.Interaction, style: str = "portrait"):
     """G?n?re une image de la personnalit? actuelle"""
@@ -1190,7 +1197,9 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
         await interaction.edit_original_response(content="? Le bot n'est pas actif. Utilisez `/start`.")
         return
     
-    nsfw_styles = ["lingerie", "suggestive", "artistic_nude", "intimate"]
+    nsfw_styles = ["lingerie", "suggestive", "artistic_nude", "intimate", 
+                   "explicit_blowjob", "explicit_fuck", "explicit_anal", 
+                   "explicit_pussy_lick", "explicit_masturbation", "explicit_exhibition"]
     if style in nsfw_styles and hasattr(interaction.channel, 'is_nsfw') and not interaction.channel.is_nsfw():
         await interaction.edit_original_response(content="?? Images NSFW uniquement dans channels NSFW.")
         return
@@ -1198,8 +1207,9 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
     personality_key = channel_personalities.get(channel_id, "femme_coquine")
     personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
     
-    # Prompts NSFW optimis?s (subtils mais efficaces)
+    # Prompts NSFW optimis?s
     style_prompts = {
+        # Styles classiques
         "portrait": "close-up portrait, face focus, head and shoulders, beautiful lighting",
         "casual": "full body, casual everyday outfit, standing, relaxed pose, natural setting",
         "elegant": "full body, elegant evening dress, formal attire, sophisticated pose, glamorous",
@@ -1207,7 +1217,20 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
         "swimsuit": "full body, wearing revealing swimsuit, beach, attractive sensual pose",
         "suggestive": "full body, provocative seductive pose, tempting expression, revealing, sensual body language, alluring",
         "artistic_nude": "full body, nude figure, artistic aesthetic pose, natural bare skin, sensual curves, tasteful composition",
-        "intimate": "intimate bedroom scene, passionate sensual moment, revealing pose, seductive atmosphere, close romantic setting"
+        "intimate": "intimate bedroom scene, passionate sensual moment, revealing pose, seductive atmosphere, close romantic setting",
+        
+        # STYLES EXPLICITES HARDCORE
+        "explicit_blowjob": "NSFW explicit hardcore fellatio scene, woman giving blowjob, dick in mouth clearly visible, actively sucking penis, tongue licking cock shaft, POV oral sex, close-up explicit blowjob, mouth filled with dick, deepthroat scene, explicit cumming oral, graphic XXX oral penetration, pornographic blowjob photo, real explicit fellatio action, hardcore oral sex scene, uncensored NSFW blowjob",
+        
+        "explicit_fuck": "NSFW explicit hardcore sex scene, dick penetrating pussy clearly visible, active fucking, penis inside vagina shown, explicit sexual intercourse POV, graphic penetration close-up, XXX hardcore fucking scene, pornographic sex photo, uncensored penetration shot, real explicit fucking action, genitals clearly visible, hardcore NSFW intercourse, explicit vaginal penetration, pornographic sex position",
+        
+        "explicit_anal": "NSFW explicit hardcore anal sex scene, dick penetrating ass clearly visible, active anal fucking, penis inside anus shown, explicit anal intercourse POV, graphic anal penetration close-up, XXX hardcore anal scene, pornographic anal sex photo, uncensored anal penetration shot, real explicit anal fucking action, asshole and dick clearly visible, hardcore NSFW anal intercourse, explicit sodomy scene",
+        
+        "explicit_pussy_lick": "NSFW explicit hardcore cunnilingus scene, tongue licking pussy clearly visible, eating pussy, mouth on vulva, explicit oral sex on woman, graphic pussy licking close-up, XXX hardcore cunnilingus, pornographic pussy eating photo, uncensored pussy licking shot, real explicit oral on pussy, clitoris and tongue clearly visible, hardcore NSFW pussy licking, explicit vagina oral scene",
+        
+        "explicit_masturbation": "NSFW explicit hardcore masturbation scene, fingers inside pussy clearly visible, hand stroking cock shown, actively fingering herself, graphic self-pleasure POV, explicit masturbation close-up, visible pussy/dick being touched, XXX solo masturbation photo, pornographic self-pleasure scene, uncensored genital stimulation, real explicit touching genitals, hardcore NSFW solo sex, fingering pussy or stroking cock clearly visible",
+        
+        "explicit_exhibition": "NSFW explicit hardcore nude pose, pussy spread wide open clearly visible, breasts fully exposed, full frontal nudity genitals shown in detail, explicit genital display close-up, XXX nude exhibition photo, pornographic body display, uncensored pussy/breasts/ass visible, real explicit nude modeling, hardcore NSFW full nudity, graphic genital exposure, detailed vulva/penis view, pornographic nude spread pose"
     }
     try:
         embed = discord.Embed(title="?? G?n?ration", description=f"Image de **{personality_data['name']}** en cours...\n? 10-30s...", color=personality_data.get('color', 0x3498db))
@@ -1253,8 +1276,9 @@ async def show_gallery(interaction: discord.Interaction):
     embed = discord.Embed(title="?? Galerie", description="Styles disponibles:", color=0x9b59b6)
     embed.add_field(name="??? Standards", value="?? Portrait\n?? Casual\n? ?l?gant\n??? Maillot", inline=False)
     if hasattr(interaction.channel, 'is_nsfw') and interaction.channel.is_nsfw():
-        embed.add_field(name="?? NSFW", value="?? Lingerie\n?? Suggestif\n?? Artistique Nu\n?? Intime", inline=False)
-    embed.add_field(name="?? Exemples", value="```/generer_image style:portrait\n/generer_contexte```", inline=False)
+        embed.add_field(name="?? NSFW Soft", value="?? Lingerie\n?? Suggestif\n?? Artistique Nu\n?? Intime", inline=False)
+        embed.add_field(name="🔥 NSFW Explicit Hardcore", value="🔥 Fellation\n🔥 Penetration\n🔥 Sodomie\n🔥 Leche Chatte\n🔥 Masturbation\n🔥 Exhibition", inline=False)
+    embed.add_field(name="?? Exemples", value="```/generer_image style:portrait\n/generer_image style:explicit_blowjob\n/generer_contexte```", inline=False)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="generer_contexte", description="Genere une image basee sur la conversation en cours")
