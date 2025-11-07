@@ -89,9 +89,10 @@ class ImageGenerator:
     def _build_base_prompt(self, genre, age, description, visual_traits=""):
         """Construit le prompt de base selon la personnalit?"""
         
-        # IMPORTANT: Toujours ajouter des indicateurs de REALISME FORT
-        # pour ?viter le style anim?/cartoon
-        realism_keywords = "photorealistic, realistic photo, real person, high quality photograph, professional photoshoot, natural lighting, realistic skin texture, detailed face"
+        # CRITIQUE: Placer les mots-cl?s de R?ALISME AU D?BUT (plus fort!)
+        # Cela force le mod?le ? g?n?rer du photoR?ALISME d?s le d?part
+        realism_prefix = "PHOTOREALISTIC PHOTO, realistic photograph, real human person"
+        realism_keywords = "high quality professional photograph, natural photographic lighting, realistic human skin texture with pores, detailed realistic face, natural appearance"
         
         # CRITIQUE: Forcer l'apparence ADULTE selon l'?ge
         # Extraire l'?ge num?rique
@@ -118,8 +119,8 @@ class ImageGenerator:
         # Si des traits visuels sp?cifiques sont fournis, les utiliser en priorit?
         if visual_traits:
             print(f"[IMAGE] Using specific visual traits: {visual_traits[:80]}...", flush=True)
-            # Prompt avec REALISME RENFORCE + AGE FORCE
-            prompt = f"{visual_traits}, {age_keywords}, {realism_keywords}"
+            # REALISME EN PREMIER, puis traits, puis ?ge
+            prompt = f"{realism_prefix}, {visual_traits}, {age_keywords}, {realism_keywords}"
             return prompt
         
         # Sinon, utiliser l'ancienne m?thode (fallback)
@@ -146,8 +147,8 @@ class ImageGenerator:
         
         traits_str = ", ".join(traits) if traits else "attractive"
         
-        # Prompt complet avec REALISME RENFORCE + AGE FORCE
-        prompt = f"{gender_desc}, {age_keywords}, {traits_str}, {realism_keywords}"
+        # REALISME EN PREMIER, puis genre, ?ge, traits
+        prompt = f"{realism_prefix}, {gender_desc}, {age_keywords}, {traits_str}, {realism_keywords}"
         
         return prompt
     
@@ -160,25 +161,34 @@ class ImageGenerator:
             random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
             print(f"[IMAGE] Using random seed: {random_seed}", flush=True)
             
-            # AJOUTER NEGATIVE PROMPT pour ?viter le style anim?/cartoon
-            style_negative = "NOT anime, NOT cartoon, NOT illustration, NOT drawing, NOT 3D render, NOT CGI"
+            # AJOUTER PREFIX NSFW EXPLICITE pour forcer le contenu adulte r?el
+            nsfw_prefix = "EXPLICIT NSFW CONTENT, adult explicit scene, graphic sexual content"
+            full_prompt_with_nsfw = f"{nsfw_prefix}, {prompt}"
+            
+            # AJOUTER NEGATIVE PROMPT RENFORCE pour ?viter le style anim?/cartoon
+            style_negative = "NOT anime, NOT cartoon, NOT illustration, NOT drawing, NOT 3D render, NOT CGI, NOT painted, NOT artistic rendering, NOT stylized, NOT digital art"
             
             # CRITIQUE: AJOUTER NEGATIVE PROMPT STRICT pour ?viter TOUTE apparence enfantine/jeune
             age_negative = "NOT child, NOT kid, NOT young child, NOT teen, NOT teenager, NOT minor, NOT underage, NOT baby face, NOT youthful appearance, NOT juvenile, NOT adolescent, NOT prepubescent"
             
+            # NOUVEAU: Negative pour ?viter les censures
+            censorship_negative = "NOT censored, NOT blurred, NOT pixelated, NOT covered, NOT hidden, NOT obscured"
+            
             # Combiner tous les n?gatifs
-            full_negative = f"{style_negative}, {age_negative}"
-            full_prompt_with_negative = f"{prompt}. {full_negative}"
+            full_negative = f"{style_negative}, {age_negative}, {censorship_negative}"
+            full_prompt_complete = f"{full_prompt_with_nsfw}. {full_negative}"
             
             # Encoder le prompt pour URL
-            encoded_prompt = urllib.parse.quote(full_prompt_with_negative)
+            encoded_prompt = urllib.parse.quote(full_prompt_complete)
             
             # Construire l'URL Pollinations (Flux model, haute qualit?, seed al?atoire)
             image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=768&height=1024&model=flux&seed={random_seed}&nologo=true&enhance=true"
             
             print(f"[IMAGE] Pollinations.ai URL generated successfully", flush=True)
-            print(f"[IMAGE] Style enforcement: Photorealistic with anti-anime keywords", flush=True)
+            print(f"[IMAGE] NSFW enforcement: Explicit adult content prefix added", flush=True)
+            print(f"[IMAGE] Style enforcement: STRONG photorealistic with REINFORCED anti-anime keywords", flush=True)
             print(f"[IMAGE] Age safety: Strict adult-only enforcement with anti-child keywords", flush=True)
+            print(f"[IMAGE] Uncensored: Anti-censorship keywords added", flush=True)
             return image_url
             
         except Exception as e:
@@ -344,9 +354,11 @@ class ImageGenerator:
             is_intimate_oral = any(ctx in conversation_text for ctx in intimate_oral_context)
             
             if is_intimate_oral:
-                context_keywords.append("intimate oral scene, mouth open, tongue out, sensual oral action, explicit oral pose")
+                # PROMPT EXPLICITE pour VRAIE sc?ne de fellation/oral sex
+                explicit_oral_prompt = "explicit fellatio scene, performing oral sex, mouth around penis, actively sucking, tongue on shaft, close intimate oral contact, explicit blowjob position, graphic oral sex scene, giving head, deep oral penetration, explicit NSFW oral activity"
+                context_keywords.append(explicit_oral_prompt)
                 action_detected = True
-                print(f"[IMAGE] SPECIFIC ACTION: Intimate oral activity detected", flush=True)
+                print(f"[IMAGE] SPECIFIC ACTION: EXPLICIT Intimate oral activity detected", flush=True)
             else:
                 # Action orale g?n?rique (baiser, l?cher le cou, etc.)
                 context_keywords.append("kissing scene, sensual licking, intimate mouth contact")
@@ -358,9 +370,11 @@ class ImageGenerator:
                                "dedans", "en moi", "en toi", "inside", "penetrat", "thrust"]
         
         if any(keyword in conversation_text for keyword in penetration_keywords):
-            context_keywords.append("explicit penetration scene, intimate intercourse, sexual position, explicit sexual act")
+            # PROMPT EXPLICITE pour VRAIE sc?ne de p?n?tration/sex
+            explicit_penetration_prompt = "explicit penetration scene, penis inside vagina, active sexual intercourse, penetrative sex position, explicit fucking scene, genitals visible, graphic sex scene, NSFW explicit intercourse, detailed penetration view, explicit sexual penetration"
+            context_keywords.append(explicit_penetration_prompt)
             action_detected = True
-            print(f"[IMAGE] SPECIFIC ACTION: Penetration activity detected", flush=True)
+            print(f"[IMAGE] SPECIFIC ACTION: EXPLICIT Penetration activity detected", flush=True)
         
         # D?tection de POSITIONS SP?CIFIQUES
         position_keywords = {
@@ -386,9 +400,11 @@ class ImageGenerator:
                                 "me toucher", "te toucher"]
         
         if any(keyword in conversation_text for keyword in masturbation_keywords):
-            context_keywords.append("self-pleasure scene, intimate touching, sensual masturbation pose, hand between legs")
+            # PROMPT EXPLICITE pour VRAIE sc?ne de masturbation
+            explicit_masturbation_prompt = "explicit masturbation scene, hand on genitals, actively masturbating, self-pleasuring, fingers on pussy/penis, explicit touching genitals, graphic self-pleasure, visible genitals being touched, NSFW masturbation scene"
+            context_keywords.append(explicit_masturbation_prompt)
             action_detected = True
-            print(f"[IMAGE] SPECIFIC ACTION: Masturbation activity detected", flush=True)
+            print(f"[IMAGE] SPECIFIC ACTION: EXPLICIT Masturbation activity detected", flush=True)
         
         # D?tection d'EXPOSITION (montrer, exhiber)
         exposure_keywords = ["montre", "regarde", "vois", "exhibe", "expose", "d?voile",
@@ -400,9 +416,11 @@ class ImageGenerator:
         has_body_part = any(part in conversation_text for part in body_parts)
         
         if has_exposure and has_body_part:
-            context_keywords.append("exhibitionist pose, showing body, revealing intimate parts, display pose")
+            # PROMPT EXPLICITE pour VRAIE exposition des parties intimes
+            explicit_exhibition_prompt = "explicit nude pose, genitals visible, showing pussy/breasts/penis, exposed genitals, full frontal nudity, explicit body display, NSFW nude exhibition, detailed genital view, graphic nudity"
+            context_keywords.append(explicit_exhibition_prompt)
             action_detected = True
-            print(f"[IMAGE] SPECIFIC ACTION: Exhibition/showing detected", flush=True)
+            print(f"[IMAGE] SPECIFIC ACTION: EXPLICIT Exhibition/showing detected", flush=True)
         
         # PRIORITE 3: D?tecter l'environnement
         if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed", "matelas"]):
