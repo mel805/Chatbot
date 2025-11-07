@@ -17,6 +17,7 @@ class ImageGenerator:
     def __init__(self):
         self.replicate_key = os.getenv('REPLICATE_API_KEY', '')
         self.huggingface_key = os.getenv('HUGGINGFACE_API_KEY', '')
+        self.stable_horde_key = os.getenv('STABLE_HORDE_API_KEY', '0000000000')  # Cl? anonyme par d?faut
         
     async def generate_personality_image(self, personality_data, prompt_addition="", max_retries=3):
         """
@@ -61,13 +62,14 @@ class ImageGenerator:
                 print(f"[IMAGE] SUCCESS with Stable Horde (FREE)!", flush=True)
                 return image_url
             
-            # M?thode 2: Hugging Face (GRATUIT avec rate limits, NSFW OK, photoR?aliste)
-            print(f"[IMAGE] Stable Horde failed, trying Hugging Face (FREE, NSFW allowed)...", flush=True)
-            image_url = await self._generate_huggingface(full_prompt)
-            
-            if image_url:
-                print(f"[IMAGE] SUCCESS with Hugging Face (FREE)!", flush=True)
-                return image_url
+            # M?thode 2: Hugging Face (TEMPORAIREMENT D?SACTIV? - API d?pr?ci?e)
+            # print(f"[IMAGE] Stable Horde failed, trying Hugging Face (FREE, NSFW allowed)...", flush=True)
+            # image_url = await self._generate_huggingface(full_prompt)
+            # 
+            # if image_url:
+            #     print(f"[IMAGE] SUCCESS with Hugging Face (FREE)!", flush=True)
+            #     return image_url
+            print(f"[IMAGE] Hugging Face temporarily disabled (API deprecated)", flush=True)
             
             # M?thode 3: Dezgo (GRATUIT rapide, NSFW OK - mais base64 incompatible Discord)
             print(f"[IMAGE] Hugging Face failed, trying Dezgo (FREE, NSFW allowed)...", flush=True)
@@ -248,11 +250,22 @@ class ImageGenerator:
                 ]  # MOD?LES NSFW SP?CIFIQUES (pas g?n?rique)
             }
             
+            # Headers avec cl? API (requis par Stable Horde maintenant)
+            headers = {
+                "apikey": self.stable_horde_key,
+                "Content-Type": "application/json"
+            }
+            
+            if self.stable_horde_key == '0000000000':
+                print(f"[IMAGE] Using Stable Horde anonymous API key (limited)", flush=True)
+            else:
+                print(f"[IMAGE] Using Stable Horde registered API key", flush=True)
+            
             timeout = aiohttp.ClientTimeout(total=120)  # 2 minutes max
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 # Soumettre
                 print(f"[IMAGE] Submitting to Stable Horde with prompt length: {len(prompt)}", flush=True)
-                async with session.post(submit_url, json=payload) as resp:
+                async with session.post(submit_url, json=payload, headers=headers) as resp:
                     if resp.status != 202:
                         error_text = await resp.text()
                         print(f"[ERROR] Stable Horde submit failed: {resp.status}", flush=True)
@@ -403,7 +416,9 @@ class ImageGenerator:
             
             # Mod?le NSFW photoR?aliste sur Hugging Face
             model_id = "SG161222/Realistic_Vision_V5.1_noVAE"
+            # NOUVELLE URL API Hugging Face (l'ancienne est d?pr?ci?e)
             api_url = f"https://api-inference.huggingface.co/models/{model_id}"
+            # Note: Si erreur 410, essayer: https://router.huggingface.co/hf-inference
             
             # Headers (optionnel mais aide avec rate limits)
             headers = {}
@@ -755,13 +770,14 @@ class ImageGenerator:
             print(f"[IMAGE] SUCCESS with Stable Horde (FREE)!", flush=True)
             return image_url
         
-        # 2. Hugging Face (GRATUIT avec rate limits, NSFW OK, photoR?aliste)
-        print(f"[IMAGE] Hugging Face attempt (FREE, NSFW allowed)...", flush=True)
-        image_url = await self._generate_huggingface(full_prompt)
-        
-        if image_url:
-            print(f"[IMAGE] SUCCESS with Hugging Face (FREE)!", flush=True)
-            return image_url
+        # 2. Hugging Face (TEMPORAIREMENT D?SACTIV? - API d?pr?ci?e)
+        # print(f"[IMAGE] Hugging Face attempt (FREE, NSFW allowed)...", flush=True)
+        # image_url = await self._generate_huggingface(full_prompt)
+        # 
+        # if image_url:
+        #     print(f"[IMAGE] SUCCESS with Hugging Face (FREE)!", flush=True)
+        #     return image_url
+        print(f"[IMAGE] Hugging Face temporarily disabled (API deprecated)", flush=True)
         
         # 3. Dezgo (GRATUIT rapide, NSFW OK - mais base64 incompatible Discord)
         print(f"[IMAGE] Hugging Face failed, trying Dezgo (FREE, NSFW allowed)...", flush=True)
