@@ -1248,7 +1248,7 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
                 color=personality_data.get('color', 0x3498db)
             )
             embed.set_image(url=image_url)
-            embed.set_footer(text=f"G?n?r? avec services NSFW gratuits ? Stable Horde / Replicate")
+            embed.set_footer(text=f"G?n?r? avec services NSFW gratuits ? Stable Horde / Hugging Face / Replicate")
             await interaction.edit_original_response(embed=embed)
             print(f"[IMAGE] Image displayed successfully!", flush=True)
         else:
@@ -1256,10 +1256,10 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
             print(f"[IMAGE] DIAGNOSTIC: Check logs above to see why Stable Horde/Replicate failed", flush=True)
             embed = discord.Embed(
                 title="? Erreur de G?n?ration",
-                description="La g?n?ration d'image a ?chou?.\n\n**Services gratuits NSFW** (Stable Horde) sont temporairement indisponibles ou surcharg?s.\n\n**Solutions:**\n? R?essayez dans quelques instants\n? Ou configurez Replicate pour une g?n?ration garantie (voir logs)",
+                description="La g?n?ration d'image a ?chou?.\n\n**Services gratuits NSFW** (Stable Horde avec mod?les NSFW sp?cifiques + Hugging Face) sont temporairement indisponibles ou surcharg?s.\n\n**Solutions:**\n? R?essayez dans quelques instants\n? Ou configurez Replicate pour une g?n?ration garantie (voir logs)",
                 color=0xe74c3c
             )
-            embed.set_footer(text="Stable Horde gratuit mais peut ?tre lent/indisponible ? Utilisez Replicate pour garantie 100%")
+            embed.set_footer(text="Services gratuits NSFW : Stable Horde (mod?les NSFW) + Hugging Face ? Utilisez Replicate pour garantie 100%")
             await interaction.edit_original_response(embed=embed)
     except Exception as e:
         print(f"[ERROR] Image generation exception: {e}", flush=True)
@@ -1340,7 +1340,7 @@ async def generate_contextual_image(interaction: discord.Interaction):
                 color=personality_data.get('color', 0x3498db)
             )
             embed.set_image(url=image_url)
-            embed.set_footer(text=f"G?n?r? avec services NSFW gratuits ? Contextuel Stable Horde / Replicate")
+            embed.set_footer(text=f"G?n?r? avec services NSFW gratuits ? Stable Horde / Hugging Face / Replicate")
             await interaction.edit_original_response(embed=embed)
             print(f"[IMAGE] Contextual image displayed successfully!", flush=True)
         else:
@@ -1348,10 +1348,10 @@ async def generate_contextual_image(interaction: discord.Interaction):
             print(f"[IMAGE] DIAGNOSTIC: Check logs above to see why Stable Horde/Replicate failed", flush=True)
             embed = discord.Embed(
                 title="? Erreur de G?n?ration",
-                description="La g?n?ration d'image contextuelle a ?chou?.\n\n**Services gratuits NSFW** (Stable Horde) sont temporairement indisponibles ou surcharg?s.\n\n**Solutions:**\n? R?essayez dans quelques instants\n? Ou configurez Replicate pour une g?n?ration garantie:\n```\nexport REPLICATE_API_KEY=\"votre_cle\"\n```",
+                description="La g?n?ration d'image contextuelle a ?chou?.\n\n**Services gratuits NSFW** (Stable Horde avec mod?les NSFW sp?cifiques + Hugging Face) sont temporairement indisponibles ou surcharg?s.\n\n**Solutions:**\n? R?essayez dans quelques instants\n? Ou configurez Replicate pour une g?n?ration garantie:\n```\nexport REPLICATE_API_KEY=\"votre_cle\"\n```",
                 color=0xe74c3c
             )
-            embed.set_footer(text="Stable Horde gratuit mais peut ?tre lent/indisponible ? Utilisez Replicate pour garantie 100%")
+            embed.set_footer(text="Services gratuits NSFW : Stable Horde (mod?les NSFW) + Hugging Face ? Utilisez Replicate pour garantie 100%")
             await interaction.edit_original_response(embed=embed)
     except Exception as e:
         print(f"[ERROR] Contextual image generation exception: {e}", flush=True)

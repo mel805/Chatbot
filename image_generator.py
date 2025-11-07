@@ -61,15 +61,23 @@ class ImageGenerator:
                 print(f"[IMAGE] SUCCESS with Stable Horde (FREE)!", flush=True)
                 return image_url
             
-            # M?thode 2: Dezgo (GRATUIT rapide, NSFW OK)
-            print(f"[IMAGE] Stable Horde failed, trying Dezgo (FREE, NSFW allowed)...", flush=True)
+            # M?thode 2: Hugging Face (GRATUIT avec rate limits, NSFW OK, photoR?aliste)
+            print(f"[IMAGE] Stable Horde failed, trying Hugging Face (FREE, NSFW allowed)...", flush=True)
+            image_url = await self._generate_huggingface(full_prompt)
+            
+            if image_url:
+                print(f"[IMAGE] SUCCESS with Hugging Face (FREE)!", flush=True)
+                return image_url
+            
+            # M?thode 3: Dezgo (GRATUIT rapide, NSFW OK - mais base64 incompatible Discord)
+            print(f"[IMAGE] Hugging Face failed, trying Dezgo (FREE, NSFW allowed)...", flush=True)
             image_url = await self._generate_dezgo(full_prompt)
             
             if image_url:
                 print(f"[IMAGE] SUCCESS with Dezgo (FREE)!", flush=True)
                 return image_url
             
-            # M?thode 3: Replicate (PAYANT backup si cl? configur?e)
+            # M?thode 4: Replicate (PAYANT backup si cl? configur?e)
             if self.replicate_key:
                 print(f"[IMAGE] Free services failed, trying Replicate (PAID)...", flush=True)
                 image_url = await self._generate_replicate(full_prompt)
@@ -78,7 +86,7 @@ class ImageGenerator:
                     print(f"[IMAGE] SUCCESS with Replicate (PAID)!", flush=True)
                     return image_url
             
-            # M?thode 4: Pollinations (D?SACTIV? pour tests NSFW explicites)
+            # M?thode 5: Pollinations (D?SACTIV? pour tests NSFW explicites)
             # print(f"[IMAGE] Trying Pollinations (FREE but censors NSFW)...", flush=True)
             # image_url = await self._generate_pollinations(full_prompt)
             # 
@@ -218,6 +226,9 @@ class ImageGenerator:
             # ?tape 1: Soumettre la requ?te
             submit_url = "https://stablehorde.net/api/v2/generate/async"
             
+            # CRITIQUE: Utiliser des MOD?LES NSFW SP?CIFIQUES qui existent vraiment
+            # "stable_diffusion" est trop g?n?rique et peut ?tre refus?
+            # Utiliser plusieurs mod?les NSFW en fallback
             payload = {
                 "prompt": prompt,
                 "params": {
@@ -230,7 +241,11 @@ class ImageGenerator:
                 },
                 "nsfw": True,  # IMPORTANT: Autorise NSFW
                 "censor_nsfw": False,  # IMPORTANT: Ne pas censurer
-                "models": ["stable_diffusion"]  # Mod?le g?n?rique
+                "models": [
+                    "Deliberate",  # Mod?le NSFW photoR?aliste #1
+                    "Realistic Vision V5.1",  # Mod?le NSFW photoR?aliste #2
+                    "DreamShaper"  # Mod?le NSFW backup
+                ]  # MOD?LES NSFW SP?CIFIQUES (pas g?n?rique)
             }
             
             timeout = aiohttp.ClientTimeout(total=120)  # 2 minutes max
@@ -382,9 +397,126 @@ class ImageGenerator:
             return None
     
     async def _generate_huggingface(self, prompt):
-        """G?n?re via Hugging Face (n?cessite cl? API)"""
-        print(f"[IMAGE] Hugging Face not implemented yet", flush=True)
-        return None
+        """G?n?re via Hugging Face Inference API (GRATUIT avec rate limits, NSFW OK)"""
+        try:
+            print(f"[IMAGE] Using Hugging Face Inference API (FREE, NSFW allowed)", flush=True)
+            
+            # Mod?le NSFW photoR?aliste sur Hugging Face
+            model_id = "SG161222/Realistic_Vision_V5.1_noVAE"
+            api_url = f"https://api-inference.huggingface.co/models/{model_id}"
+            
+            # Headers (optionnel mais aide avec rate limits)
+            headers = {}
+            if self.huggingface_key:
+                headers["Authorization"] = f"Bearer {self.huggingface_key}"
+                print(f"[IMAGE] Using Hugging Face API key", flush=True)
+            else:
+                print(f"[IMAGE] Using Hugging Face without API key (may have rate limits)", flush=True)
+            
+            # Payload
+            payload = {
+                "inputs": prompt,
+                "parameters": {
+                    "width": 768,
+                    "height": 1024,
+                    "num_inference_steps": 25,
+                    "guidance_scale": 7.5
+                }
+            }
+            
+            timeout = aiohttp.ClientTimeout(total=90)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.post(api_url, headers=headers, json=payload) as resp:
+                    if resp.status == 200:
+                        # Hugging Face retourne l'image en bytes
+                        image_data = await resp.read()
+                        
+                        # Uploader sur un service d'h?bergement temporaire
+                        # Pour l'instant, on utilise tmpfiles.org ou imgbb
+                        upload_url = await self._upload_image_to_tmpfiles(image_data)
+                        
+                        if upload_url:
+                            print(f"[IMAGE] Hugging Face SUCCESS - Image uploaded", flush=True)
+                            return upload_url
+                        else:
+                            print(f"[IMAGE] Hugging Face generated image but upload failed", flush=True)
+                            return None
+                    
+                    elif resp.status == 503:
+                        # Mod?le en chargement
+                        result = await resp.json()
+                        estimated_time = result.get('estimated_time', 20)
+                        print(f"[IMAGE] Hugging Face model loading, estimated time: {estimated_time}s", flush=True)
+                        
+                        # Attendre et r?essayer (max 60s)
+                        if estimated_time < 60:
+                            await asyncio.sleep(estimated_time + 5)
+                            
+                            # R?essayer une fois
+                            async with session.post(api_url, headers=headers, json=payload) as retry_resp:
+                                if retry_resp.status == 200:
+                                    image_data = await retry_resp.read()
+                                    upload_url = await self._upload_image_to_tmpfiles(image_data)
+                                    
+                                    if upload_url:
+                                        print(f"[IMAGE] Hugging Face SUCCESS after retry", flush=True)
+                                        return upload_url
+                        
+                        return None
+                    
+                    elif resp.status == 429:
+                        # Rate limit
+                        print(f"[IMAGE] Hugging Face rate limit reached", flush=True)
+                        return None
+                    
+                    else:
+                        error_text = await resp.text()
+                        print(f"[ERROR] Hugging Face failed: {resp.status} - {error_text[:200]}", flush=True)
+                        return None
+                        
+        except Exception as e:
+            print(f"[ERROR] Hugging Face error: {e}", flush=True)
+            return None
+    
+    async def _upload_image_to_tmpfiles(self, image_data):
+        """Upload image bytes vers tmpfiles.org pour obtenir une URL"""
+        try:
+            print(f"[IMAGE] Uploading image to tmpfiles.org...", flush=True)
+            
+            # Utiliser tmpfiles.org (service gratuit, pas de cl? requise)
+            upload_url = "https://tmpfiles.org/api/v1/upload"
+            
+            # Cr?er un FormData avec l'image
+            form_data = aiohttp.FormData()
+            form_data.add_field('file',
+                              image_data,
+                              filename='generated.png',
+                              content_type='image/png')
+            
+            timeout = aiohttp.ClientTimeout(total=30)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.post(upload_url, data=form_data) as resp:
+                    if resp.status == 200:
+                        result = await resp.json()
+                        
+                        # tmpfiles.org retourne: {"status": "success", "data": {"url": "..."}}
+                        if result.get('status') == 'success':
+                            file_url = result.get('data', {}).get('url', '')
+                            
+                            # tmpfiles.org retourne une URL comme https://tmpfiles.org/12345
+                            # Il faut la convertir en URL directe: https://tmpfiles.org/dl/12345
+                            if 'tmpfiles.org/' in file_url and '/dl/' not in file_url:
+                                file_url = file_url.replace('tmpfiles.org/', 'tmpfiles.org/dl/')
+                            
+                            print(f"[IMAGE] Upload success: {file_url}", flush=True)
+                            return file_url
+                    
+                    print(f"[IMAGE] Upload failed: {resp.status}", flush=True)
+                    return None
+                    
+        except Exception as e:
+            print(f"[ERROR] Image upload error: {e}", flush=True)
+            return None
     
     async def generate_contextual_image(self, personality_data, conversation_history):
         """
@@ -623,15 +755,23 @@ class ImageGenerator:
             print(f"[IMAGE] SUCCESS with Stable Horde (FREE)!", flush=True)
             return image_url
         
-        # 2. Dezgo (GRATUIT rapide, NSFW OK)
-        print(f"[IMAGE] Stable Horde failed, trying Dezgo (FREE, NSFW allowed)...", flush=True)
+        # 2. Hugging Face (GRATUIT avec rate limits, NSFW OK, photoR?aliste)
+        print(f"[IMAGE] Hugging Face attempt (FREE, NSFW allowed)...", flush=True)
+        image_url = await self._generate_huggingface(full_prompt)
+        
+        if image_url:
+            print(f"[IMAGE] SUCCESS with Hugging Face (FREE)!", flush=True)
+            return image_url
+        
+        # 3. Dezgo (GRATUIT rapide, NSFW OK - mais base64 incompatible Discord)
+        print(f"[IMAGE] Hugging Face failed, trying Dezgo (FREE, NSFW allowed)...", flush=True)
         image_url = await self._generate_dezgo(full_prompt)
         
         if image_url:
             print(f"[IMAGE] SUCCESS with Dezgo (FREE)!", flush=True)
             return image_url
         
-        # 3. Replicate (PAYANT backup si cl? configur?e)
+        # 4. Replicate (PAYANT backup si cl? configur?e)
         if self.replicate_key:
             print(f"[IMAGE] Free services failed, trying Replicate (PAID)...", flush=True)
             image_url = await self._generate_replicate(full_prompt)
@@ -640,7 +780,7 @@ class ImageGenerator:
                 print(f"[IMAGE] SUCCESS with Replicate (PAID)!", flush=True)
                 return image_url
         
-        # 4. Pollinations (D?SACTIV? pour tests NSFW explicites)
+        # 5. Pollinations (D?SACTIV? pour tests NSFW explicites)
         # print(f"[IMAGE] Trying Pollinations (FREE but censors NSFW)...", flush=True)
         # image_url = await self._generate_pollinations(full_prompt)
         # 
