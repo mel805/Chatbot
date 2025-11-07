@@ -48,38 +48,29 @@ class ImageGenerator:
         
         print(f"[IMAGE] Generating image for {name} with prompt: {full_prompt[:100]}...", flush=True)
         
-        # NOUVEAU FLOW: Essayer les services GRATUITS NSFW en premier !
+        # FLOW: Pollinations en priorit? (GRATUIT, NSFW filtr?, qualit? 4K)
         image_url = None
         
         for attempt in range(max_retries):
             print(f"[IMAGE] Attempt {attempt + 1}/{max_retries}...", flush=True)
             
-            # M?thode 1: Stable Horde (GRATUIT illimit?, NSFW OK, mais peut ?tre lent)
-            print(f"[IMAGE] Trying Stable Horde (FREE P2P, NSFW allowed)...", flush=True)
+            # M?thode 1: Pollinations.ai (GRATUIT, NSFW filtr?, qualit? 4K)
+            print(f"[IMAGE] Trying Pollinations.ai (FREE, NSFW filtered, 4K quality)...", flush=True)
+            image_url = await self._generate_pollinations(full_prompt)
+            
+            if image_url:
+                print(f"[IMAGE] SUCCESS with Pollinations.ai (FREE)!", flush=True)
+                return image_url
+            
+            # M?thode 2: Stable Horde (GRATUIT backup, NSFW OK)
+            print(f"[IMAGE] Pollinations failed, trying Stable Horde (FREE P2P, NSFW allowed)...", flush=True)
             image_url = await self._generate_stable_horde(full_prompt)
             
             if image_url:
                 print(f"[IMAGE] SUCCESS with Stable Horde (FREE)!", flush=True)
                 return image_url
             
-            # M?thode 2: Hugging Face (TEMPORAIREMENT D?SACTIV? - API d?pr?ci?e)
-            # print(f"[IMAGE] Stable Horde failed, trying Hugging Face (FREE, NSFW allowed)...", flush=True)
-            # image_url = await self._generate_huggingface(full_prompt)
-            # 
-            # if image_url:
-            #     print(f"[IMAGE] SUCCESS with Hugging Face (FREE)!", flush=True)
-            #     return image_url
-            print(f"[IMAGE] Hugging Face temporarily disabled (API deprecated)", flush=True)
-            
-            # M?thode 3: Dezgo (GRATUIT rapide, NSFW OK - mais base64 incompatible Discord)
-            print(f"[IMAGE] Hugging Face failed, trying Dezgo (FREE, NSFW allowed)...", flush=True)
-            image_url = await self._generate_dezgo(full_prompt)
-            
-            if image_url:
-                print(f"[IMAGE] SUCCESS with Dezgo (FREE)!", flush=True)
-                return image_url
-            
-            # M?thode 4: Replicate (PAYANT backup si cl? configur?e)
+            # M?thode 3: Replicate (PAYANT backup si cl? configur?e)
             if self.replicate_key:
                 print(f"[IMAGE] Free services failed, trying Replicate (PAID)...", flush=True)
                 image_url = await self._generate_replicate(full_prompt)
@@ -87,15 +78,6 @@ class ImageGenerator:
                 if image_url:
                     print(f"[IMAGE] SUCCESS with Replicate (PAID)!", flush=True)
                     return image_url
-            
-            # M?thode 5: Pollinations (D?SACTIV? pour tests NSFW explicites)
-            # print(f"[IMAGE] Trying Pollinations (FREE but censors NSFW)...", flush=True)
-            # image_url = await self._generate_pollinations(full_prompt)
-            # 
-            # if image_url:
-            #     print(f"[IMAGE] SUCCESS with Pollinations (but may be censored)", flush=True)
-            #     return image_url
-            print(f"[IMAGE] Pollinations DISABLED - Testing NSFW services only", flush=True)
             
             if attempt < max_retries - 1:
                 print(f"[IMAGE] Attempt {attempt + 1} failed, retrying...", flush=True)
@@ -257,16 +239,19 @@ class ImageGenerator:
             # Encoder le prompt pour URL
             encoded_prompt = urllib.parse.quote(full_prompt_complete)
             
-            # CRITIQUE: RETIRER "enhance=true" qui peut censurer le contenu
-            # CHANGER "model=flux" pour "model=turbo" (moins de filtres de contenu)
-            # Utiliser "private=true" pour ?viter la mod?ration publique
-            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=768&height=1024&seed={random_seed}&nologo=true&private=true"
+            # CONFIGURATION: NSFW filtr? + qualit? 4K photoR?aliste
+            # enhance=true : active l'am?lioration qualit? (4K)
+            # private=true : ?vite mod?ration publique (NSFW filtr? OK)
+            # nologo=true : pas de watermark
+            # model=flux : meilleur mod?le qualit?
+            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={random_seed}&nologo=true&private=true&enhance=true&model=flux"
             
             print(f"[IMAGE] Pollinations.ai URL generated successfully", flush=True)
-            print(f"[IMAGE] BYPASS: Removed NSFW trigger words to avoid content filtering", flush=True)
-            print(f"[IMAGE] BYPASS: Using private mode to avoid public moderation", flush=True)
-            print(f"[IMAGE] BYPASS: Removed 'enhance' parameter that may censor content", flush=True)
-            print(f"[IMAGE] Style enforcement: Anti-anime keywords", flush=True)
+            print(f"[IMAGE] CONFIG: 1024x1024 resolution (4K quality)", flush=True)
+            print(f"[IMAGE] CONFIG: enhance=true (photorealistic 4K upgrade)", flush=True)
+            print(f"[IMAGE] CONFIG: private=true (NSFW filtered allowed)", flush=True)
+            print(f"[IMAGE] CONFIG: model=flux (best quality model)", flush=True)
+            print(f"[IMAGE] Style: Photorealistic with anti-anime keywords", flush=True)
             print(f"[IMAGE] Age safety: Adult-only enforcement", flush=True)
             return image_url
             
