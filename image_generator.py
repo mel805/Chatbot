@@ -104,28 +104,36 @@ class ImageGenerator:
         # Extraire l'?ge num?rique
         age_num = int(''.join(filter(str.isdigit, str(age))) or "25")
         
+        # D?terminer le genre pour les mots-cl?s (sans slash qui casse les URLs)
+        gender_keyword = "PERSON"
+        if genre == "Femme":
+            gender_keyword = "WOMAN"
+        elif genre == "Homme":
+            gender_keyword = "MAN"
+        
         # ULTRA RENFORC?: Mots-cl?s d'?ge ADULTE massivement augment?s
         # Placer ?GE EN PREMIER pour ?viter blocage CSAM + RESPECT ?GE PR?CIS
+        # IMPORTANT: Pas de slash (/) qui casse les URLs Pollinations
         if age_num >= 40:
             # 40+ ans : TRES mature - ULTRA RENFORC? avec signes visibles de maturit?
-            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, MATURE ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
-            age_keywords = f"middle-aged adult, fully mature woman/man aged {age_num}, experienced adult over 35, grown adult person, adult facial features showing {age_num} years, mature adult body, NOT young, NOT teen, adult only, 40+ years old appearance, visible maturity, age-appropriate features for {age_num} years"
+            age_prefix = f"ADULT {gender_keyword} {age_num} YEARS OLD, MATURE ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
+            age_keywords = f"middle-aged adult, fully mature aged {age_num}, experienced adult over 35, grown adult person, adult facial features showing {age_num} years, mature adult body, NOT young, NOT teen, adult only, 40+ years old appearance, visible maturity, age-appropriate features for {age_num} years"
             print(f"[IMAGE] ANTI-CSAM: {age_num}+ years - MATURE ADULT (age-appropriate features enforced)", flush=True)
         elif age_num >= 30:
             # 30-39 ans : Mature - ULTRA RENFORC? avec apparence 30+
-            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, MATURE ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
+            age_prefix = f"ADULT {gender_keyword} {age_num} YEARS OLD, MATURE ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
             age_keywords = f"mature adult person aged {age_num}, fully grown adult, adult facial features showing {age_num} years, adult body type, NOT young, NOT teen, adult only, 30+ years old appearance, visible maturity for {age_num} years, age-appropriate look"
             print(f"[IMAGE] ANTI-CSAM: {age_num} years - ADULT (age-appropriate features enforced)", flush=True)
         elif age_num >= 25:
             # 25-29 ans : Jeune adulte - ULTRA RENFORC? avec apparence 25+
-            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, YOUNG ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
+            age_prefix = f"ADULT {gender_keyword} {age_num} YEARS OLD, YOUNG ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
             age_keywords = f"young adult person aged {age_num}, fully grown adult, mature young adult showing {age_num} years, adult features, adult body, NOT teen, NOT minor, adult only, 25+ years old appearance, mature for {age_num} years old"
             print(f"[IMAGE] ANTI-CSAM: {age_num} years - YOUNG ADULT (age-appropriate features enforced)", flush=True)
         else:
             # 18-24 ans : Adulte - ULTRA RENFORC? (minimum 25 ans pour ?viter filtres)
             # FORCER ? 25 ANS MINIMUM pour Stable Horde
             age_num = max(age_num, 25)
-            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, YOUNG ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
+            age_prefix = f"ADULT {gender_keyword} {age_num} YEARS OLD, YOUNG ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
             age_keywords = f"young adult person aged {age_num}, fully grown adult, adult features showing {age_num} years, mature body, NOT teen, NOT minor, adult only, 25+ years old appearance, legal adult, age-appropriate for {age_num} years"
             print(f"[IMAGE] ANTI-CSAM: Forced to {age_num} years - ADULT (age-appropriate features enforced)", flush=True)
         
