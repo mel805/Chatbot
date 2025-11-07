@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Config Inactivité</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #0d0d0d; color: #fff; }
+        .card { background: #1a1a1a; padding: 20px; border-radius: 8px; margin: 10px 0; }
+        .tab { display: inline-block; padding: 10px 20px; margin: 5px; cursor: pointer; background: #2a2a2a; border-radius: 5px; }
+        .tab.active { background: #5865F2; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 5px; }
+        .btn-primary { background: #5865F2; color: white; }
+        .btn-success { background: #57F287; color: black; }
+        .btn-danger { background: #ED4245; color: white; }
+        input, select { width: 100%; padding: 8px; margin: 5px 0; background: #2a2a2a; color: white; border: 1px solid #444; border-radius: 4px; }
+        label { display: block; margin: 10px 0; }
+        .debug { background: #0a0a0a; padding: 10px; border-left: 3px solid #5865F2; margin: 10px 0; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>🔍 Test Configuration Inactivité</h1>
+        
+        <div class="debug">
+            <strong>État des variables :</strong><br>
+            inactivityTab: {{ inactivityTab }}<br>
+            editingInactivity: {{ editingInactivity }}<br>
+            inactivity: {{ JSON.stringify(inactivity) }}<br>
+            roles chargés: {{ Object.keys(roles).length }}
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <span class="tab" :class="{active: inactivityTab === 'stats'}" @click="inactivityTab = 'stats'">📊 Statistiques</span>
+            <span class="tab" :class="{active: inactivityTab === 'config'}" @click="inactivityTab = 'config'">⚙️ Configuration</span>
+            <span class="tab" :class="{active: inactivityTab === 'members'}" @click="inactivityTab = 'members'">👥 Membres</span>
+        </div>
+        
+        <!-- Stats -->
+        <div v-show="inactivityTab === 'stats'" class="card">
+            <h2>Statistiques</h2>
+            <p>Onglet stats visible</p>
+        </div>
+        
+        <!-- Config -->
+        <div v-show="inactivityTab === 'config'" class="card">
+            <h2>Configuration</h2>
+            
+            <div class="debug">
+                <strong>DEBUG Configuration :</strong><br>
+                v-show="inactivityTab === 'config'" = {{ inactivityTab === 'config' }}<br>
+                inactivity.enabled = {{ inactivity.enabled }}<br>
+                inactivity.delayDays = {{ inactivity.delayDays }}<br>
+                editingInactivity = {{ editingInactivity }}
+            </div>
+            
+            <label>
+                <input type="checkbox" v-model="inactivity.enabled" :disabled="!editingInactivity" style="width: auto;">
+                <strong>Activer le kick automatique pour inactivité</strong>
+            </label>
+            
+            <label>
+                Délai d'inactivité avant kick
+                <select v-if="editingInactivity" v-model="inactivityDelayMode">
+                    <option value="1">1 jour</option>
+                    <option value="7">1 semaine</option>
+                    <option value="30">1 mois</option>
+                </select>
+                <input v-else :value="inactivity.delayDays + ' jours'" readonly>
+            </label>
+            
+            <label>
+                Rôle "Inactif"
+                <select v-if="editingInactivity" v-model="inactivity.inactiveRoleId">
+                    <option :value="null">Aucun</option>
+                    <option v-for="(role, roleId) in roles" :key="roleId" :value="roleId">{{ role }}</option>
+                </select>
+                <input v-else :value="roles[inactivity.inactiveRoleId] || 'Aucun'" readonly>
+            </label>
+            
+            <div style="margin-top: 20px;">
+                <button v-if="!editingInactivity" @click="editingInactivity = true" class="btn-primary">✏️ Modifier</button>
+                <button v-if="editingInactivity" @click="saveConfig()" class="btn-success">💾 Sauvegarder</button>
+                <button v-if="editingInactivity" @click="editingInactivity = false; loadConfig()" class="btn-danger">❌ Annuler</button>
+            </div>
+        </div>
+        
+        <!-- Members -->
+        <div v-show="inactivityTab === 'members'" class="card">
+            <h2>Membres</h2>
+            <p>Onglet membres visible</p>
+        </div>
+        
+        <div class="card">
+            <h3>Actions de test</h3>
+            <button @click="loadConfig()" class="btn-primary">Charger config</button>
+            <button @click="loadRoles()" class="btn-primary">Charger rôles</button>
+            <button @click="testAPI()" class="btn-primary">Test API direct</button>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    inactivityTab: 'config',
+                    editingInactivity: false,
+                    inactivityDelayMode: '30',
+                    inactivity: {
+                        enabled: false,
+                        delayDays: 30,
+                        inactiveRoleId: null,
+                        excludedRoleIds: []
+                    },
+                    roles: {}
+                }
+            },
+            async mounted() {
+                console.log('🚀 App montée');
+                await this.loadRoles();
+                await this.loadConfig();
+            },
+            methods: {
+                async loadConfig() {
+                    console.log('🔄 Chargement config...');
+                    try {
+                        const response = await fetch('/api/inactivity');
+                        const data = await response.json();
+                        console.log('✅ Config reçue:', data);
+                        this.inactivity = data;
+                        this.inactivityDelayMode = String(data.delayDays);
+                    } catch (error) {
+                        console.error('❌ Erreur chargement config:', error);
+                    }
+                },
+                async loadRoles() {
+                    console.log('🔄 Chargement rôles...');
+                    try {
+                        const response = await fetch('/api/discord/roles');
+                        const data = await response.json();
+                        console.log('✅ Rôles reçus:', Object.keys(data).length);
+                        this.roles = data;
+                    } catch (error) {
+                        console.error('❌ Erreur chargement rôles:', error);
+                    }
+                },
+                async saveConfig() {
+                    console.log('💾 Sauvegarde config...');
+                    try {
+                        const response = await fetch('/api/inactivity', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.inactivity)
+                        });
+                        const result = await response.json();
+                        console.log('✅ Sauvegarde OK:', result);
+                        alert('Configuration sauvegardée !');
+                        this.editingInactivity = false;
+                    } catch (error) {
+                        console.error('❌ Erreur sauvegarde:', error);
+                        alert('Erreur lors de la sauvegarde');
+                    }
+                },
+                async testAPI() {
+                    console.log('🧪 Test API direct...');
+                    try {
+                        const response = await fetch('/api/inactivity');
+                        const text = await response.text();
+                        console.log('Raw response:', text);
+                        alert('Réponse API (voir console): ' + text.substring(0, 100) + '...');
+                    } catch (error) {
+                        console.error('❌ Erreur test API:', error);
+                        alert('Erreur: ' + error.message);
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
