@@ -1,132 +1,176 @@
-✅ PROBLÈME TROUVÉ - CORRECTION PUSHÉE
+✅ GÉNÉRATION CONTEXTUELLE AMÉLIORÉE
 
-## 🔍 DIAGNOSTIC (depuis logs Render)
+## 🔍 PROBLÈME IDENTIFIÉ
 
-**Erreur identifiée :**
-```
-403 - Due to heavy demand, client needs to already have 
-the required kudos. This request requires 15.49 kudos.
-```
-
-**Cause :** Clé anonyme Stable Horde refuse :
-- Images > 721x721 pixels
-- Plus de 50 steps
-
-**Votre configuration :** 768x1024, 25 steps → REFUSÉ ❌
+Le bouton de génération contextuelle (sous les messages du bot) **ne détectait pas bien** les détails de la conversation :
+- ❌ Positions manquées ("à 4 pattes" vs "quatre pattes")
+- ❌ Vêtements incomplets
+- ❌ Situations non capturées
+- ❌ Seulement 10 derniers messages analysés
 
 ---
 
-## ✅ CORRECTION APPLIQUÉE
+## ✅ AMÉLIORATIONS APPLIQUÉES
 
-**Code modifié pour clé anonyme :**
-- Résolution : 512x512 (au lieu de 768x1024)
-- Steps : 20 (au lieu de 25)
-- **= Pas de kudos requis !**
+### 1. 📊 Analyse complète de la conversation
 
-**Commit :** `df147f7`
+**Avant :** 10 derniers messages seulement
+**Maintenant :** TOUS les messages de la conversation
+
+### 2. 🎯 Détection des positions (×3 variations)
+
+**Nouvelles variations détectées :**
+- "quatre pattes" / "4 pattes" / "à quatre pattes"
+- "à genoux" / "genoux"
+- "jambes écartées" / "jambe écartée" / "écarte les jambes"
+- "couchée" / "allongée" / "sur le dos"
+- "monte sur" / "assise sur" / "assis sur"
+- "contre le mur" / "debout contre"
+- "penchée" / "courbée"
+
+### 3. 👗 Détection des vêtements (×2 variations)
+
+**Nouvelles variations :**
+- "robe courte" / "robe longue" / "robe légère"
+- "mini-jupe" / "minijupe"
+- "string" / "dentelle"
+- "toute nue" / "complètement nue" / "sans rien"
+- "crop top" / "tee-shirt"
+- "talons hauts" / "escarpins"
+
+### 4. 🔥 Détection d'actions intimes (×2 variations)
+
+**Actions ORALES :**
+- "prend dans ma bouche" / "dans ma bouche"
+- "vais te" / "pipe" / "fellation"
+
+**Actions PÉNÉTRATION :**
+- "entre dans" / "dans ton cul" / "dans ta chatte"
+- "te baise" / "baise" / "fuck"
+
+### 5. 📋 Logs diagnostiques détaillés
+
+**Nouveaux logs avec émojis :**
+```
+[IMAGE CONTEXT] ✅ DETECTED: Position 'quatre pattes' → doggystyle pose
+[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Penetration / Sex
+[IMAGE CONTEXT] ✅ 3 context elements detected
+[IMAGE CONTEXT] Final prompt preview: ...
+```
 
 ---
 
-## 🚀 REDÉPLOYER SUR RENDER (encore une fois)
+## 🚀 REDÉPLOYER SUR RENDER
 
-### Procédure :
+**Commit :** `b56736e` - Improve contextual image generation
 
-1. Render Dashboard → Votre service bot
+### Étapes :
+
+1. **Render Dashboard** → Votre service bot
 2. **Manual Deploy** → Deploy latest commit
-3. Attendre 3-5 min
-4. Tester `/generer_image`
+3. **Attendre 3-5 min**
+4. **Tester** avec le bouton contextuel
+
+---
+
+## 🧪 TESTER APRÈS REDÉPLOIEMENT
+
+### Test 1 : Conversation avec position
+
+**Dans la conversation, dites :**
+```
+Mets-toi à 4 pattes et relève ta jupe
+```
+
+**Puis cliquez sur le bouton "🎨 Générer image contextuelle"**
 
 **Logs attendus :**
 ```
-[IMAGE] Using reduced params for anonymous key (512x512, 20 steps)
-[IMAGE] Stable Horde request submitted: <uuid>
-[IMAGE] Stable Horde SUCCESS ✅
+[IMAGE CONTEXT] Analyzing X messages...
+[IMAGE CONTEXT] ✅ DETECTED: Clothing detected: ...jupe...
+[IMAGE CONTEXT] ✅ DETECTED: Position '4 pattes' → on all fours position
+[IMAGE CONTEXT] ✅ 2 context elements detected
 ```
 
----
-
-## 📊 3 OPTIONS DISPONIBLES
-
-### Option 1 : Clé anonyme (GRATUIT, qualité réduite)
-
-**✅ Maintenant corrigé !**
-- Résolution : 512x512
-- Gratuit illimité
-- **Action :** Redéployer Render
+**Résultat :** Image montrant le bot à 4 pattes avec jupe ✅
 
 ---
 
-### Option 2 : Vraie clé Stable Horde (GRATUIT, haute qualité)
+### Test 2 : Conversation avec action
 
-**🎯 RECOMMANDÉ**
-- Résolution : 768x1024 
-- Steps : 25
-- Kudos gratuits
-- Priorité dans les queues
-
-**Comment :**
-1. S'inscrire : https://stablehorde.net/register
-2. Copier votre clé API
-3. Render → Environment → Modifier :
-   ```
-   STABLE_HORDE_API_KEY = <votre_vraie_cle>
-   ```
-4. Redéployer
-
----
-
-### Option 3 : Replicate (100% FIABLE, payant)
-
-**💯 Pour fiabilité totale**
-- Résolution : 768x1024
-- 100% succès
-- Rapide (10-30s)
-- $10 gratuits = 4000 images
-
-**Comment :**
-1. Compte : https://replicate.com/
-2. Obtenir clé API
-3. Render → Environment → Ajouter :
-   ```
-   REPLICATE_API_KEY = r8_xxx
-   ```
-4. Redéployer
-
----
-
-## 🎯 PROCHAINE ÉTAPE
-
-**1. REDÉPLOYER RENDER avec nouvelle correction**
-
-Render Dashboard → Manual Deploy
-
-**2. TESTER**
-
+**Dans la conversation :**
 ```
-/generer_image style:explicit_blowjob
+Je pénètre ma queue dans ton cul
 ```
+
+**Cliquez sur le bouton contextuel**
 
 **Logs attendus :**
 ```
-[IMAGE] Using reduced params for anonymous key (512x512, 20 steps)
-[IMAGE] Stable Horde SUCCESS ✅
+[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Penetration / Sex
+[IMAGE CONTEXT] Keywords: NSFW explicit hardcore sex scene...
 ```
 
-**Si succès :** ✅ Fonctionne (qualité réduite mais gratuit)
+**Résultat :** Image explicite de pénétration anale ✅
 
-**Si échec :** → Option 2 (vraie clé gratuite) ou Option 3 (Replicate)
+---
+
+## 📊 AVANT / APRÈS
+
+| Aspect | Avant | Après |
+|--------|-------|-------|
+| **Messages analysés** | 10 derniers | TOUS |
+| **Variations positions** | 6 exactes | 21 variations |
+| **Variations vêtements** | 13 | 25+ |
+| **Variations actions** | Strictes | 2-3x plus |
+| **Logs diagnostiques** | Basiques | Détaillés ✅ |
+
+---
+
+## 🔍 VOIR LES DÉTECTIONS
+
+Après redéploiement, **regardez les logs Render** quand vous cliquez sur le bouton contextuel.
+
+**Vous verrez EXACTEMENT ce qui est détecté :**
+
+```
+[IMAGE CONTEXT] Analyzing 15 messages...
+[IMAGE CONTEXT] Conversation text length: 1024 chars
+[IMAGE CONTEXT] ✅ DETECTED: Clothing detected: ...robe légère...
+[IMAGE CONTEXT] PRIORITY: Clothing context added: ...robe légère...
+[IMAGE CONTEXT] ✅ DETECTED: Position 'jambes écartées' → legs spread wide
+[IMAGE CONTEXT] ✅ 2 context elements detected
+[IMAGE CONTEXT] Keywords: wearing ...robe légère..., legs spread wide...
+[IMAGE CONTEXT] Final prompt length: 512 chars
+[IMAGE CONTEXT] Final prompt preview: PHOTOREALISTIC PHOTO...
+```
+
+---
+
+## ❌ SI PAS DE DÉTECTION
+
+**Si vous voyez :**
+```
+[IMAGE CONTEXT] ⚠️ NO specific context detected
+```
+
+**= Les mots-clés ne correspondent pas**
+
+**Solutions :**
+1. Utilisez les mots-clés listés ci-dessus
+2. Regardez les logs pour voir le texte analysé
+3. Envoyez-moi les logs pour que j'ajoute + de variations
 
 ---
 
 ## 📄 RÉSUMÉ
 
-| Solution | Résolution | Gratuit | Fiabilité | Action |
-|----------|------------|---------|-----------|--------|
-| **Anonyme (corrigé)** | 512x512 | ✅ Oui | 60% | Redéployer |
-| **Vraie clé SH** | 768x1024 | ✅ Oui | 80% | Inscrire + config |
-| **Replicate** | 768x1024 | 💰 Non | 100% | Créer compte + config |
+✅ **Améliorations majeures** de la détection contextuelle
+✅ **3x plus de variations** pour positions/vêtements
+✅ **Logs détaillés** pour diagnostiquer
+✅ **Analyse complète** de toute la conversation
 
----
+**Commit :** `b56736e`
+**Action :** 🚀 **Redéployer sur Render maintenant**
 
-**Commit :** `df147f7`
-**Action :** 🚀 Redéployer sur Render maintenant
+Après redéploiement, le bouton contextuel capturera BEAUCOUP mieux les détails ! 🎉
