@@ -225,12 +225,11 @@ class ImageGenerator:
                     "steps": 25,
                     "cfg_scale": 7.5,
                     "sampler_name": "k_euler_a",
-                    "karras": True,
                     "n": 1
                 },
                 "nsfw": True,  # IMPORTANT: Autorise NSFW
                 "censor_nsfw": False,  # IMPORTANT: Ne pas censurer
-                "models": ["Realistic_Vision_V5.1"]  # Mod?le NSFW
+                "models": ["stable_diffusion"]  # Mod?le g?n?rique
             }
             
             timeout = aiohttp.ClientTimeout(total=120)  # 2 minutes max
@@ -289,19 +288,19 @@ class ImageGenerator:
             
             api_url = "https://api.dezgo.com/text2image"
             
-            payload = {
-                "prompt": prompt,
-                "width": 768,
-                "height": 1024,
-                "model": "realistic_vision_v51",  # Mod?le NSFW
-                "sampler": "euler_a",
-                "steps": 25,
-                "guidance": 7.5
-            }
+            # FormData pour Dezgo
+            form_data = aiohttp.FormData()
+            form_data.add_field('prompt', prompt)
+            form_data.add_field('width', '768')
+            form_data.add_field('height', '1024')
+            form_data.add_field('model', 'realistic_vision_v51')
+            form_data.add_field('sampler', 'euler_a')
+            form_data.add_field('steps', '25')
+            form_data.add_field('guidance', '7.5')
             
             timeout = aiohttp.ClientTimeout(total=60)
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.post(api_url, data=payload) as resp:
+                async with session.post(api_url, data=form_data) as resp:
                     if resp.status == 200:
                         # Dezgo retourne directement l'image en bytes
                         image_data = await resp.read()
@@ -388,7 +387,15 @@ class ImageGenerator:
         """
         # Analyser les derniers messages pour extraire le contexte
         context_keywords = []
-        conversation_text = " ".join(conversation_history[-10:]).lower()
+        
+        # Extraire le texte de la conversation (g?rer dict ou str)
+        conversation_texts = []
+        for msg in conversation_history[-10:]:
+            if isinstance(msg, dict):
+                conversation_texts.append(msg.get('content', ''))
+            else:
+                conversation_texts.append(str(msg))
+        conversation_text = " ".join(conversation_texts).lower()
         
         # PRIORITE 1: D?tecter les v?tements sp?cifiques mentionn?s
         # Cela permet de capturer "robe l?g?re", "chemise", "jupe", etc.
