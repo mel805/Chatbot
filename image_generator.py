@@ -494,11 +494,11 @@ class ImageGenerator:
             is_intimate_oral = any(ctx in conversation_text for ctx in intimate_oral_context)
             
             if is_intimate_oral:
-                # PROMPT EXPLICITE pour VRAIE sc?ne de fellation/oral sex
-                explicit_oral_prompt = "explicit fellatio scene, performing oral sex, mouth around penis, actively sucking, tongue on shaft, close intimate oral contact, explicit blowjob position, graphic oral sex scene, giving head, deep oral penetration, explicit NSFW oral activity"
+                # PROMPT ULTRA EXPLICITE pour VRAIE sc?ne de fellation/oral sex
+                explicit_oral_prompt = "NSFW explicit hardcore fellatio scene, woman giving blowjob, dick in mouth, actively sucking penis, tongue licking cock shaft, POV oral sex, close-up explicit blowjob, mouth filled with dick, deepthroat scene, explicit cumming oral, graphic XXX oral penetration, pornographic blowjob photo, real explicit fellatio action, hardcore oral sex scene, uncensored NSFW blowjob"
                 context_keywords.append(explicit_oral_prompt)
                 action_detected = True
-                print(f"[IMAGE] SPECIFIC ACTION: EXPLICIT Intimate oral activity detected", flush=True)
+                print(f"[IMAGE] SPECIFIC ACTION: ULTRA EXPLICIT Intimate oral activity detected", flush=True)
             else:
                 # Action orale g?n?rique (baiser, l?cher le cou, etc.)
                 context_keywords.append("kissing scene, sensual licking, intimate mouth contact")
@@ -510,11 +510,11 @@ class ImageGenerator:
                                "dedans", "en moi", "en toi", "inside", "penetrat", "thrust"]
         
         if any(keyword in conversation_text for keyword in penetration_keywords):
-            # PROMPT EXPLICITE pour VRAIE sc?ne de p?n?tration/sex
-            explicit_penetration_prompt = "explicit penetration scene, penis inside vagina, active sexual intercourse, penetrative sex position, explicit fucking scene, genitals visible, graphic sex scene, NSFW explicit intercourse, detailed penetration view, explicit sexual penetration"
+            # PROMPT ULTRA EXPLICITE pour VRAIE sc?ne de p?n?tration/sex
+            explicit_penetration_prompt = "NSFW explicit hardcore sex scene, dick penetrating pussy, active fucking, penis inside vagina visible, explicit sexual intercourse POV, graphic penetration close-up, XXX hardcore fucking scene, pornographic sex photo, uncensored penetration shot, real explicit fucking action, genitals clearly visible, hardcore NSFW intercourse, explicit vaginal penetration, pornographic sex position"
             context_keywords.append(explicit_penetration_prompt)
             action_detected = True
-            print(f"[IMAGE] SPECIFIC ACTION: EXPLICIT Penetration activity detected", flush=True)
+            print(f"[IMAGE] SPECIFIC ACTION: ULTRA EXPLICIT Penetration activity detected", flush=True)
         
         # D?tection de POSITIONS SP?CIFIQUES
         position_keywords = {
@@ -540,11 +540,11 @@ class ImageGenerator:
                                 "me toucher", "te toucher"]
         
         if any(keyword in conversation_text for keyword in masturbation_keywords):
-            # PROMPT EXPLICITE pour VRAIE sc?ne de masturbation
-            explicit_masturbation_prompt = "explicit masturbation scene, hand on genitals, actively masturbating, self-pleasuring, fingers on pussy/penis, explicit touching genitals, graphic self-pleasure, visible genitals being touched, NSFW masturbation scene"
+            # PROMPT ULTRA EXPLICITE pour VRAIE sc?ne de masturbation
+            explicit_masturbation_prompt = "NSFW explicit hardcore masturbation scene, fingers inside pussy, hand stroking cock, actively fingering herself, graphic self-pleasure POV, explicit masturbation close-up, visible pussy/dick being touched, XXX solo masturbation photo, pornographic self-pleasure scene, uncensored genital stimulation, real explicit touching genitals, hardcore NSFW solo sex, fingering pussy clearly visible, explicit masturbation action"
             context_keywords.append(explicit_masturbation_prompt)
             action_detected = True
-            print(f"[IMAGE] SPECIFIC ACTION: EXPLICIT Masturbation activity detected", flush=True)
+            print(f"[IMAGE] SPECIFIC ACTION: ULTRA EXPLICIT Masturbation activity detected", flush=True)
         
         # D?tection d'EXPOSITION (montrer, exhiber)
         exposure_keywords = ["montre", "regarde", "vois", "exhibe", "expose", "d?voile",
@@ -556,11 +556,11 @@ class ImageGenerator:
         has_body_part = any(part in conversation_text for part in body_parts)
         
         if has_exposure and has_body_part:
-            # PROMPT EXPLICITE pour VRAIE exposition des parties intimes
-            explicit_exhibition_prompt = "explicit nude pose, genitals visible, showing pussy/breasts/penis, exposed genitals, full frontal nudity, explicit body display, NSFW nude exhibition, detailed genital view, graphic nudity"
+            # PROMPT ULTRA EXPLICITE pour VRAIE exposition des parties intimes
+            explicit_exhibition_prompt = "NSFW explicit hardcore nude pose, pussy spread wide open visible, breasts fully exposed, full frontal nudity genitals shown, explicit genital display close-up, XXX nude exhibition photo, pornographic body display, uncensored pussy/breasts/ass visible, real explicit nude modeling, hardcore NSFW full nudity, graphic genital exposure, detailed vulva/penis view, pornographic nude pose"
             context_keywords.append(explicit_exhibition_prompt)
             action_detected = True
-            print(f"[IMAGE] SPECIFIC ACTION: EXPLICIT Exhibition/showing detected", flush=True)
+            print(f"[IMAGE] SPECIFIC ACTION: ULTRA EXPLICIT Exhibition/showing detected", flush=True)
         
         # PRIORITE 3: D?tecter l'environnement
         if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed", "matelas"]):
