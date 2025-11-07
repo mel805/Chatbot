@@ -1281,6 +1281,19 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
         
         if image_url:
             print(f"[IMAGE] Success! Displaying image...", flush=True)
+            print(f"[IMAGE] URL to display: {image_url[:100]}... (length: {len(image_url)})", flush=True)
+            
+            # V?rifier que l'URL n'est pas trop longue pour Discord
+            if len(image_url) > 2048:
+                print(f"[IMAGE] ❌ ERROR: URL too long for Discord embed ({len(image_url)} > 2048)", flush=True)
+                embed = discord.Embed(
+                    title="? Erreur URL",
+                    description=f"L'URL de l'image est trop longue ({len(image_url)} caract?res, max 2048).\n\n**Solution:** R?essayez ou configurez Replicate.",
+                    color=0xe74c3c
+                )
+                await interaction.edit_original_response(embed=embed)
+                return
+            
             embed = discord.Embed(
                 title=f"? {personality_data['name']}",
                 description=f"**Style:** {style.replace('_', ' ').title()}\n**Genre:** {personality_data.get('genre', 'N/A')}\n**?ge:** {personality_data.get('age', 'N/A')}",
@@ -1288,8 +1301,15 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
             )
             embed.set_image(url=image_url)
             embed.set_footer(text=f"G?n?r? avec Pollinations.ai (GRATUIT, NSFW filtr?, qualit? 4K)")
-            await interaction.edit_original_response(embed=embed)
-            print(f"[IMAGE] Image displayed successfully!", flush=True)
+            
+            try:
+                await interaction.edit_original_response(embed=embed)
+                print(f"[IMAGE] ✅ Embed sent to Discord successfully!", flush=True)
+            except discord.errors.HTTPException as e:
+                print(f"[IMAGE] ❌ Discord HTTPException: {e}", flush=True)
+                print(f"[IMAGE] Error code: {e.code}, Status: {e.status}, Text: {e.text}", flush=True)
+            except Exception as e:
+                print(f"[IMAGE] ❌ Error sending embed: {e}", flush=True)
         else:
             print(f"[IMAGE] Generation failed - no URL returned", flush=True)
             print(f"[IMAGE] DIAGNOSTIC: Check logs above to see why generation failed", flush=True)

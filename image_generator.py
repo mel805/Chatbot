@@ -258,14 +258,35 @@ class ImageGenerator:
             # model=flux : meilleur mod?le qualit?
             image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={random_seed}&nologo=true&private=true&enhance=true&model=flux"
             
-            print(f"[IMAGE] Pollinations.ai URL generated successfully", flush=True)
+            print(f"[IMAGE] Pollinations.ai URL generated", flush=True)
+            print(f"[IMAGE] URL length: {len(image_url)} characters", flush=True)
             print(f"[IMAGE] CONFIG: 1024x1024 resolution (4K quality)", flush=True)
             print(f"[IMAGE] CONFIG: enhance=true (photorealistic 4K upgrade)", flush=True)
             print(f"[IMAGE] CONFIG: private=true (NSFW filtered allowed)", flush=True)
             print(f"[IMAGE] CONFIG: model=flux (best quality model)", flush=True)
-            print(f"[IMAGE] Style: Photorealistic with anti-anime keywords", flush=True)
-            print(f"[IMAGE] Age safety: Adult-only enforcement", flush=True)
-            return image_url
+            
+            # CRITIQUE: V?rifier que l'URL est accessible et attend la g?n?ration
+            # Pollinations g?n?re l'image ? la vol?e, Discord a besoin que l'image soit pr?te
+            print(f"[IMAGE] Verifying Pollinations URL accessibility...", flush=True)
+            
+            try:
+                timeout = aiohttp.ClientTimeout(total=45)  # 45s pour laisser le temps ? Pollinations de g?n?rer
+                async with aiohttp.ClientSession(timeout=timeout) as session:
+                    async with session.head(image_url, allow_redirects=True) as resp:
+                        if resp.status == 200:
+                            print(f"[IMAGE] ✅ Pollinations URL verified and accessible", flush=True)
+                            return image_url
+                        else:
+                            print(f"[IMAGE] ❌ Pollinations returned status {resp.status}", flush=True)
+                            return None
+            except asyncio.TimeoutError:
+                print(f"[IMAGE] ❌ Pollinations timeout (45s) - image generation too slow", flush=True)
+                return None
+            except Exception as e:
+                print(f"[IMAGE] ❌ Pollinations verification failed: {e}", flush=True)
+                # Retourner l'URL quand m?me, Discord pourrait r?ussir ? la charger
+                print(f"[IMAGE] ⚠️ Returning URL anyway, Discord may still load it", flush=True)
+                return image_url
             
         except Exception as e:
             print(f"[ERROR] Pollinations.ai error: {e}", flush=True)
