@@ -231,12 +231,25 @@ class ImageGenerator:
             # CRITIQUE: Utiliser des MOD?LES NSFW SP?CIFIQUES qui existent vraiment
             # "stable_diffusion" est trop g?n?rique et peut ?tre refus?
             # Utiliser plusieurs mod?les NSFW en fallback
+            
+            # IMPORTANT: R?duire r?solution/steps pour cl? anonyme
+            # Cl? anonyme : max 512x512, 20 steps (pas de kudos requis)
+            # Vraie cl? : 768x1024, 25 steps possible
+            if self.stable_horde_key == '0000000000':
+                # Cl? anonyme : param?tres r?duits
+                width, height, steps = 512, 512, 20
+                print(f"[IMAGE] Using reduced params for anonymous key (512x512, 20 steps)", flush=True)
+            else:
+                # Vraie cl? : param?tres normaux
+                width, height, steps = 768, 1024, 25
+                print(f"[IMAGE] Using full params for registered key (768x1024, 25 steps)", flush=True)
+            
             payload = {
                 "prompt": prompt,
                 "params": {
-                    "width": 768,
-                    "height": 1024,
-                    "steps": 25,
+                    "width": width,
+                    "height": height,
+                    "steps": steps,
                     "cfg_scale": 7.5,
                     "sampler_name": "k_euler_a",
                     "n": 1
