@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Direct Inactivité</title>
+    <style>
+        body { background: #0d0d0d; color: white; font-family: Arial; padding: 20px; }
+        .test { background: #1a1a1a; padding: 20px; margin: 10px 0; border-radius: 8px; }
+        .success { border-left: 4px solid #57F287; }
+        .error { border-left: 4px solid #ED4245; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test Direct Dashboard</h1>
+    
+    <div class="test success">
+        <h2>1. Test de connexion</h2>
+        <p>Si vous voyez cette page, le serveur fonctionne ✅</p>
+    </div>
+    
+    <div class="test">
+        <h2>2. Test API /api/inactivity</h2>
+        <button onclick="testConfig()" style="padding: 10px 20px; cursor: pointer;">Tester</button>
+        <pre id="config-result" style="background: #0a0a0a; padding: 10px; margin-top: 10px;"></pre>
+    </div>
+    
+    <div class="test">
+        <h2>3. Test API /api/inactivity/members</h2>
+        <button onclick="testMembers()" style="padding: 10px 20px; cursor: pointer;">Tester</button>
+        <pre id="members-result" style="background: #0a0a0a; padding: 10px; margin-top: 10px;"></pre>
+    </div>
+    
+    <div class="test">
+        <h2>4. Accès au dashboard principal</h2>
+        <a href="/" style="color: #5865F2; font-size: 18px;">➡️ Aller au dashboard principal</a>
+        <p style="margin-top: 10px; opacity: 0.7;">
+            Une fois sur le dashboard:<br>
+            1. Cliquez sur <strong>⏰ Inactivité</strong> dans le menu<br>
+            2. Cliquez sur <strong>⚙️ Configuration</strong> (deuxième onglet)<br>
+            3. Vous devriez voir les paramètres
+        </p>
+    </div>
+
+    <script>
+        async function testConfig() {
+            const result = document.getElementById('config-result');
+            try {
+                result.textContent = 'Chargement...';
+                const res = await fetch('/api/inactivity');
+                const data = await res.json();
+                result.textContent = JSON.stringify(data, null, 2);
+                result.parentElement.classList.add('success');
+            } catch (error) {
+                result.textContent = 'ERREUR: ' + error.message;
+                result.parentElement.classList.add('error');
+            }
+        }
+        
+        async function testMembers() {
+            const result = document.getElementById('members-result');
+            try {
+                result.textContent = 'Chargement...';
+                const res = await fetch('/api/inactivity/members');
+                const data = await res.json();
+                result.textContent = `${data.length} membres trouvés\n\n` + JSON.stringify(data.slice(0, 3), null, 2);
+                result.parentElement.classList.add('success');
+            } catch (error) {
+                result.textContent = 'ERREUR: ' + error.message;
+                result.parentElement.classList.add('error');
+            }
+        }
+    </script>
+</body>
+</html>
