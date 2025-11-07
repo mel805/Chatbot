@@ -2541,9 +2541,12 @@ this.inactivity.delayDays=parseFloat(this.inactivityDelayMode);
 }
 },
 async loadInactivity(){
+console.log('🔄 loadInactivity() appelée');
 const r=await this.api('/api/inactivity');
+console.log('📥 Réponse API /api/inactivity:', r);
 if(r){
 this.inactivity=r;
+console.log('✅ inactivity chargé:', this.inactivity);
 // Initialiser le mode du sélecteur en fonction de delayDays
 const days=r.delayDays;
 if(days<1)this.inactivityDelayMode='0.0007';
@@ -2557,10 +2560,14 @@ else{
 this.inactivityDelayMode='custom';
 this.inactivityCustomDays=days;
 }
+console.log('🔧 inactivityDelayMode:', this.inactivityDelayMode);
+console.log('🔧 editingInactivity:', this.editingInactivity);
 // Ajouter automatiquement le rôle inactif aux exclus s'il est configuré
 if(r.inactiveRoleId && !r.excludedRoleIds.includes(r.inactiveRoleId)){
 r.excludedRoleIds.push(r.inactiveRoleId);
 }
+}else{
+console.error('❌ Pas de réponse de l\'API /api/inactivity');
 }
 // Charger les statistiques
 const stats=await this.api('/api/inactivity/stats');
