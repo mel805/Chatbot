@@ -561,33 +561,39 @@ class ImageGenerator:
         context_keywords = []
         
         # Extraire le texte de la conversation (g?rer dict ou str)
+        # IMPORTANT: Prendre TOUS les messages (pas juste 10) pour mieux capturer le contexte
         conversation_texts = []
-        for msg in conversation_history[-10:]:
+        for msg in conversation_history:  # Tous les messages, pas juste [-10:]
             if isinstance(msg, dict):
                 conversation_texts.append(msg.get('content', ''))
             else:
                 conversation_texts.append(str(msg))
         conversation_text = " ".join(conversation_texts).lower()
         
+        print(f"[IMAGE CONTEXT] Analyzing {len(conversation_texts)} messages...", flush=True)
+        print(f"[IMAGE CONTEXT] Conversation text length: {len(conversation_text)} chars", flush=True)
+        print(f"[IMAGE CONTEXT] Last 200 chars: ...{conversation_text[-200:]}", flush=True)
+        
         # PRIORITE 1: D?tecter les v?tements sp?cifiques mentionn?s
         # Cela permet de capturer "robe l?g?re", "chemise", "jupe", etc.
         clothing_detected = False
         clothing_items = []
         
-        # D?tection de v?tements sp?cifiques
+        # D?tection de v?tements sp?cifiques (avec plus de variations)
         clothing_keywords = {
-            "robe": ["robe l?g?re", "light dress", "robe", "dress"],
-            "chemise": ["chemise", "shirt", "blouse"],
-            "jupe": ["jupe", "skirt"],
-            "pantalon": ["pantalon", "pants", "jeans"],
-            "short": ["short", "shorts"],
-            "haut": ["haut", "top", "d?bardeur", "tank top"],
-            "lingerie": ["lingerie", "sous-v?tements", "underwear", "soutien-gorge", "bra", "culotte", "panties"],
-            "maillot": ["maillot de bain", "bikini", "swimsuit"],
-            "nuisette": ["nuisette", "d?shabill?", "nightgown", "negligee"],
-            "bas_vetement": ["bas r?sille", "bas nylon", "collants", "stockings", "tights"],  # Renomm? pour ?viter conflit avec "baiser"
-            "chaussures": ["talons", "heels", "chaussures", "shoes"],
-            "accessoires": ["chapeau", "foulard", "bijoux", "jewelry", "collier", "necklace"]
+            "robe": ["robe l?g?re", "robe courte", "robe longue", "light dress", "robe", "dress"],
+            "chemise": ["chemise", "chemisier", "shirt", "blouse"],
+            "jupe": ["jupe courte", "jupe longue", "jupe", "skirt", "mini-jupe", "minijupe"],
+            "pantalon": ["pantalon", "pants", "jeans", "legging"],
+            "short": ["short", "shorts", "mini short"],
+            "haut": ["haut", "top", "d?bardeur", "tank top", "crop top", "tee-shirt", "t-shirt"],
+            "lingerie": ["lingerie", "sous-v?tements", "underwear", "soutien-gorge", "bra", "culotte", "panties", "string", "dentelle"],
+            "maillot": ["maillot de bain", "bikini", "swimsuit", "maillot"],
+            "nuisette": ["nuisette", "d?shabill?", "nightgown", "negligee", "babydoll"],
+            "bas_vetement": ["bas r?sille", "bas nylon", "collants", "stockings", "tights", "bas"],
+            "chaussures": ["talons", "heels", "chaussures", "shoes", "talons hauts", "escarpins"],
+            "accessoires": ["chapeau", "foulard", "bijoux", "jewelry", "collier", "necklace", "boucles d'oreilles"],
+            "rien": ["toute nue", "compl?tement nue", "enti?rement nue", "sans rien", "nue", "naked", "nude"]
         }
         
         for category, keywords in clothing_keywords.items():
@@ -645,10 +651,12 @@ class ImageGenerator:
         
         action_detected = False
         
-        # D?tection d'actions ORALES (bouche, l?cher, sucer, etc.)
+        # D?tection d'actions ORALES (bouche, l?cher, sucer, etc.) - AJOUT DE VARIATIONS
         oral_keywords = ["bouche", "l?che", "l?cher", "suce", "sucer", "avale", "avaler", 
                         "langue", "l?vres sur", "embrasse le", "goute", "go?ter",
-                        "mouth", "lick", "licking", "suck", "sucking", "oral", "tongue", "taste"]
+                        "mouth", "lick", "licking", "suck", "sucking", "oral", "tongue", "taste",
+                        "prend dans ma bouche", "prendre dans", "dans ma bouche", "dans ta bouche",
+                        "te prendre", "vais te", "pipe", "fellation", "blowjob"]
         
         if any(keyword in conversation_text for keyword in oral_keywords):
             # V?rifier si c'est une action orale intime (pas juste un baiser sur la joue)
@@ -664,39 +672,57 @@ class ImageGenerator:
                 explicit_oral_prompt = "NSFW explicit hardcore fellatio scene, woman giving blowjob, dick in mouth, actively sucking penis, tongue licking cock shaft, POV oral sex, close-up explicit blowjob, mouth filled with dick, deepthroat scene, explicit cumming oral, graphic XXX oral penetration, pornographic blowjob photo, real explicit fellatio action, hardcore oral sex scene, uncensored NSFW blowjob"
                 context_keywords.append(explicit_oral_prompt)
                 action_detected = True
-                print(f"[IMAGE] SPECIFIC ACTION: ULTRA EXPLICIT Intimate oral activity detected", flush=True)
+                print(f"[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Oral sex / Fellation", flush=True)
+                print(f"[IMAGE CONTEXT] Added explicit oral prompt to generation", flush=True)
             else:
                 # Action orale g?n?rique (baiser, l?cher le cou, etc.)
                 context_keywords.append("kissing scene, sensual licking, intimate mouth contact")
                 action_detected = True
-                print(f"[IMAGE] ACTION: General oral/kissing activity detected", flush=True)
+                print(f"[IMAGE CONTEXT] ✅ DETECTED: General oral/kissing activity", flush=True)
         
-        # D?tection de P?N?TRATION
+        # D?tection de P?N?TRATION (avec plus de variations)
         penetration_keywords = ["p?n?tre", "p?n?trer", "rentre en", "enfonce", "enfoncer",
-                               "dedans", "en moi", "en toi", "inside", "penetrat", "thrust"]
+                               "dedans", "en moi", "en toi", "inside", "penetrat", "thrust",
+                               "entre dans", "dans ton cul", "dans ta chatte", "dans mon cul", "dans ma chatte",
+                               "te prend", "te baise", "baise", "fuck"]
         
         if any(keyword in conversation_text for keyword in penetration_keywords):
             # PROMPT ULTRA EXPLICITE pour VRAIE sc?ne de p?n?tration/sex
             explicit_penetration_prompt = "NSFW explicit hardcore sex scene, dick penetrating pussy, active fucking, penis inside vagina visible, explicit sexual intercourse POV, graphic penetration close-up, XXX hardcore fucking scene, pornographic sex photo, uncensored penetration shot, real explicit fucking action, genitals clearly visible, hardcore NSFW intercourse, explicit vaginal penetration, pornographic sex position"
             context_keywords.append(explicit_penetration_prompt)
             action_detected = True
-            print(f"[IMAGE] SPECIFIC ACTION: ULTRA EXPLICIT Penetration activity detected", flush=True)
+            print(f"[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Penetration / Sex", flush=True)
+            print(f"[IMAGE CONTEXT] Penetration keywords found in conversation", flush=True)
         
-        # D?tection de POSITIONS SP?CIFIQUES
+        # D?tection de POSITIONS SP?CIFIQUES (avec variations)
         position_keywords = {
             "quatre pattes": "on all fours position, doggystyle pose, bent over",
+            "4 pattes": "on all fours position, doggystyle pose, bent over",
+            "quatre patte": "on all fours position, doggystyle pose, bent over",
+            "a quatre pattes": "on all fours position, doggystyle pose, bent over",
             "genoux": "on knees position, kneeling pose, submissive kneel",
+            "? genoux": "on knees position, kneeling pose, submissive kneel",
             "jambes ?cart": "legs spread wide, open legs position, exposed pose",
+            "jambe ?cart": "legs spread wide, open legs position, exposed pose",
+            "jambes ouvert": "legs spread wide, open legs position, exposed pose",
+            "?carte les jambes": "legs spread wide, open legs position, exposed pose",
             "allong": "lying down position, on back pose, horizontal pose",
+            "couch": "lying down position, on back pose, horizontal pose",
+            "sur le dos": "lying down position, on back pose, horizontal pose",
             "assis sur": "sitting on lap, straddling position, mounted pose",
-            "debout contre": "standing against wall, pressed against, upright position"
+            "assise sur": "sitting on lap, straddling position, mounted pose",
+            "monte sur": "sitting on lap, straddling position, mounted pose",
+            "debout contre": "standing against wall, pressed against, upright position",
+            "contre le mur": "standing against wall, pressed against, upright position",
+            "pench": "bent over position, leaning forward pose",
+            "courb": "bent over position, arched back"
         }
         
         for pos_keyword, visual_desc in position_keywords.items():
             if pos_keyword in conversation_text:
                 context_keywords.append(visual_desc)
                 action_detected = True
-                print(f"[IMAGE] SPECIFIC POSITION: {pos_keyword} detected", flush=True)
+                print(f"[IMAGE CONTEXT] ✅ DETECTED: Position '{pos_keyword}' → {visual_desc}", flush=True)
                 break
         
         # D?tection de MASTURBATION (v?rifier contexte r?flexif/auto-plaisir)
@@ -710,7 +736,7 @@ class ImageGenerator:
             explicit_masturbation_prompt = "NSFW explicit hardcore masturbation scene, fingers inside pussy, hand stroking cock, actively fingering herself, graphic self-pleasure POV, explicit masturbation close-up, visible pussy/dick being touched, XXX solo masturbation photo, pornographic self-pleasure scene, uncensored genital stimulation, real explicit touching genitals, hardcore NSFW solo sex, fingering pussy clearly visible, explicit masturbation action"
             context_keywords.append(explicit_masturbation_prompt)
             action_detected = True
-            print(f"[IMAGE] SPECIFIC ACTION: ULTRA EXPLICIT Masturbation activity detected", flush=True)
+            print(f"[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Masturbation", flush=True)
         
         # D?tection d'EXPOSITION (montrer, exhiber)
         exposure_keywords = ["montre", "regarde", "vois", "exhibe", "expose", "d?voile",
@@ -726,7 +752,7 @@ class ImageGenerator:
             explicit_exhibition_prompt = "NSFW explicit hardcore nude pose, pussy spread wide open visible, breasts fully exposed, full frontal nudity genitals shown, explicit genital display close-up, XXX nude exhibition photo, pornographic body display, uncensored pussy/breasts/ass visible, real explicit nude modeling, hardcore NSFW full nudity, graphic genital exposure, detailed vulva/penis view, pornographic nude pose"
             context_keywords.append(explicit_exhibition_prompt)
             action_detected = True
-            print(f"[IMAGE] SPECIFIC ACTION: ULTRA EXPLICIT Exhibition/showing detected", flush=True)
+            print(f"[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Exhibition / Nudity", flush=True)
         
         # PRIORITE 3: D?tecter l'environnement
         if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed", "matelas"]):
@@ -764,13 +790,15 @@ class ImageGenerator:
         if context_keywords:
             context_str = ", ".join(context_keywords)
             full_prompt = f"{base_prompt}, {context_str}"
-            print(f"[IMAGE] Contextual generation with keywords: {context_str[:100]}...", flush=True)
+            print(f"[IMAGE CONTEXT] ✅ {len(context_keywords)} context elements detected", flush=True)
+            print(f"[IMAGE CONTEXT] Keywords: {context_str[:200]}...", flush=True)
         else:
             # Par d?faut, g?n?rer une image suggestive
             full_prompt = f"{base_prompt}, suggestive, sensual"
-            print(f"[IMAGE] No specific context detected, using suggestive default", flush=True)
+            print(f"[IMAGE CONTEXT] ⚠️ NO specific context detected, using default suggestive", flush=True)
         
-        print(f"[IMAGE] Contextual prompt: {full_prompt[:150]}...", flush=True)
+        print(f"[IMAGE CONTEXT] Final prompt length: {len(full_prompt)} chars", flush=True)
+        print(f"[IMAGE CONTEXT] Final prompt preview: {full_prompt[:200]}...", flush=True)
         
         # G?n?rer l'image - NOUVEAU FLOW: Services GRATUITS NSFW en premier !
         image_url = None
