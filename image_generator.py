@@ -113,34 +113,39 @@ class ImageGenerator:
         age_num = int(''.join(filter(str.isdigit, str(age))) or "25")
         
         # ULTRA RENFORC?: Mots-cl?s d'?ge ADULTE massivement augment?s
-        # Placer ?GE EN PREMIER pour ?viter blocage CSAM
+        # Placer ?GE EN PREMIER pour ?viter blocage CSAM + RESPECT ?GE PR?CIS
         if age_num >= 40:
-            # 40+ ans : TRES mature - ULTRA RENFORC?
-            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, MATURE ADULT OVER 30 YEARS OLD"
-            age_keywords = f"middle-aged adult, fully mature woman/man, experienced adult over 35, grown adult person, adult facial features, mature adult body, NOT young, NOT teen, adult only, 30+ years old minimum"
-            print(f"[IMAGE] ANTI-CSAM: {age_num}+ years - MATURE ADULT (ultra enforced)", flush=True)
+            # 40+ ans : TRES mature - ULTRA RENFORC? avec signes visibles de maturit?
+            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, MATURE ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
+            age_keywords = f"middle-aged adult, fully mature woman/man aged {age_num}, experienced adult over 35, grown adult person, adult facial features showing {age_num} years, mature adult body, NOT young, NOT teen, adult only, 40+ years old appearance, visible maturity, age-appropriate features for {age_num} years"
+            print(f"[IMAGE] ANTI-CSAM: {age_num}+ years - MATURE ADULT (age-appropriate features enforced)", flush=True)
         elif age_num >= 30:
-            # 30-39 ans : Mature - ULTRA RENFORC?
-            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, MATURE ADULT OVER 25 YEARS OLD"
-            age_keywords = f"mature adult person, fully grown adult, adult facial features, adult body type, NOT young, NOT teen, adult only, 25+ years old minimum, experienced adult"
-            print(f"[IMAGE] ANTI-CSAM: {age_num} years - ADULT (ultra enforced)", flush=True)
+            # 30-39 ans : Mature - ULTRA RENFORC? avec apparence 30+
+            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, MATURE ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
+            age_keywords = f"mature adult person aged {age_num}, fully grown adult, adult facial features showing {age_num} years, adult body type, NOT young, NOT teen, adult only, 30+ years old appearance, visible maturity for {age_num} years, age-appropriate look"
+            print(f"[IMAGE] ANTI-CSAM: {age_num} years - ADULT (age-appropriate features enforced)", flush=True)
         elif age_num >= 25:
-            # 25-29 ans : Jeune adulte - ULTRA RENFORC?
-            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, YOUNG ADULT OVER 25 YEARS OLD"
-            age_keywords = f"young adult person, fully grown adult, mature young adult, adult features, adult body, NOT teen, NOT minor, adult only, 25+ years old, grown adult"
-            print(f"[IMAGE] ANTI-CSAM: {age_num} years - YOUNG ADULT (ultra enforced)", flush=True)
+            # 25-29 ans : Jeune adulte - ULTRA RENFORC? avec apparence 25+
+            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, YOUNG ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
+            age_keywords = f"young adult person aged {age_num}, fully grown adult, mature young adult showing {age_num} years, adult features, adult body, NOT teen, NOT minor, adult only, 25+ years old appearance, mature for {age_num} years old"
+            print(f"[IMAGE] ANTI-CSAM: {age_num} years - YOUNG ADULT (age-appropriate features enforced)", flush=True)
         else:
             # 18-24 ans : Adulte - ULTRA RENFORC? (minimum 25 ans pour ?viter filtres)
             # FORCER ? 25 ANS MINIMUM pour Stable Horde
             age_num = max(age_num, 25)
-            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, YOUNG ADULT OVER 25 YEARS OLD"
-            age_keywords = f"young adult person, fully grown adult, adult features, mature body, NOT teen, NOT minor, adult only, 25+ years old minimum, legal adult"
-            print(f"[IMAGE] ANTI-CSAM: Forced to {age_num} years - ADULT (ultra enforced)", flush=True)
+            age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD, YOUNG ADULT {age_num} YEARS, {age_num}-YEAR-OLD ADULT"
+            age_keywords = f"young adult person aged {age_num}, fully grown adult, adult features showing {age_num} years, mature body, NOT teen, NOT minor, adult only, 25+ years old appearance, legal adult, age-appropriate for {age_num} years"
+            print(f"[IMAGE] ANTI-CSAM: Forced to {age_num} years - ADULT (age-appropriate features enforced)", flush=True)
         
-        # REALISME apr?s l'?ge + QUALIT? RENFORC?E
-        # Ajout de mots-cl?s de qualit? pour r?duire les d?fauts
-        realism_keywords = "PHOTOREALISTIC PHOTO, realistic photograph, real human person, high quality professional photograph, natural photographic lighting, realistic human skin texture, detailed realistic face, natural appearance"
-        quality_keywords = "perfect anatomy, perfect hands, perfect fingers, perfect face, detailed eyes, symmetrical face, high quality, masterpiece, best quality, ultra detailed, flawless skin, professional photography"
+        # REALISME ULTRA-RENFORC? + QUALIT? + SEX-APPEAL
+        # Mots-cl?s pour PHOTORÉALISME maximal
+        realism_keywords = "ULTRA PHOTOREALISTIC, hyperrealistic photograph, real human person, professional photography, 8K resolution, DSLR camera quality, natural photographic lighting, realistic human skin with pores and texture, highly detailed realistic face, lifelike appearance, RAW photo quality, sharp focus, natural colors"
+        
+        # Mots-cl?s de qualit? pour r?duire les d?fauts
+        quality_keywords = "perfect anatomy, perfect hands with 5 fingers, perfect face structure, detailed realistic eyes, symmetrical facial features, high quality, masterpiece quality, best quality, ultra detailed, flawless natural skin, professional studio photography, anatomically correct"
+        
+        # Mots-cl?s de SEX-APPEAL et s?duction
+        sexy_keywords = "attractive, sexy, seductive look, alluring, sultry gaze, sensual pose, confident expression, appealing features, beautiful, glamorous, striking appearance, captivating beauty, seductive appeal, desirable, charismatic presence"
         
         # Si des traits visuels sp?cifiques sont fournis, les ULTRA-RENFORCER
         if visual_traits:
@@ -159,12 +164,13 @@ class ImageGenerator:
             # AJOUTER des mots-cl?s de stabilit? visuelle ultra-forts
             stability_keywords = "same face every time, identical facial structure, same hair color and length, same eye color, same body type, stable appearance, unchanging features, consistent person, fixed characteristics"
             
-            # ?GE EN PREMIER (anti-CSAM), puis r?alisme, qualit?, puis traits ULTRA-RENFORC?S × 3
-            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {visual_ultra_reinforced}, {age_keywords}, {stability_keywords}, SAME EXACT PERSON"
+            # ?GE EN PREMIER (anti-CSAM), puis r?alisme ULTRA, qualit?, sex-appeal, puis traits ULTRA-RENFORC?S × 3
+            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {visual_ultra_reinforced}, {age_keywords}, {stability_keywords}, SAME EXACT PERSON"
             
             print(f"[IMAGE COHERENCE] ⭐ Visual traits ULTRA-REINFORCED (3x repetition)", flush=True)
             print(f"[IMAGE COHERENCE] ⭐ Stability keywords added for fixed appearance", flush=True)
-            print(f"[IMAGE QUALITY] Quality keywords added to reduce defects", flush=True)
+            print(f"[IMAGE QUALITY] ⭐ Quality keywords + ULTRA-REALISM added", flush=True)
+            print(f"[IMAGE SEXY] ⭐ Sex-appeal keywords added for attractive look", flush=True)
             return prompt
         
         # Sinon, utiliser l'ancienne m?thode (fallback)
@@ -208,12 +214,13 @@ class ImageGenerator:
         # Mots-cl?s de stabilit? visuelle
         stability_keywords = "same face every time, identical facial structure, same hair style, same features, stable appearance, consistent person"
         
-        # ?GE EN PREMIER (anti-CSAM), puis r?alisme, qualit?, puis description physique RENFORC?E
-        prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {generic_visual_reinforced}, {gender_desc}, {age_keywords}, {traits_str}, {stability_keywords}, SAME EXACT PERSON"
+        # ?GE EN PREMIER (anti-CSAM), puis r?alisme ULTRA, qualit?, sex-appeal, puis description physique RENFORC?E
+        prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {generic_visual_reinforced}, {gender_desc}, {age_keywords}, {traits_str}, {stability_keywords}, SAME EXACT PERSON"
         
         print(f"[IMAGE COHERENCE] ⚠️ No specific visual traits - using generic detailed description", flush=True)
         print(f"[IMAGE COHERENCE] ⭐ Generic visual traits ULTRA-REINFORCED (3x repetition)", flush=True)
-        print(f"[IMAGE QUALITY] Quality keywords added to reduce defects", flush=True)
+        print(f"[IMAGE QUALITY] ⭐ Quality keywords + ULTRA-REALISM added", flush=True)
+        print(f"[IMAGE SEXY] ⭐ Sex-appeal keywords added for attractive look", flush=True)
         
         return prompt
     
