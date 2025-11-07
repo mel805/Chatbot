@@ -137,8 +137,10 @@ class ImageGenerator:
             age_keywords = f"young adult person, fully grown adult, adult features, mature body, NOT teen, NOT minor, adult only, 25+ years old minimum, legal adult"
             print(f"[IMAGE] ANTI-CSAM: Forced to {age_num} years - ADULT (ultra enforced)", flush=True)
         
-        # REALISME apr?s l'?ge
+        # REALISME apr?s l'?ge + QUALIT? RENFORC?E
+        # Ajout de mots-cl?s de qualit? pour r?duire les d?fauts
         realism_keywords = "PHOTOREALISTIC PHOTO, realistic photograph, real human person, high quality professional photograph, natural photographic lighting, realistic human skin texture, detailed realistic face, natural appearance"
+        quality_keywords = "perfect anatomy, perfect hands, perfect fingers, perfect face, detailed eyes, symmetrical face, high quality, masterpiece, best quality, ultra detailed, flawless skin, professional photography"
         
         # Si des traits visuels sp?cifiques sont fournis, les RENFORCER pour coh?rence
         if visual_traits:
@@ -146,9 +148,10 @@ class ImageGenerator:
             # RENFORCER les traits visuels pour coh?rence entre images
             # R?p?ter les traits cl?s 2x pour que l'IA les priorise
             visual_reinforced = f"{visual_traits}, CONSISTENT APPEARANCE, {visual_traits}"
-            # ?GE EN PREMIER (anti-CSAM), puis r?alisme, puis traits RENFORC?S
-            prompt = f"{age_prefix}, {realism_keywords}, {visual_reinforced}, {age_keywords}, SAME PERSON, consistent facial features"
+            # ?GE EN PREMIER (anti-CSAM), puis r?alisme, qualit?, puis traits RENFORC?S
+            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {visual_reinforced}, {age_keywords}, SAME PERSON, consistent facial features"
             print(f"[IMAGE COHERENCE] Visual traits reinforced for consistency", flush=True)
+            print(f"[IMAGE QUALITY] Quality keywords added to reduce defects", flush=True)
             return prompt
         
         # Sinon, utiliser l'ancienne m?thode (fallback)
@@ -175,10 +178,11 @@ class ImageGenerator:
         
         traits_str = ", ".join(traits) if traits else "attractive"
         
-        # ?GE EN PREMIER (anti-CSAM), puis r?alisme, puis genre, traits
-        # AJOUTER coh?rence visuelle m?me sans traits sp?cifiques
-        prompt = f"{age_prefix}, {realism_keywords}, {gender_desc}, {age_keywords}, {traits_str}, CONSISTENT APPEARANCE, stable facial features"
+        # ?GE EN PREMIER (anti-CSAM), puis r?alisme, qualit?, puis genre, traits
+        # AJOUTER coh?rence visuelle + qualit? m?me sans traits sp?cifiques
+        prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {gender_desc}, {age_keywords}, {traits_str}, CONSISTENT APPEARANCE, stable facial features"
         print(f"[IMAGE COHERENCE] Added consistency keywords for stable appearance", flush=True)
+        print(f"[IMAGE QUALITY] Quality keywords added to reduce defects", flush=True)
         
         return prompt
     
