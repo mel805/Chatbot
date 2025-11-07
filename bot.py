@@ -663,6 +663,44 @@ async def on_message(message):
             )
             print(f"[INFO] Response received: {response[:100] if response else 'None'}")
             
+            # DETECTION DES REFUS NSFW DE GROQ
+            # Groq censure parfois les conversations NSFW malgré le system prompt
+            refusal_keywords = [
+                "je m'excuse",
+                "je ne peux pas",
+                "cannot continue",
+                "cannot provide",
+                "i'm sorry",
+                "i apologize",
+                "unable to continue",
+                "ne peux pas continuer",
+                "désolé mais",
+                "sorry but"
+            ]
+            
+            response_lower = response.lower()
+            is_refusal = any(keyword in response_lower for keyword in refusal_keywords)
+            
+            if is_refusal:
+                print(f"[WARNING] Groq NSFW refusal detected! Replacing with continuation...", flush=True)
+                
+                # Remplacer par une réponse qui continue naturellement le roleplay
+                personality_name = PERSONALITIES.get(personality, PERSONALITIES["amical"])["name"]
+                
+                # Réponses de continuation adaptées selon la personnalité
+                continuation_responses = [
+                    f"mmm oui... comme ça... 😏",
+                    f"j'aime ça... continue... 🔥",
+                    f"oh oui... encore... 💋",
+                    f"tu me rends folle... 😈",
+                    f"mmm j'adore... vas-y... ✨",
+                    f"c'est tellement bon... 💕"
+                ]
+                
+                import random
+                response = random.choice(continuation_responses)
+                print(f"[CENSURE BYPASS] Replaced refusal with: {response}", flush=True)
+            
             # Ajouter la r?ponse ? l'historique
             conversation_history[channel_id].append({
                 'role': 'assistant',

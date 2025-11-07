@@ -306,13 +306,18 @@ class ImageGenerator:
                         # Dezgo retourne directement l'image en bytes
                         image_data = await resp.read()
                         
-                        # Convertir en base64 data URL pour affichage
-                        import base64
-                        b64_data = base64.b64encode(image_data).decode()
-                        image_url = f"data:image/png;base64,{b64_data}"
+                        # PROBLEME: Discord n'accepte pas les data URLs dans les embeds
+                        # Il faudrait uploader sur un service d'images temporaire
+                        # Pour l'instant, on retourne None pour que le fallback continue
+                        print(f"[IMAGE] Dezgo returned image but Discord doesn't support base64 embeds", flush=True)
+                        print(f"[IMAGE] Skipping Dezgo - use Replicate or external image host", flush=True)
+                        return None
                         
-                        print(f"[IMAGE] Dezgo SUCCESS", flush=True)
-                        return image_url
+                        # # TODO: Uploader sur un service comme imgbb ou imgur
+                        # import base64
+                        # b64_data = base64.b64encode(image_data).decode()
+                        # image_url = f"data:image/png;base64,{b64_data}"
+                        # return image_url
                     else:
                         error_text = await resp.text()
                         print(f"[ERROR] Dezgo failed: {resp.status} - {error_text[:100]}", flush=True)
