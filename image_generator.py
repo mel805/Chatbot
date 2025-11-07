@@ -78,13 +78,14 @@ class ImageGenerator:
                     print(f"[IMAGE] SUCCESS with Replicate (PAID)!", flush=True)
                     return image_url
             
-            # M?thode 4: Pollinations (GRATUIT mais censure NSFW)
-            print(f"[IMAGE] Trying Pollinations (FREE but censors NSFW)...", flush=True)
-            image_url = await self._generate_pollinations(full_prompt)
-            
-            if image_url:
-                print(f"[IMAGE] SUCCESS with Pollinations (but may be censored)", flush=True)
-                return image_url
+            # M?thode 4: Pollinations (D?SACTIV? pour tests NSFW explicites)
+            # print(f"[IMAGE] Trying Pollinations (FREE but censors NSFW)...", flush=True)
+            # image_url = await self._generate_pollinations(full_prompt)
+            # 
+            # if image_url:
+            #     print(f"[IMAGE] SUCCESS with Pollinations (but may be censored)", flush=True)
+            #     return image_url
+            print(f"[IMAGE] Pollinations DISABLED - Testing NSFW services only", flush=True)
             
             if attempt < max_retries - 1:
                 print(f"[IMAGE] Attempt {attempt + 1} failed, retrying...", flush=True)
@@ -628,11 +629,12 @@ class ImageGenerator:
                 print(f"[IMAGE] SUCCESS with Replicate (PAID)!", flush=True)
                 return image_url
         
-        # 4. Pollinations (GRATUIT mais censure NSFW - dernier recours)
-        print(f"[IMAGE] Trying Pollinations (FREE but censors NSFW)...", flush=True)
-        image_url = await self._generate_pollinations(full_prompt)
-        
-        if image_url:
-            print(f"[IMAGE] SUCCESS with Pollinations (but may be censored)", flush=True)
+        # 4. Pollinations (D?SACTIV? pour tests NSFW explicites)
+        # print(f"[IMAGE] Trying Pollinations (FREE but censors NSFW)...", flush=True)
+        # image_url = await self._generate_pollinations(full_prompt)
+        # 
+        # if image_url:
+        #     print(f"[IMAGE] SUCCESS with Pollinations (but may be censored)", flush=True)
+        print(f"[IMAGE] Pollinations DISABLED - Testing NSFW services only", flush=True)
         
         return image_url
