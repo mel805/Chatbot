@@ -43,7 +43,8 @@ class ImageGenerator:
         age_num = ''.join(filter(str.isdigit, age))
         
         # Construire le prompt Stable Diffusion avec traits visuels uniques
-        base_prompt = self._build_base_prompt(genre, age_num, description, visual_traits)
+        # Note: On cr?era une version courte sp?cifiquement pour Pollinations
+        base_prompt = self._build_base_prompt(genre, age_num, description, visual_traits, short_version=False)
         full_prompt = f"{base_prompt}, {prompt_addition}" if prompt_addition else base_prompt
         
         print(f"[IMAGE] Generating image for {name} with prompt: {full_prompt[:100]}...", flush=True)
@@ -55,8 +56,13 @@ class ImageGenerator:
             print(f"[IMAGE] Attempt {attempt + 1}/{max_retries}...", flush=True)
             
             # M?thode 1: Pollinations.ai (GRATUIT, NSFW filtr?, qualit? 4K)
+            # IMPORTANT: Utiliser une version COURTE du prompt pour respecter limite URL Discord (2048 caract?res)
             print(f"[IMAGE] Trying Pollinations.ai (FREE, NSFW filtered, 4K quality)...", flush=True)
-            image_url = await self._generate_pollinations(full_prompt)
+            short_prompt = self._build_base_prompt(genre, age_num, description, visual_traits, short_version=True)
+            if prompt_addition:
+                short_prompt = f"{short_prompt}, {prompt_addition}"
+            print(f"[IMAGE] Using SHORT prompt for Pollinations (length: {len(short_prompt)})", flush=True)
+            image_url = await self._generate_pollinations(short_prompt)
             
             if image_url:
                 print(f"[IMAGE] SUCCESS with Pollinations.ai (FREE)!", flush=True)
@@ -86,8 +92,12 @@ class ImageGenerator:
         print(f"[IMAGE] All {max_retries} attempts and all services failed", flush=True)
         return image_url
     
-    def _build_base_prompt(self, genre, age, description, visual_traits=""):
-        """Construit le prompt de base selon la personnalit?"""
+    def _build_base_prompt(self, genre, age, description, visual_traits="", short_version=False):
+        """Construit le prompt de base selon la personnalit?
+        
+        Args:
+            short_version: Si True, g?n?re une version courte pour Pollinations (limite URL 2048 caract?res)
+        """
         
         # CRITIQUE ANTI-CSAM: L'?GE ADULTE DOIT ?TRE EN PREMIER !
         # Stable Horde a un filtre CSAM tr?s agressif
@@ -119,15 +129,16 @@ class ImageGenerator:
             age_keywords = f"young adult person aged {age_num}, fully grown adult, adult features showing {age_num} years, mature body, NOT teen, NOT minor, adult only, 25+ years old appearance, legal adult, age-appropriate for {age_num} years"
             print(f"[IMAGE] ANTI-CSAM: Forced to {age_num} years - ADULT (age-appropriate features enforced)", flush=True)
         
-        # REALISME ULTRA-RENFORC? + QUALIT? + SEX-APPEAL
-        # Mots-cl?s pour PHOTORÉALISME maximal
-        realism_keywords = "ULTRA PHOTOREALISTIC, hyperrealistic photograph, real human person, professional photography, 8K resolution, DSLR camera quality, natural photographic lighting, realistic human skin with pores and texture, highly detailed realistic face, lifelike appearance, RAW photo quality, sharp focus, natural colors"
-        
-        # Mots-cl?s de qualit? pour r?duire les d?fauts
-        quality_keywords = "perfect anatomy, perfect hands with 5 fingers, perfect face structure, detailed realistic eyes, symmetrical facial features, high quality, masterpiece quality, best quality, ultra detailed, flawless natural skin, professional studio photography, anatomically correct"
-        
-        # Mots-cl?s de SEX-APPEAL et s?duction
-        sexy_keywords = "attractive, sexy, seductive look, alluring, sultry gaze, sensual pose, confident expression, appealing features, beautiful, glamorous, striking appearance, captivating beauty, seductive appeal, desirable, charismatic presence"
+        # VERSION COURTE pour Pollinations (limite URL Discord 2048 caract?res)
+        if short_version:
+            realism_keywords = "photorealistic, professional photo, DSLR quality, natural lighting, detailed face"
+            quality_keywords = "perfect anatomy, high quality, detailed"
+            sexy_keywords = "attractive, sexy, seductive, beautiful"
+        else:
+            # VERSION COMPLETE pour Stable Horde / Replicate
+            realism_keywords = "ULTRA PHOTOREALISTIC, hyperrealistic photograph, real human person, professional photography, 8K resolution, DSLR camera quality, natural photographic lighting, realistic human skin with pores and texture, highly detailed realistic face, lifelike appearance, RAW photo quality, sharp focus, natural colors"
+            quality_keywords = "perfect anatomy, perfect hands with 5 fingers, perfect face structure, detailed realistic eyes, symmetrical facial features, high quality, masterpiece quality, best quality, ultra detailed, flawless natural skin, professional studio photography, anatomically correct"
+            sexy_keywords = "attractive, sexy, seductive look, alluring, sultry gaze, sensual pose, confident expression, appealing features, beautiful, glamorous, striking appearance, captivating beauty, seductive appeal, desirable, charismatic presence"
         
         # Si des traits visuels sp?cifiques sont fournis, les ULTRA-RENFORCER
         if visual_traits:
@@ -139,15 +150,15 @@ class ImageGenerator:
             # Corps: morphologie
             # Visage: traits
             
-            # R?P?TER 3X les traits visuels pour FORCER la coh?rence
-            # PLUS de r?p?titions = PLUS de poids dans la g?n?ration
-            visual_ultra_reinforced = f"{visual_traits}, EXACT SAME PERSON, {visual_traits}, IDENTICAL APPEARANCE, {visual_traits}, CONSISTENT FEATURES"
-            
-            # AJOUTER des mots-cl?s de stabilit? visuelle ultra-forts
-            stability_keywords = "same face every time, identical facial structure, same hair color and length, same eye color, same body type, stable appearance, unchanging features, consistent person, fixed characteristics"
-            
-            # ?GE EN PREMIER (anti-CSAM), puis r?alisme ULTRA, qualit?, sex-appeal, puis traits ULTRA-RENFORC?S × 3
-            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {visual_ultra_reinforced}, {age_keywords}, {stability_keywords}, SAME EXACT PERSON"
+            if short_version:
+                # VERSION COURTE: 1 seule r?p?tition + mots-cl?s simplifi?s
+                prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {visual_traits}, {age_keywords}"
+                print(f"[IMAGE] SHORT prompt for Pollinations (URL length limit)", flush=True)
+            else:
+                # VERSION COMPLETE: 3x r?p?titions + tous les mots-cl?s
+                visual_ultra_reinforced = f"{visual_traits}, EXACT SAME PERSON, {visual_traits}, IDENTICAL APPEARANCE, {visual_traits}, CONSISTENT FEATURES"
+                stability_keywords = "same face every time, identical facial structure, same hair color and length, same eye color, same body type, stable appearance, unchanging features, consistent person, fixed characteristics"
+                prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {visual_ultra_reinforced}, {age_keywords}, {stability_keywords}, SAME EXACT PERSON"
             
             print(f"[IMAGE COHERENCE] ⭐ Visual traits ULTRA-REINFORCED (3x repetition)", flush=True)
             print(f"[IMAGE COHERENCE] ⭐ Stability keywords added for fixed appearance", flush=True)
@@ -190,14 +201,15 @@ class ImageGenerator:
         else:
             base_physical = "medium length hair, distinctive facial features, average build"
         
-        # R?P?TER 3X pour FORCER la coh?rence m?me sans traits sp?cifiques
-        generic_visual_reinforced = f"{base_physical}, EXACT SAME PERSON, {base_physical}, IDENTICAL APPEARANCE, {base_physical}"
-        
-        # Mots-cl?s de stabilit? visuelle
-        stability_keywords = "same face every time, identical facial structure, same hair style, same features, stable appearance, consistent person"
-        
-        # ?GE EN PREMIER (anti-CSAM), puis r?alisme ULTRA, qualit?, sex-appeal, puis description physique RENFORC?E
-        prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {generic_visual_reinforced}, {gender_desc}, {age_keywords}, {traits_str}, {stability_keywords}, SAME EXACT PERSON"
+        if short_version:
+            # VERSION COURTE: 1 seule fois
+            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {base_physical}, {gender_desc}, {age_keywords}, {traits_str}"
+            print(f"[IMAGE] SHORT generic prompt for Pollinations", flush=True)
+        else:
+            # VERSION COMPLETE: 3x r?p?titions
+            generic_visual_reinforced = f"{base_physical}, EXACT SAME PERSON, {base_physical}, IDENTICAL APPEARANCE, {base_physical}"
+            stability_keywords = "same face every time, identical facial structure, same hair style, same features, stable appearance, consistent person"
+            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {generic_visual_reinforced}, {gender_desc}, {age_keywords}, {traits_str}, {stability_keywords}, SAME EXACT PERSON"
         
         print(f"[IMAGE COHERENCE] ⚠️ No specific visual traits - using generic detailed description", flush=True)
         print(f"[IMAGE COHERENCE] ⭐ Generic visual traits ULTRA-REINFORCED (3x repetition)", flush=True)
@@ -878,35 +890,38 @@ class ImageGenerator:
         print(f"[IMAGE CONTEXT] Final prompt length: {len(full_prompt)} chars", flush=True)
         print(f"[IMAGE CONTEXT] Final prompt preview: {full_prompt[:200]}...", flush=True)
         
-        # G?n?rer l'image - NOUVEAU FLOW: Services GRATUITS NSFW en premier !
+        # G?n?rer l'image - FLOW: Pollinations en priorit? (avec prompt court pour limite URL)
         image_url = None
         
-        # 1. Stable Horde (GRATUIT illimit?, NSFW OK)
-        print(f"[IMAGE] Trying Stable Horde (FREE P2P, NSFW allowed)...", flush=True)
+        # 1. Pollinations.ai (GRATUIT, NSFW filtr?, qualit? 4K)
+        # IMPORTANT: Cr?er une version COURTE du prompt pour ?viter d?passer 2048 caract?res (limite URL Discord)
+        print(f"[IMAGE] Trying Pollinations.ai (FREE, NSFW filtered, 4K quality)...", flush=True)
+        
+        # Raccourcir le prompt pour Pollinations : garder base + contexte essentiels
+        # R?duire les r?p?titions et mots-cl?s ultra-longs
+        short_context_prompt = full_prompt
+        # Si trop long, tronquer les parties moins importantes
+        if len(full_prompt) > 800:  # Limite s?curitaire avant encodage URL
+            # Garder: base_prompt + premiers context_keywords
+            context_str_short = ", ".join(context_keywords[:5]) if len(context_keywords) > 5 else context_str
+            short_context_prompt = f"{base_prompt}, {context_str_short}"
+            print(f"[IMAGE] Shortened contextual prompt to {len(short_context_prompt)} chars for Pollinations", flush=True)
+        
+        image_url = await self._generate_pollinations(short_context_prompt)
+        
+        if image_url:
+            print(f"[IMAGE] SUCCESS with Pollinations.ai (FREE)!", flush=True)
+            return image_url
+        
+        # 2. Stable Horde (GRATUIT backup, NSFW OK)
+        print(f"[IMAGE] Pollinations failed, trying Stable Horde (FREE P2P, NSFW allowed)...", flush=True)
         image_url = await self._generate_stable_horde(full_prompt)
         
         if image_url:
             print(f"[IMAGE] SUCCESS with Stable Horde (FREE)!", flush=True)
             return image_url
         
-        # 2. Hugging Face (TEMPORAIREMENT D?SACTIV? - API d?pr?ci?e)
-        # print(f"[IMAGE] Hugging Face attempt (FREE, NSFW allowed)...", flush=True)
-        # image_url = await self._generate_huggingface(full_prompt)
-        # 
-        # if image_url:
-        #     print(f"[IMAGE] SUCCESS with Hugging Face (FREE)!", flush=True)
-        #     return image_url
-        print(f"[IMAGE] Hugging Face temporarily disabled (API deprecated)", flush=True)
-        
-        # 3. Dezgo (GRATUIT rapide, NSFW OK - mais base64 incompatible Discord)
-        print(f"[IMAGE] Hugging Face failed, trying Dezgo (FREE, NSFW allowed)...", flush=True)
-        image_url = await self._generate_dezgo(full_prompt)
-        
-        if image_url:
-            print(f"[IMAGE] SUCCESS with Dezgo (FREE)!", flush=True)
-            return image_url
-        
-        # 4. Replicate (PAYANT backup si cl? configur?e)
+        # 3. Replicate (PAYANT backup si cl? configur?e)
         if self.replicate_key:
             print(f"[IMAGE] Free services failed, trying Replicate (PAID)...", flush=True)
             image_url = await self._generate_replicate(full_prompt)
@@ -914,13 +929,5 @@ class ImageGenerator:
             if image_url:
                 print(f"[IMAGE] SUCCESS with Replicate (PAID)!", flush=True)
                 return image_url
-        
-        # 5. Pollinations (D?SACTIV? pour tests NSFW explicites)
-        # print(f"[IMAGE] Trying Pollinations (FREE but censors NSFW)...", flush=True)
-        # image_url = await self._generate_pollinations(full_prompt)
-        # 
-        # if image_url:
-        #     print(f"[IMAGE] SUCCESS with Pollinations (but may be censored)", flush=True)
-        print(f"[IMAGE] Pollinations DISABLED - Testing NSFW services only", flush=True)
         
         return image_url
