@@ -236,14 +236,20 @@ class ImageGenerator:
             timeout = aiohttp.ClientTimeout(total=120)  # 2 minutes max
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 # Soumettre
+                print(f"[IMAGE] Submitting to Stable Horde with prompt length: {len(prompt)}", flush=True)
                 async with session.post(submit_url, json=payload) as resp:
                     if resp.status != 202:
+                        error_text = await resp.text()
                         print(f"[ERROR] Stable Horde submit failed: {resp.status}", flush=True)
+                        print(f"[ERROR] Stable Horde error message: {error_text[:500]}", flush=True)
+                        print(f"[ERROR] Prompt was: {prompt[:200]}...", flush=True)
+                        print(f"[DIAGNOSTIC] Stable Horde may reject explicit prompts or complex payloads", flush=True)
                         return None
                     
                     result = await resp.json()
                     request_id = result.get('id')
                     if not request_id:
+                        print(f"[ERROR] Stable Horde no request ID in response", flush=True)
                         return None
                     
                     print(f"[IMAGE] Stable Horde request submitted: {request_id}", flush=True)
