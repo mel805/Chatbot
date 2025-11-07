@@ -47,43 +47,50 @@ class ImageGenerator:
         
         print(f"[IMAGE] Generating image for {name} with prompt: {full_prompt[:100]}...", flush=True)
         
-        # Essayer avec retry automatique pour 100% de r?ussite
+        # NOUVEAU FLOW: Essayer les services GRATUITS NSFW en premier !
         image_url = None
         
         for attempt in range(max_retries):
             print(f"[IMAGE] Attempt {attempt + 1}/{max_retries}...", flush=True)
             
-            # M?thode 1: Pollinations.ai (GRATUIT, sans cl? API, PRIORITAIRE)
-            print(f"[IMAGE] Trying Pollinations.ai (free, unlimited)...", flush=True)
-            image_url = await self._generate_pollinations(full_prompt)
+            # M?thode 1: Stable Horde (GRATUIT illimit?, NSFW OK, mais peut ?tre lent)
+            print(f"[IMAGE] Trying Stable Horde (FREE P2P, NSFW allowed)...", flush=True)
+            image_url = await self._generate_stable_horde(full_prompt)
             
             if image_url:
-                print(f"[IMAGE] Success on attempt {attempt + 1}!", flush=True)
+                print(f"[IMAGE] SUCCESS with Stable Horde (FREE)!", flush=True)
                 return image_url
             
-            # M?thode 2: Replicate (backup si cl? configur?e)
+            # M?thode 2: Dezgo (GRATUIT rapide, NSFW OK)
+            print(f"[IMAGE] Stable Horde failed, trying Dezgo (FREE, NSFW allowed)...", flush=True)
+            image_url = await self._generate_dezgo(full_prompt)
+            
+            if image_url:
+                print(f"[IMAGE] SUCCESS with Dezgo (FREE)!", flush=True)
+                return image_url
+            
+            # M?thode 3: Replicate (PAYANT backup si cl? configur?e)
             if self.replicate_key:
-                print(f"[IMAGE] Pollinations failed, trying Replicate...", flush=True)
+                print(f"[IMAGE] Free services failed, trying Replicate (PAID)...", flush=True)
                 image_url = await self._generate_replicate(full_prompt)
                 
                 if image_url:
-                    print(f"[IMAGE] Success with Replicate on attempt {attempt + 1}!", flush=True)
+                    print(f"[IMAGE] SUCCESS with Replicate (PAID)!", flush=True)
                     return image_url
             
-            # M?thode 3: Hugging Face (backup si cl? configur?e)
-            if self.huggingface_key:
-                print(f"[IMAGE] Replicate failed, trying Hugging Face...", flush=True)
-                image_url = await self._generate_huggingface(full_prompt)
-                
-                if image_url:
-                    print(f"[IMAGE] Success with Hugging Face on attempt {attempt + 1}!", flush=True)
-                    return image_url
+            # M?thode 4: Pollinations (GRATUIT mais censure NSFW)
+            print(f"[IMAGE] Trying Pollinations (FREE but censors NSFW)...", flush=True)
+            image_url = await self._generate_pollinations(full_prompt)
+            
+            if image_url:
+                print(f"[IMAGE] SUCCESS with Pollinations (but may be censored)", flush=True)
+                return image_url
             
             if attempt < max_retries - 1:
                 print(f"[IMAGE] Attempt {attempt + 1} failed, retrying...", flush=True)
                 await asyncio.sleep(2)  # Petite pause avant retry
         
-        print(f"[IMAGE] All {max_retries} attempts failed", flush=True)
+        print(f"[IMAGE] All {max_retries} attempts and all services failed", flush=True)
         return image_url
     
     def _build_base_prompt(self, genre, age, description, visual_traits=""):
@@ -202,8 +209,121 @@ class ImageGenerator:
             print(f"[ERROR] Pollinations.ai error: {e}", flush=True)
             return None
     
+    async def _generate_stable_horde(self, prompt):
+        """G?n?re via Stable Horde (GRATUIT, NSFW OK, mais peut ?tre lent)"""
+        try:
+            print(f"[IMAGE] Using Stable Horde FREE P2P Network (NSFW allowed)", flush=True)
+            
+            # ?tape 1: Soumettre la requ?te
+            submit_url = "https://stablehorde.net/api/v2/generate/async"
+            
+            payload = {
+                "prompt": prompt,
+                "params": {
+                    "width": 768,
+                    "height": 1024,
+                    "steps": 25,
+                    "cfg_scale": 7.5,
+                    "sampler_name": "k_euler_a",
+                    "karras": True,
+                    "n": 1
+                },
+                "nsfw": True,  # IMPORTANT: Autorise NSFW
+                "censor_nsfw": False,  # IMPORTANT: Ne pas censurer
+                "models": ["Realistic_Vision_V5.1"]  # Mod?le NSFW
+            }
+            
+            timeout = aiohttp.ClientTimeout(total=120)  # 2 minutes max
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                # Soumettre
+                async with session.post(submit_url, json=payload) as resp:
+                    if resp.status != 202:
+                        print(f"[ERROR] Stable Horde submit failed: {resp.status}", flush=True)
+                        return None
+                    
+                    result = await resp.json()
+                    request_id = result.get('id')
+                    if not request_id:
+                        return None
+                    
+                    print(f"[IMAGE] Stable Horde request submitted: {request_id}", flush=True)
+                
+                # ?tape 2: Attendre et r?cup?rer (polling)
+                check_url = f"https://stablehorde.net/api/v2/generate/check/{request_id}"
+                status_url = f"https://stablehorde.net/api/v2/generate/status/{request_id}"
+                
+                for attempt in range(60):  # Max 60 tentatives (2 min)
+                    await asyncio.sleep(2)  # Attendre 2s entre chaque check
+                    
+                    async with session.get(check_url) as check_resp:
+                        check_data = await check_resp.json()
+                        done = check_data.get('done', False)
+                        
+                        if done:
+                            # R?cup?rer l'image
+                            async with session.get(status_url) as status_resp:
+                                status_data = await status_resp.json()
+                                generations = status_data.get('generations', [])
+                                if generations:
+                                    image_url = generations[0].get('img')
+                                    if image_url:
+                                        print(f"[IMAGE] Stable Horde SUCCESS after {attempt*2}s", flush=True)
+                                        return image_url
+                        
+                        # Log progression
+                        if attempt % 10 == 0:
+                            queue_position = check_data.get('queue_position', 0)
+                            print(f"[IMAGE] Stable Horde waiting... Queue: {queue_position}", flush=True)
+                
+                print(f"[IMAGE] Stable Horde timeout after 120s", flush=True)
+                return None
+                
+        except Exception as e:
+            print(f"[ERROR] Stable Horde error: {e}", flush=True)
+            return None
+    
+    async def _generate_dezgo(self, prompt):
+        """G?n?re via Dezgo (GRATUIT, rapide, NSFW OK)"""
+        try:
+            print(f"[IMAGE] Using Dezgo FREE API (NSFW allowed)", flush=True)
+            
+            api_url = "https://api.dezgo.com/text2image"
+            
+            payload = {
+                "prompt": prompt,
+                "width": 768,
+                "height": 1024,
+                "model": "realistic_vision_v51",  # Mod?le NSFW
+                "sampler": "euler_a",
+                "steps": 25,
+                "guidance": 7.5
+            }
+            
+            timeout = aiohttp.ClientTimeout(total=60)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.post(api_url, data=payload) as resp:
+                    if resp.status == 200:
+                        # Dezgo retourne directement l'image en bytes
+                        image_data = await resp.read()
+                        
+                        # Convertir en base64 data URL pour affichage
+                        import base64
+                        b64_data = base64.b64encode(image_data).decode()
+                        image_url = f"data:image/png;base64,{b64_data}"
+                        
+                        print(f"[IMAGE] Dezgo SUCCESS", flush=True)
+                        return image_url
+                    else:
+                        error_text = await resp.text()
+                        print(f"[ERROR] Dezgo failed: {resp.status} - {error_text[:100]}", flush=True)
+                        return None
+                        
+        except Exception as e:
+            print(f"[ERROR] Dezgo error: {e}", flush=True)
+            return None
+    
     async def _generate_replicate(self, prompt):
-        """G?n?re via Replicate API (n?cessite cl? API)"""
+        """G?n?re via Replicate API (PAYANT mais garanti, n?cessite cl? API)"""
         try:
             headers = {
                 "Authorization": f"Token {self.replicate_key}",
@@ -473,10 +593,39 @@ class ImageGenerator:
         
         print(f"[IMAGE] Contextual prompt: {full_prompt[:150]}...", flush=True)
         
-        # G?n?rer l'image
+        # G?n?rer l'image - NOUVEAU FLOW: Services GRATUITS NSFW en premier !
+        image_url = None
+        
+        # 1. Stable Horde (GRATUIT illimit?, NSFW OK)
+        print(f"[IMAGE] Trying Stable Horde (FREE P2P, NSFW allowed)...", flush=True)
+        image_url = await self._generate_stable_horde(full_prompt)
+        
+        if image_url:
+            print(f"[IMAGE] SUCCESS with Stable Horde (FREE)!", flush=True)
+            return image_url
+        
+        # 2. Dezgo (GRATUIT rapide, NSFW OK)
+        print(f"[IMAGE] Stable Horde failed, trying Dezgo (FREE, NSFW allowed)...", flush=True)
+        image_url = await self._generate_dezgo(full_prompt)
+        
+        if image_url:
+            print(f"[IMAGE] SUCCESS with Dezgo (FREE)!", flush=True)
+            return image_url
+        
+        # 3. Replicate (PAYANT backup si cl? configur?e)
+        if self.replicate_key:
+            print(f"[IMAGE] Free services failed, trying Replicate (PAID)...", flush=True)
+            image_url = await self._generate_replicate(full_prompt)
+            
+            if image_url:
+                print(f"[IMAGE] SUCCESS with Replicate (PAID)!", flush=True)
+                return image_url
+        
+        # 4. Pollinations (GRATUIT mais censure NSFW - dernier recours)
+        print(f"[IMAGE] Trying Pollinations (FREE but censors NSFW)...", flush=True)
         image_url = await self._generate_pollinations(full_prompt)
         
-        if not image_url and self.replicate_key:
-            image_url = await self._generate_replicate(full_prompt)
+        if image_url:
+            print(f"[IMAGE] SUCCESS with Pollinations (but may be censored)", flush=True)
         
         return image_url
