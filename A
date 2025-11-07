@@ -1,112 +1,85 @@
-✅ STABLE HORDE RÉPARÉ - REDÉMARREZ LE BOT !
+# ✅ CODE VALIDÉ - REDÉPLOYER RENDER
 
-## 🔍 DIAGNOSTIC
+## 🎯 STATUT
 
-**Problème trouvé :** Stable Horde requiert clé API (erreur 400)
-
-**Solution appliquée :** Ajout clé anonyme `0000000000`
-
-**Test réussi :** ✅ Status 202 (soumission acceptée)
-
----
-
-## 🔄 ACTION REQUISE : REDÉMARRER LE BOT
-
-```bash
-# Arrêter le bot
-ps aux | grep bot.py
-kill <PID>
-
-# Redémarrer
-cd /workspace
-python3 bot.py
-```
+✅ **Code testé** : Aucune erreur de syntaxe
+✅ **Commit créé** : `1ed116b`
+✅ **Push GitHub** : Fait
+✅ **Stable Horde** : Clé anonyme `0000000000` configurée
+⚠️ **Render** : PAS ENCORE REDÉPLOYÉ
 
 ---
 
-## ✅ APRÈS REDÉMARRAGE
+## 🚀 ACTION REQUISE : RENDER
 
-**Testez :**
+### Procédure rapide :
+
+1. 🌐 https://dashboard.render.com/
+2. 📱 Cliquer sur votre service bot
+3. 🔧 Onglet "Environment" → Ajouter :
+   ```
+   STABLE_HORDE_API_KEY = 0000000000
+   ```
+4. 💾 Save Changes
+5. 🚀 Manual Deploy → Deploy latest commit
+6. ⏳ Attendre 2-5 min
+7. 📋 Onglet "Logs" → Vérifier :
+   ```
+   [INFO] Bot ready!
+   ```
+
+---
+
+## 👀 APRÈS REDÉPLOIEMENT
+
+**Tester :**
 ```
 /generer_image style:explicit_blowjob
 ```
 
-**Logs attendus :**
+**Logs Render attendus :**
 ```
 [IMAGE] Using Stable Horde FREE P2P Network (NSFW allowed)
 [IMAGE] Using Stable Horde anonymous API key (limited)
+[IMAGE] Submitting to Stable Horde...
 [IMAGE] Stable Horde request submitted: <uuid>
 [IMAGE] Stable Horde SUCCESS after Xs
 ```
 
----
-
-## 📊 RÉSULTATS ATTENDUS
-
-**✅ Succès (60-80%)** : Image générée en 30-120s
-
-**⏳ Queue longue (20-30%)** : Attente plus longue mais succès
-
-**❌ Timeout (10%)** : Message "Services surchargés, réessayez"
+**Si vous ne voyez PAS ces lignes = Render n'a pas redéployé**
 
 ---
 
-## 🚀 AMÉLIORER LES PERFORMANCES
+## ❌ "AUCUN LOG" = PAS REDÉPLOYÉ
 
-### Option 1 : Vraie clé Stable Horde (GRATUIT)
+Si vous ne voyez **aucun nouveau log** dans Render :
 
-1. S'inscrire : https://stablehorde.net/register
-2. Copier votre clé
-3. Exporter : `export STABLE_HORDE_API_KEY="votre_cle"`
-4. Redémarrer bot
-
-**Amélioration :** 60-80% → 80-90% succès
+1. Vérifier onglet "Events" → Dernier deploy récent ?
+2. Si non → Re-cliquer "Manual Deploy"
+3. Attendre logs de démarrage
+4. Tester à nouveau
 
 ---
 
-### Option 2 : Replicate (100% FIABLE)
+## 🆘 SI ÇA ÉCHOUE ENCORE
 
-1. Compte : https://replicate.com/
-2. $10 gratuits = 4000 images
-3. Exporter : `export REPLICATE_API_KEY="r8_xxx"`
-4. Redémarrer bot
+**Envoyez-moi :**
 
-**Résultat :** 100% succès, génération 10-30s
+1. **Screenshot des logs Render** (dernières 50 lignes)
+2. **Screenshot variables d'environnement Render**
+3. **Message d'erreur Discord exact**
 
----
-
-## 📄 DOCUMENTATION
-
-- `SOLUTION_FINALE_NSFW.md` - Guide complet
-- `ALTERNATIVES_GRATUITES_QUI_FONCTIONNENT.md` - Diagnostic
-- `test_nsfw_services.py` - Script de test
+Je diagnostiquerai précisément !
 
 ---
 
-## ✅ MODIFICATIONS
+## 📄 GUIDES
 
-**Fichiers :**
-- ✅ `image_generator.py` - Stable Horde avec clé API
-- ✅ Syntaxe validée
-- ✅ Tests réussis
-
-**Status :**
-- ✅ Stable Horde : FONCTIONNE
-- ⚠️ Hugging Face : Désactivé (API dépréciée)
-- ✅ Replicate : Disponible
+- `PROCEDURE_RENDER_SIMPLE.md` - Procédure détaillée
+- `RENDER_DEPLOYMENT_GUIDE.md` - Guide complet
 
 ---
 
-## 🎯 RÉSUMÉ
-
-| Service | Status | Gratuit | Succès |
-|---------|--------|---------|--------|
-| **Stable Horde** | ✅ OK | ✅ Oui | 60-80% |
-| Hugging Face | ⚠️ Off | ✅ Oui | 0% |
-| Replicate | ✅ OK | 💰 Non | 100% |
-
----
-
-**🔄 REDÉMARREZ LE BOT MAINTENANT !**
-
-Branche : `cursor/debug-image-generation-for-conversational-accuracy-30a6`
+**Commit :** `1ed116b` (Stable Horde réparé)
+**Branche :** `cursor/debug-image-generation-for-conversational-accuracy-30a6`
+**Action :** 🚀 **REDÉPLOYER SUR RENDER MAINTENANT**
