@@ -142,15 +142,28 @@ class ImageGenerator:
         realism_keywords = "PHOTOREALISTIC PHOTO, realistic photograph, real human person, high quality professional photograph, natural photographic lighting, realistic human skin texture, detailed realistic face, natural appearance"
         quality_keywords = "perfect anatomy, perfect hands, perfect fingers, perfect face, detailed eyes, symmetrical face, high quality, masterpiece, best quality, ultra detailed, flawless skin, professional photography"
         
-        # Si des traits visuels sp?cifiques sont fournis, les RENFORCER pour coh?rence
+        # Si des traits visuels sp?cifiques sont fournis, les ULTRA-RENFORCER
         if visual_traits:
             print(f"[IMAGE] Using specific visual traits: {visual_traits[:80]}...", flush=True)
-            # RENFORCER les traits visuels pour coh?rence entre images
-            # R?p?ter les traits cl?s 2x pour que l'IA les priorise
-            visual_reinforced = f"{visual_traits}, CONSISTENT APPEARANCE, {visual_traits}"
-            # ?GE EN PREMIER (anti-CSAM), puis r?alisme, qualit?, puis traits RENFORC?S
-            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {visual_reinforced}, {age_keywords}, SAME PERSON, consistent facial features"
-            print(f"[IMAGE COHERENCE] Visual traits reinforced for consistency", flush=True)
+            
+            # EXTRAIRE ET RENFORCER chaque caract?ristique physique CRITIQUE
+            # Cheveux: couleur + longueur
+            # Yeux: couleur
+            # Corps: morphologie
+            # Visage: traits
+            
+            # R?P?TER 3X les traits visuels pour FORCER la coh?rence
+            # PLUS de r?p?titions = PLUS de poids dans la g?n?ration
+            visual_ultra_reinforced = f"{visual_traits}, EXACT SAME PERSON, {visual_traits}, IDENTICAL APPEARANCE, {visual_traits}, CONSISTENT FEATURES"
+            
+            # AJOUTER des mots-cl?s de stabilit? visuelle ultra-forts
+            stability_keywords = "same face every time, identical facial structure, same hair color and length, same eye color, same body type, stable appearance, unchanging features, consistent person, fixed characteristics"
+            
+            # ?GE EN PREMIER (anti-CSAM), puis r?alisme, qualit?, puis traits ULTRA-RENFORC?S × 3
+            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {visual_ultra_reinforced}, {age_keywords}, {stability_keywords}, SAME EXACT PERSON"
+            
+            print(f"[IMAGE COHERENCE] ⭐ Visual traits ULTRA-REINFORCED (3x repetition)", flush=True)
+            print(f"[IMAGE COHERENCE] ⭐ Stability keywords added for fixed appearance", flush=True)
             print(f"[IMAGE QUALITY] Quality keywords added to reduce defects", flush=True)
             return prompt
         
@@ -178,10 +191,28 @@ class ImageGenerator:
         
         traits_str = ", ".join(traits) if traits else "attractive"
         
-        # ?GE EN PREMIER (anti-CSAM), puis r?alisme, qualit?, puis genre, traits
-        # AJOUTER coh?rence visuelle + qualit? m?me sans traits sp?cifiques
-        prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {gender_desc}, {age_keywords}, {traits_str}, CONSISTENT APPEARANCE, stable facial features"
-        print(f"[IMAGE COHERENCE] Added consistency keywords for stable appearance", flush=True)
+        # FALLBACK: Si pas de traits sp?cifiques, cr?er une description g?n?rique D?TAILL?E
+        # IMPORTANT: M?me sans traits sp?cifiques, FORCER des caract?ristiques pour coh?rence
+        
+        # G?n?rer une description physique de base selon le genre
+        if genre == "Femme":
+            base_physical = "shoulder-length brown hair, expressive eyes, feminine facial features, average height, healthy body type"
+        elif genre == "Homme":
+            base_physical = "short dark hair, masculine facial features, average build, defined jawline"
+        else:
+            base_physical = "medium length hair, distinctive facial features, average build"
+        
+        # R?P?TER 3X pour FORCER la coh?rence m?me sans traits sp?cifiques
+        generic_visual_reinforced = f"{base_physical}, EXACT SAME PERSON, {base_physical}, IDENTICAL APPEARANCE, {base_physical}"
+        
+        # Mots-cl?s de stabilit? visuelle
+        stability_keywords = "same face every time, identical facial structure, same hair style, same features, stable appearance, consistent person"
+        
+        # ?GE EN PREMIER (anti-CSAM), puis r?alisme, qualit?, puis description physique RENFORC?E
+        prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {generic_visual_reinforced}, {gender_desc}, {age_keywords}, {traits_str}, {stability_keywords}, SAME EXACT PERSON"
+        
+        print(f"[IMAGE COHERENCE] ⚠️ No specific visual traits - using generic detailed description", flush=True)
+        print(f"[IMAGE COHERENCE] ⭐ Generic visual traits ULTRA-REINFORCED (3x repetition)", flush=True)
         print(f"[IMAGE QUALITY] Quality keywords added to reduce defects", flush=True)
         
         return prompt
