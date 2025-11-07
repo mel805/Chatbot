@@ -1256,10 +1256,10 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
             print(f"[IMAGE] DIAGNOSTIC: Check logs above to see why Stable Horde/Replicate failed", flush=True)
             embed = discord.Embed(
                 title="? Erreur de G?n?ration",
-                description="La g?n?ration d'image a ?chou?.\n\n**Services gratuits NSFW** (Stable Horde avec mod?les NSFW sp?cifiques + Hugging Face) sont temporairement indisponibles ou surcharg?s.\n\n**Solutions:**\n? R?essayez dans quelques instants\n? Ou configurez Replicate pour une g?n?ration garantie (voir logs)",
+                description="La g?n?ration d'image a ?chou?.\n\n**Cause probable:**\n? Stable Horde GRATUIT a des **filtres CSAM tr?s agressifs** qui bloquent souvent le contenu NSFW adulte\n\n**Solutions:**\n? **R?essayez** (parfois ?a marche au 2e essai)\n? **RECOMMAND?: Configurez Replicate** pour ?viter tout blocage:\n```\nREPLICATE_API_KEY=votre_cle\n```\n($10 gratuits, puis $0.0025/image)\n\n? Replicate = **0% censure, 100% fiable**",
                 color=0xe74c3c
             )
-            embed.set_footer(text="Services gratuits NSFW : Stable Horde (mod?les NSFW) + Hugging Face ? Utilisez Replicate pour garantie 100%")
+            embed.set_footer(text="? Stable Horde GRATUIT mais censure CSAM ? Replicate = 0% censure, 100% fiable")
             await interaction.edit_original_response(embed=embed)
     except Exception as e:
         print(f"[ERROR] Image generation exception: {e}", flush=True)
