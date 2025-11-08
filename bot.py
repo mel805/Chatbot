@@ -36,7 +36,7 @@ image_gen = ImageGenerator()
 
 # Historique des conversations par canal
 conversation_history = defaultdict(list)
-MAX_HISTORY = 40  # Nombre de messages ? garder en m?moire par canal (augment? pour meilleure coh?rence)
+MAX_HISTORY = 25  # Nombre de messages à garder en mémoire par canal (réduit pour éviter répétitions)
 
 # ?tat d'activation du bot par canal (True = actif, False = inactif)
 bot_active_channels = defaultdict(bool)
@@ -594,8 +594,8 @@ Par defaut, tu es amicale, drole, interessante, normale. Le NSFW existe SEULEMEN
                 "temperature": temperature,  # Utilise le parametre (0.95 par defaut, 1.2 pour retry)
                 "max_tokens": max_tokens,  # Utilise le parametre
                 "top_p": 0.95,  # Equilibre diversite/pertinence
-                "frequency_penalty": 0.4,  # Evite repetitions
-                "presence_penalty": 0.3,  # Encourage variete
+                "frequency_penalty": 0.8,  # AUGMENTÉ: Evite fortement repetitions (0.4 → 0.8)
+                "presence_penalty": 0.6,  # AUGMENTÉ: Encourage forte variete (0.3 → 0.6)
                 "stream": False
             }
             
