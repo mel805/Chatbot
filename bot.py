@@ -569,9 +569,27 @@ Par defaut, tu es amicale, drole, interessante, normale. Le NSFW existe SEULEMEN
                         except Exception as e:
                             print(f"[ERROR] Failed to parse JSON: {e}", flush=True)
                             return "Desole, erreur de parsing de la reponse."
+                    
+                    # Gestion des erreurs HTTP spécifiques
+                    elif response.status == 400:
+                        print(f"[ERROR] Groq API 400 Bad Request: {response_text[:500]}", flush=True)
+                        return "Desole, requete invalide (erreur 400)."
+                    elif response.status == 401:
+                        print(f"[ERROR] Groq API 401 Unauthorized: {response_text[:500]}", flush=True)
+                        print(f"[ERROR] Check GROQ_API_KEY validity!", flush=True)
+                        return "Desole, probleme d'authentification (erreur 401)."
+                    elif response.status == 429:
+                        print(f"[ERROR] Groq API 429 Rate Limit: {response_text[:500]}", flush=True)
+                        return "Desole, trop de requetes (limite atteinte). Reessaye dans quelques secondes."
+                    elif response.status == 500:
+                        print(f"[ERROR] Groq API 500 Internal Server Error: {response_text[:500]}", flush=True)
+                        return "Desole, erreur serveur Groq (500). Reessaye dans un instant."
+                    elif response.status == 503:
+                        print(f"[ERROR] Groq API 503 Service Unavailable: {response_text[:500]}", flush=True)
+                        return "Desole, service Groq temporairement indisponible (503)."
                     else:
-                        print(f"[ERROR] Groq API error {response.status}: {response_text}", flush=True)
-                        return "Desole, j'ai rencontre une erreur technique."
+                        print(f"[ERROR] Groq API error {response.status}: {response_text[:500]}", flush=True)
+                        return f"Desole, erreur technique (code {response.status})."
         
         except asyncio.TimeoutError:
             print(f"[ERROR] Groq API timeout (30s)", flush=True)
