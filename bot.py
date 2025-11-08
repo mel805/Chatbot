@@ -604,18 +604,28 @@ Par defaut, tu es amicale, drole, interessante, normale. Le NSFW existe SEULEMEN
             print(f"[DEBUG] Payload model: {payload['model']}", flush=True)
             print(f"[DEBUG] Payload messages count: {len(payload['messages'])}", flush=True)
             
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    self.api_url,
-                    headers=self.headers,
-                    json=payload,
-                    timeout=aiohttp.ClientTimeout(total=30)
-                ) as response:
-                    print(f"[DEBUG] Groq response status: {response.status}", flush=True)
-                    response_text = await response.text()
-                    print(f"[DEBUG] Groq raw response: {response_text[:500]}", flush=True)
-                    
-                    if response.status == 200:
+            # Retry automatique avec délai pour rate limits
+            max_retries = 3
+            retry_delay = 2  # Secondes
+            
+            for attempt in range(max_retries):
+                if attempt > 0:
+                    print(f"[RETRY] Attempt {attempt + 1}/{max_retries} after {retry_delay}s delay...", flush=True)
+                    await asyncio.sleep(retry_delay)
+                    retry_delay *= 2  # Délai exponentiel: 2s, 4s, 8s
+                
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        self.api_url,
+                        headers=self.headers,
+                        json=payload,
+                        timeout=aiohttp.ClientTimeout(total=30)
+                    ) as response:
+                        print(f"[DEBUG] Groq response status: {response.status}", flush=True)
+                        response_text = await response.text()
+                        print(f"[DEBUG] Groq raw response: {response_text[:500]}", flush=True)
+                        
+                        if response.status == 200:
                         try:
                             result = await response.json() if not response_text else json.loads(response_text)
                             print(f"[DEBUG] Response parsed successfully", flush=True)
@@ -630,26 +640,35 @@ Par defaut, tu es amicale, drole, interessante, normale. Le NSFW existe SEULEMEN
                             print(f"[ERROR] Failed to parse JSON: {e}", flush=True)
                             return "Desole, erreur de parsing de la reponse."
                     
-                    # Gestion des erreurs HTTP spécifiques
-                    elif response.status == 400:
-                        print(f"[ERROR] Groq API 400 Bad Request: {response_text[:500]}", flush=True)
-                        return "Desole, requete invalide (erreur 400)."
-                    elif response.status == 401:
-                        print(f"[ERROR] Groq API 401 Unauthorized: {response_text[:500]}", flush=True)
-                        print(f"[ERROR] Check GROQ_API_KEY validity!", flush=True)
-                        return "Desole, probleme d'authentification (erreur 401)."
-                    elif response.status == 429:
-                        print(f"[ERROR] Groq API 429 Rate Limit: {response_text[:500]}", flush=True)
-                        return "Desole, trop de requetes (limite atteinte). Reessaye dans quelques secondes."
-                    elif response.status == 500:
-                        print(f"[ERROR] Groq API 500 Internal Server Error: {response_text[:500]}", flush=True)
-                        return "Desole, erreur serveur Groq (500). Reessaye dans un instant."
-                    elif response.status == 503:
-                        print(f"[ERROR] Groq API 503 Service Unavailable: {response_text[:500]}", flush=True)
-                        return "Desole, service Groq temporairement indisponible (503)."
-                    else:
-                        print(f"[ERROR] Groq API error {response.status}: {response_text[:500]}", flush=True)
-                        return f"Desole, erreur technique (code {response.status})."
+                        # Gestion des erreurs HTTP spécifiques
+                        elif response.status == 400:
+                            print(f"[ERROR] Groq API 400 Bad Request: {response_text[:500]}", flush=True)
+                            return "Desole, requete invalide (erreur 400)."
+                        elif response.status == 401:
+                            print(f"[ERROR] Groq API 401 Unauthorized: {response_text[:500]}", flush=True)
+                            print(f"[ERROR] Check GROQ_API_KEY validity!", flush=True)
+                            return "Desole, probleme d'authentification (erreur 401)."
+                        elif response.status == 429:
+                            print(f"[ERROR] Groq API 429 Rate Limit: {response_text[:500]}", flush=True)
+                            # Ne pas return immédiatement, laisser le retry fonctionner
+                            if attempt < max_retries - 1:
+                                print(f"[RETRY] Rate limit hit, retrying in {retry_delay}s...", flush=True)
+                                continue  # Continue à la prochaine tentative
+                            else:
+                                print(f"[ERROR] Rate limit persists after {max_retries} attempts", flush=True)
+                                return "Desole, trop de requetes (limite atteinte). Reessaye dans quelques instants."
+                        elif response.status == 500:
+                            print(f"[ERROR] Groq API 500 Internal Server Error: {response_text[:500]}", flush=True)
+                            return "Desole, erreur serveur Groq (500). Reessaye dans un instant."
+                        elif response.status == 503:
+                            print(f"[ERROR] Groq API 503 Service Unavailable: {response_text[:500]}", flush=True)
+                            return "Desole, service Groq temporairement indisponible (503)."
+                        else:
+                            print(f"[ERROR] Groq API error {response.status}: {response_text[:500]}", flush=True)
+                            return f"Desole, erreur technique (code {response.status})."
+            
+            # Si toutes les tentatives échouent (ne devrait arriver que pour 429 persistant)
+            return "Desole, le service est momentanement surchargé. Reessaye dans un instant."
         
         except asyncio.TimeoutError:
             print(f"[ERROR] Groq API timeout (30s)", flush=True)
