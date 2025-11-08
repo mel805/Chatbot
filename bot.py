@@ -951,7 +951,7 @@ class GenerateImageButton(ui.Button):
                     color=personality_data.get('color', 0x3498db)
                 )
                 embed.set_image(url=image_url)
-                embed.set_footer(text=f"Généré avec Pollinations.ai • Contextuel")
+                embed.set_footer(text="Image générée automatiquement")
                 
                 print(f"[IMAGE BUTTON] Sending embed to channel...", flush=True)
                 try:
@@ -1353,7 +1353,7 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
                 color=personality_data.get('color', 0x3498db)
             )
             embed.set_image(url=image_url)
-            embed.set_footer(text=f"G?n?r? avec Pollinations.ai (GRATUIT, NSFW filtr?, qualit? 4K)")
+            embed.set_footer(text="Image générée automatiquement")
             
             try:
                 await interaction.edit_original_response(embed=embed)
@@ -1367,11 +1367,11 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
             print(f"[IMAGE] Generation failed - no URL returned", flush=True)
             print(f"[IMAGE] DIAGNOSTIC: Check logs above to see why generation failed", flush=True)
             embed = discord.Embed(
-                title="? Erreur de G?n?ration",
-                description="La g?n?ration d'image a ?chou?.\n\n**Cause probable:**\n? Pollinations.ai ou Stable Horde temporairement indisponibles\n\n**Solutions:**\n? **R?essayez** dans quelques instants\n? **Optionnel: Configurez Replicate** pour une fiabilit? maximale:\n```\nREPLICATE_API_KEY=votre_cle\n```\n($10 gratuits, puis $0.0025/image)\n\n? Replicate = **100% fiable, qualit? maximale**",
+                title="❌ Erreur de Génération",
+                description="La génération d'image a échoué.\n\n**Cause probable:**\n• Pollinations.ai temporairement indisponible\n\n**Solutions:**\n• **Réessayez** dans quelques instants\n• Si le problème persiste, contactez un admin",
                 color=0xe74c3c
             )
-            embed.set_footer(text="? Pollinations.ai (gratuit 4K) ? Stable Horde (backup) ? Replicate (payant fiable)")
+            embed.set_footer(text="Image générée automatiquement")
             await interaction.edit_original_response(embed=embed)
     except Exception as e:
         print(f"[ERROR] Image generation exception: {e}", flush=True)
@@ -1451,18 +1451,18 @@ async def generate_contextual_image(interaction: discord.Interaction):
                 color=personality_data.get('color', 0x3498db)
             )
             embed.set_image(url=image_url)
-            embed.set_footer(text=f"G?n?r? avec services NSFW gratuits ? Stable Horde / Hugging Face / Replicate")
+            embed.set_footer(text="Image générée automatiquement")
             await interaction.edit_original_response(embed=embed)
             print(f"[IMAGE] Contextual image displayed successfully!", flush=True)
         else:
             print(f"[IMAGE] Contextual generation failed - no URL returned", flush=True)
-            print(f"[IMAGE] DIAGNOSTIC: Check logs above to see why Stable Horde/Replicate failed", flush=True)
+            print(f"[IMAGE] DIAGNOSTIC: Check logs above to see why Pollinations failed", flush=True)
             embed = discord.Embed(
-                title="? Erreur de G?n?ration",
-                description="La g?n?ration d'image contextuelle a ?chou?.\n\n**Services gratuits NSFW** (Stable Horde avec mod?les NSFW sp?cifiques + Hugging Face) sont temporairement indisponibles ou surcharg?s.\n\n**Solutions:**\n? R?essayez dans quelques instants\n? Ou configurez Replicate pour une g?n?ration garantie:\n```\nexport REPLICATE_API_KEY=\"votre_cle\"\n```",
+                title="❌ Erreur de Génération",
+                description="La génération d'image contextuelle a échoué.\n\n**Cause probable:**\n• Pollinations.ai temporairement indisponible\n\n**Solutions:**\n• **Réessayez** dans quelques instants\n• Si le problème persiste, contactez un admin",
                 color=0xe74c3c
             )
-            embed.set_footer(text="Services gratuits NSFW : Stable Horde (mod?les NSFW) + Hugging Face ? Utilisez Replicate pour garantie 100%")
+            embed.set_footer(text="Image générée automatiquement")
             await interaction.edit_original_response(embed=embed)
     except Exception as e:
         print(f"[ERROR] Contextual image generation exception: {e}", flush=True)
