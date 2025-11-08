@@ -633,14 +633,14 @@ Par defaut, tu es amicale, drole, interessante, normale. Le NSFW existe SEULEMEN
             print(f"[DEBUG] Payload messages count: {len(payload['messages'])}", flush=True)
             
             # Retry automatique avec délai pour rate limits
-            max_retries = 3
-            retry_delay = 2  # Secondes
+            max_retries = 5  # AUGMENTÉ: 3 → 5 tentatives
+            retry_delay = 3  # AUGMENTÉ: 2s → 3s de base
             
             for attempt in range(max_retries):
                 if attempt > 0:
                     print(f"[RETRY] Attempt {attempt + 1}/{max_retries} after {retry_delay}s delay...", flush=True)
                     await asyncio.sleep(retry_delay)
-                    retry_delay *= 2  # Délai exponentiel: 2s, 4s, 8s
+                    retry_delay = min(retry_delay * 1.5, 15)  # Délai exponentiel: 3s, 4.5s, 6.75s, 10s, 15s (max 15s)
                 
                 async with aiohttp.ClientSession() as session:
                     async with session.post(
@@ -680,11 +680,12 @@ Par defaut, tu es amicale, drole, interessante, normale. Le NSFW existe SEULEMEN
                             print(f"[ERROR] Groq API 429 Rate Limit: {response_text[:500]}", flush=True)
                             # Ne pas return immédiatement, laisser le retry fonctionner
                             if attempt < max_retries - 1:
-                                print(f"[RETRY] Rate limit hit, retrying in {retry_delay}s...", flush=True)
+                                print(f"[RETRY] Rate limit hit, retrying in {retry_delay}s... (attempt {attempt + 1}/{max_retries})", flush=True)
                                 continue  # Continue à la prochaine tentative
                             else:
                                 print(f"[ERROR] Rate limit persists after {max_retries} attempts", flush=True)
-                                return "Desole, trop de requetes (limite atteinte). Reessaye dans quelques instants."
+                                # Message plus discret pour l'utilisateur
+                                return "Un instant... ⏱️"
                         elif response.status == 500:
                             print(f"[ERROR] Groq API 500 Internal Server Error: {response_text[:500]}", flush=True)
                             return "Desole, erreur serveur Groq (500). Reessaye dans un instant."
