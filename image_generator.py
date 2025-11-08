@@ -768,12 +768,11 @@ class ImageGenerator:
             
             # SEULEMENT ajouter prompts explicites si demande est explicite
             if is_intimate_oral and is_explicit_request:
-                # PROMPT ULTRA EXPLICITE pour VRAIE sc?ne de fellation/oral sex
-                explicit_oral_prompt = "NSFW explicit hardcore fellatio scene, woman giving blowjob, dick in mouth, actively sucking penis, tongue licking cock shaft, POV oral sex, close-up explicit blowjob, mouth filled with dick, deepthroat scene, explicit cumming oral, graphic XXX oral penetration, pornographic blowjob photo, real explicit fellatio action, hardcore oral sex scene, uncensored NSFW blowjob"
+                # VERSION COURTE pour bouton contextuel (limite URL Discord)
+                explicit_oral_prompt = "explicit oral sex, blowjob POV, dick in mouth, fellatio scene"
                 context_keywords.append(explicit_oral_prompt)
                 action_detected = True
-                print(f"[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Oral sex / Fellation", flush=True)
-                print(f"[IMAGE CONTEXT] Added explicit oral prompt to generation", flush=True)
+                print(f"[IMAGE CONTEXT] ✅ DETECTED: EXPLICIT Oral sex / Fellation", flush=True)
             elif is_intimate_oral and not is_explicit_request:
                 # Demande innocente avec mots oraux (ex: "prend dans ma bouche une glace")
                 # Ne PAS g?n?rer d'image explicite
@@ -792,12 +791,11 @@ class ImageGenerator:
         
         # SEULEMENT ajouter p?n?tration si demande explicite
         if is_explicit_request and any(keyword in conversation_text for keyword in penetration_keywords):
-            # PROMPT ULTRA EXPLICITE pour VRAIE sc?ne de p?n?tration/sex
-            explicit_penetration_prompt = "NSFW explicit hardcore sex scene, dick penetrating pussy, active fucking, penis inside vagina visible, explicit sexual intercourse POV, graphic penetration close-up, XXX hardcore fucking scene, pornographic sex photo, uncensored penetration shot, real explicit fucking action, genitals clearly visible, hardcore NSFW intercourse, explicit vaginal penetration, pornographic sex position"
+            # VERSION COURTE pour bouton contextuel (limite URL Discord)
+            explicit_penetration_prompt = "explicit sex scene, penetration POV, fucking, intercourse"
             context_keywords.append(explicit_penetration_prompt)
             action_detected = True
-            print(f"[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Penetration / Sex", flush=True)
-            print(f"[IMAGE CONTEXT] Penetration keywords found in conversation", flush=True)
+            print(f"[IMAGE CONTEXT] ✅ DETECTED: EXPLICIT Penetration / Sex", flush=True)
         
         # D?tection de POSITIONS SP?CIFIQUES (avec variations)
         position_keywords = {
@@ -838,11 +836,11 @@ class ImageGenerator:
         
         # SEULEMENT ajouter masturbation si demande explicite
         if is_explicit_request and any(keyword in conversation_text for keyword in masturbation_keywords):
-            # PROMPT ULTRA EXPLICITE pour VRAIE sc?ne de masturbation
-            explicit_masturbation_prompt = "NSFW explicit hardcore masturbation scene, fingers inside pussy, hand stroking cock, actively fingering herself, graphic self-pleasure POV, explicit masturbation close-up, visible pussy/dick being touched, XXX solo masturbation photo, pornographic self-pleasure scene, uncensored genital stimulation, real explicit touching genitals, hardcore NSFW solo sex, fingering pussy clearly visible, explicit masturbation action"
+            # VERSION COURTE pour bouton contextuel (limite URL Discord)
+            explicit_masturbation_prompt = "explicit masturbation, self-pleasure POV, touching genitals, fingering"
             context_keywords.append(explicit_masturbation_prompt)
             action_detected = True
-            print(f"[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Masturbation", flush=True)
+            print(f"[IMAGE CONTEXT] ✅ DETECTED: EXPLICIT Masturbation", flush=True)
         
         # D?tection d'EXPOSITION (montrer, exhiber)
         exposure_keywords = ["montre", "regarde", "vois", "exhibe", "expose", "d?voile",
@@ -855,11 +853,11 @@ class ImageGenerator:
         
         # SEULEMENT ajouter exhibition si demande explicite
         if is_explicit_request and has_exposure and has_body_part:
-            # PROMPT ULTRA EXPLICITE pour VRAIE exposition des parties intimes
-            explicit_exhibition_prompt = "NSFW explicit hardcore nude pose, pussy spread wide open visible, breasts fully exposed, full frontal nudity genitals shown, explicit genital display close-up, XXX nude exhibition photo, pornographic body display, uncensored pussy/breasts/ass visible, real explicit nude modeling, hardcore NSFW full nudity, graphic genital exposure, detailed vulva/penis view, pornographic nude pose"
+            # VERSION COURTE pour bouton contextuel (limite URL Discord)
+            explicit_exhibition_prompt = "explicit nude pose, full nudity, genitals visible, exposed body"
             context_keywords.append(explicit_exhibition_prompt)
             action_detected = True
-            print(f"[IMAGE CONTEXT] ✅ DETECTED: ULTRA EXPLICIT Exhibition / Nudity", flush=True)
+            print(f"[IMAGE CONTEXT] ✅ DETECTED: EXPLICIT Exhibition / Nudity", flush=True)
         
         # PRIORITE 3: D?tecter l'environnement
         if any(word in conversation_text for word in ["lit", "chambre", "bedroom", "bed", "matelas"]):
