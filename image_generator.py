@@ -56,19 +56,19 @@ class ImageGenerator:
         for attempt in range(max_retries):
             print(f"[IMAGE] Attempt {attempt + 1}/{max_retries}...", flush=True)
             
-            # Pollinations.ai avec seed fixe pour cohérence
+            # Pollinations.ai avec seed aléatoire pour varier les images
             print(f"[IMAGE] Using Pollinations.ai (FREE, 4K quality)...", flush=True)
             short_prompt = self._build_base_prompt(genre, age_num, description, visual_traits, short_version=True)
             if prompt_addition:
                 short_prompt = f"{short_prompt}, {prompt_addition}"
             print(f"[IMAGE] Using SHORT prompt for Pollinations (length: {len(short_prompt)})", flush=True)
             
-            # Seed fixe basé sur le nom pour cohérence visuelle
-            # Même personnalité = même seed = même apparence
-            fixed_seed = abs(hash(name)) % 1000000000  # Seed entre 0 et 1 milliard
-            print(f"[IMAGE] Using FIXED seed {fixed_seed} for {name} (visual consistency)", flush=True)
+            # Seed aléatoire pour images différentes (mais traits cohérents via prompt)
+            # Les traits visuels détaillés dans le prompt assurent la cohérence
+            random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
+            print(f"[IMAGE] Using random seed {random_seed} (different images, consistent traits)", flush=True)
             
-            image_url = await self._generate_pollinations(short_prompt, seed=fixed_seed)
+            image_url = await self._generate_pollinations(short_prompt, seed=random_seed)
             
             if image_url:
                 print(f"[IMAGE] SUCCESS with Pollinations.ai!", flush=True)
@@ -923,12 +923,12 @@ class ImageGenerator:
             short_context_prompt = f"{base_prompt}, {context_str_short}"
             print(f"[IMAGE] Shortened contextual prompt to {len(short_context_prompt)} chars for Pollinations", flush=True)
         
-        # Seed fixe basé sur le nom pour cohérence visuelle
+        # Seed aléatoire basé sur le nom pour cohérence visuelle
         name = personality_data['name']
-        fixed_seed = abs(hash(name)) % 1000000000
-        print(f"[IMAGE] Using FIXED seed {fixed_seed} for {name} (visual consistency)", flush=True)
+        random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
+        print(f"[IMAGE] Using random seed {random_seed} (different images, consistent traits)", flush=True)
         
-        image_url = await self._generate_pollinations(short_context_prompt, seed=fixed_seed)
+        image_url = await self._generate_pollinations(short_context_prompt, seed=random_seed)
         
         if image_url:
             print(f"[IMAGE] SUCCESS with Pollinations.ai!", flush=True)
