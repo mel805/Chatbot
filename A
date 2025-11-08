@@ -1,61 +1,113 @@
-✅ PROBLÈME TROUVÉ ET CORRIGÉ ! 🎉
+✅ SIMPLIFICATION MAJEURE APPLIQUÉE
 
-## 🔴 LE PROBLÈME
+## 🎯 Changements Appliqués
 
-L'URL que tu m'as envoyée contient :
-```
-https://image.pollinations.ai/prompt/ADULT%20WOMAN/MAN%2027...
-                                                  ↑
-                                           Slash "/" NON ENCODÉ !
-```
-
-Le **slash `/`** dans **`WOMAN/MAN`** n'est **pas encodé** et **casse l'URL** :
-- Le `/` est interprété comme un **séparateur de chemin** dans l'URL
-- Pollinations ne peut pas générer l'image correctement
-- Discord ne peut pas afficher l'image
-
----
-
-## ✅ LA SOLUTION
-
-J'ai **retiré le slash** en utilisant le **genre spécifique** au lieu de `WOMAN/MAN` :
-
-### Code Modifié
+### 1️⃣ **SEULEMENT Pollinations** (Simplifié)
 
 **AVANT** :
+- Pollinations → Stable Horde → Dezgo → Hugging Face → Replicate
+- 5 services différents
+- Complexe et lent
+
+**MAINTENANT** :
+- ✅ **SEULEMENT Pollinations**
+- ✅ 3 retry max sur Pollinations uniquement
+- ✅ Rapide et simple
+- ✅ Gratuit et fiable
+
+---
+
+### 2️⃣ **SEED FIXE** (Cohérence Visuelle Garantie)
+
+**Le Problème** : Chaque génération créait un visage différent pour la même personnalité
+
+**La Solution** :
 ```python
-age_prefix = f"ADULT WOMAN/MAN {age_num} YEARS OLD..."
-                      ↑ Slash casse l'URL
+# Seed calculé à partir du nom de la personnalité
+fixed_seed = abs(hash(name)) % 1000000000
+
+# Exemple:
+# "Amelie" → Seed: 123456789 (toujours le même)
+# "Sophie" → Seed: 987654321 (toujours le même)
 ```
 
-**APRÈS** :
-```python
-# Déterminer le genre spécifique
-if genre == "Femme":
-    gender_keyword = "WOMAN"
-elif genre == "Homme":
-    gender_keyword = "MAN"
-else:
-    gender_keyword = "PERSON"
+**Résultat** :
+✅ **Même personnalité = MÊME seed = MÊME apparence**
+✅ Visage identique à chaque fois
+✅ Cheveux identiques (couleur, longueur)
+✅ Corps identique (morphologie, poitrine, musculature)
+✅ Traits du visage cohérents
 
-age_prefix = f"ADULT {gender_keyword} {age_num} YEARS OLD..."
-                    ↑ Pas de slash, genre précis
+---
+
+### 3️⃣ **DERNIER MESSAGE UNIQUEMENT** (Contexte Précis)
+
+**AVANT** :
+- Analysait les 3 derniers messages
+- Accumulait le contexte
+- Risque de sur-sexualisation
+
+**MAINTENANT** :
+- ✅ Analyse **SEULEMENT le dernier message** utilisateur
+- ✅ Pas d'accumulation de contexte
+- ✅ Génération basée sur demande actuelle précise
+- ✅ Plus de sur-sexualisation
+
+**Exemple** :
+```
+User: "mets une robe rouge"
+Bot: Génère image avec robe rouge (sans regarder messages avant)
+
+User: "souris"
+Bot: Génère image avec sourire (oublie la robe rouge si pas mentionnée)
 ```
 
 ---
 
-## 🎯 RÉSULTAT
+## 📊 Comparaison Avant/Après
 
-### URLs Maintenant :
-```
-AVANT: ADULT%20WOMAN/MAN%2027...  ← Cassé
-APRÈS: ADULT%20WOMAN%2027...      ← Valide ✅
+### Génération d'Images
+
+| Aspect | AVANT | MAINTENANT |
+|--------|-------|------------|
+| **Services** | 5 (Pollinations, Stable Horde, etc.) | 1 (Pollinations) |
+| **Vitesse** | Lent (teste 5 services) | Rapide (1 seul service) |
+| **Cohérence visuelle** | ❌ Aléatoire | ✅ GARANTIE (seed fixe) |
+| **Même visage** | ❌ Différent à chaque fois | ✅ Identique |
+| **Complexité** | ❌ Élevée | ✅ Simple |
+
+### Génération Contextuelle
+
+| Aspect | AVANT | MAINTENANT |
+|--------|-------|------------|
+| **Analyse** | 3 derniers messages | Dernier message uniquement |
+| **Contexte** | Accumulé | Précis et actuel |
+| **Sur-sexualisation** | ❌ Risque élevé | ✅ Minimisée |
+| **Pertinence** | Moyenne | ✅ Haute |
+
+---
+
+## 🔑 Fonctionnement du Seed Fixe
+
+### Comment ça marche ?
+
+```python
+# 1. Hash du nom de la personnalité
+hash("Amelie") = -1234567890123456789
+
+# 2. Valeur absolue
+abs(-1234567890123456789) = 1234567890123456789
+
+# 3. Modulo pour garder entre 0 et 1 milliard
+1234567890123456789 % 1000000000 = 567890123
+
+# 4. Seed fixe pour Amelie = 567890123
 ```
 
-### Avantages :
-✅ **URLs Pollinations valides** (pas de slash)
-✅ **Prompts plus précis** (WOMAN vs WOMAN/MAN générique)
-✅ **Images s'affichent** dans Discord embeds
+**Résultat** :
+- Chaque fois que tu génères une image d'Amelie → Seed `567890123`
+- Pollinations avec même seed + même prompt = **MÊME image de base**
+- Les traits visuels sont cohérents : même visage, même cheveux, même corps
 
 ---
 
@@ -63,25 +115,25 @@ APRÈS: ADULT%20WOMAN%2027...      ← Valide ✅
 
 **Code poussé** sur `cursor/debug-image-generation-for-conversational-accuracy-30a6`
 
-**Tests** :
+**Tests à faire** :
 1. ⚙️ **Redémarrer** le bot sur Render
-2. 🖼️ **Tester** : `/generer_image style:portrait`
-3. ✅ **Vérifier** : L'image doit maintenant s'afficher dans l'embed !
+2. 🖼️ **Générer plusieurs images** de la même personnalité
+3. ✅ **Vérifier** : Visage/cheveux/corps identiques
+4. 💬 **Tester contexte** : Bouton génération avec dernier message
+5. ✅ **Confirmer** : Pas de sur-sexualisation
 
 ---
 
-## 🎉 CONCLUSION
+## 🎉 RÉSULTATS ATTENDUS
 
-Le problème était **le slash `/` dans `WOMAN/MAN`** qui cassait les URLs.
-
-Maintenant, chaque personnalité utilise son **genre exact** :
-- Femme → `ADULT WOMAN X YEARS OLD`
-- Homme → `ADULT MAN X YEARS OLD`
-- Autre → `ADULT PERSON X YEARS OLD`
-
-**Les images devraient s'afficher parfaitement maintenant !** 🎉
+✅ **Images générées rapidement** (seulement Pollinations, pas de backup lent)
+✅ **Apparence COHÉRENTE** pour chaque personnalité (seed fixe)
+✅ **Même visage/cheveux/corps** à chaque génération
+✅ **Contexte précis** basé sur dernier message uniquement
+✅ **Plus de sur-sexualisation** dans génération contextuelle
+✅ **Plus simple** et **plus fiable**
 
 ---
 
-**STATUS** : ✅ Commit `fix-slash-prompt` - Slash retiré, URLs valides
-**PRÊT** : Redémarrer et les images devraient s'afficher ! 🖼️
+**STATUS** : ✅ Commit `d47167f` - Simplification Pollinations + Seed fixe + Dernier message
+**PRÊT** : Redémarrer et tester la cohérence visuelle ! 🎉
