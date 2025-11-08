@@ -136,14 +136,16 @@ class ImageGenerator:
         
         # VERSION COURTE pour Pollinations (limite URL Discord 2048 caract?res)
         if short_version:
-            realism_keywords = "photorealistic, professional photo, DSLR quality, natural lighting, detailed face"
+            realism_keywords = "photorealistic, professional photo, DSLR quality, natural lighting, detailed face, real person photograph"
             quality_keywords = "perfect anatomy, high quality, detailed"
             sexy_keywords = "attractive, sexy, seductive, beautiful"
+            anti_anime = "NOT anime, NOT cartoon, NOT drawing, NOT illustration, NOT 3D, realistic photo only"
         else:
             # VERSION COMPLETE pour Stable Horde / Replicate
             realism_keywords = "ULTRA PHOTOREALISTIC, hyperrealistic photograph, real human person, professional photography, 8K resolution, DSLR camera quality, natural photographic lighting, realistic human skin with pores and texture, highly detailed realistic face, lifelike appearance, RAW photo quality, sharp focus, natural colors"
             quality_keywords = "perfect anatomy, perfect hands with 5 fingers, perfect face structure, detailed realistic eyes, symmetrical facial features, high quality, masterpiece quality, best quality, ultra detailed, flawless natural skin, professional studio photography, anatomically correct"
             sexy_keywords = "attractive, sexy, seductive look, alluring, sultry gaze, sensual pose, confident expression, appealing features, beautiful, glamorous, striking appearance, captivating beauty, seductive appeal, desirable, charismatic presence"
+            anti_anime = "NOT anime, NOT cartoon, NOT drawing, NOT illustration, NOT painting, NOT comic, NOT manga, NOT 3D render, NOT CGI, NOT sketch, realistic photography only, real photograph, actual person"
         
         # Si des traits visuels sp?cifiques sont fournis, les ULTRA-RENFORCER
         if visual_traits:
@@ -156,14 +158,14 @@ class ImageGenerator:
             # Visage: traits
             
             if short_version:
-                # VERSION COURTE: 1 seule r?p?tition + mots-cl?s simplifi?s
-                prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {visual_traits}, {age_keywords}"
+                # VERSION COURTE: 1 seule r?p?tition + mots-cl?s simplifi?s + anti-anime
+                prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {visual_traits}, {age_keywords}, {anti_anime}"
                 print(f"[IMAGE] SHORT prompt for Pollinations (URL length limit)", flush=True)
             else:
-                # VERSION COMPLETE: 3x r?p?titions + tous les mots-cl?s
+                # VERSION COMPLETE: 3x r?p?titions + tous les mots-cl?s + anti-anime
                 visual_ultra_reinforced = f"{visual_traits}, EXACT SAME PERSON, {visual_traits}, IDENTICAL APPEARANCE, {visual_traits}, CONSISTENT FEATURES"
                 stability_keywords = "same face every time, identical facial structure, same hair color and length, same eye color, same body type, stable appearance, unchanging features, consistent person, fixed characteristics"
-                prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {visual_ultra_reinforced}, {age_keywords}, {stability_keywords}, SAME EXACT PERSON"
+                prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {visual_ultra_reinforced}, {age_keywords}, {stability_keywords}, {anti_anime}, SAME EXACT PERSON"
             
             print(f"[IMAGE COHERENCE] ⭐ Visual traits ULTRA-REINFORCED (3x repetition)", flush=True)
             print(f"[IMAGE COHERENCE] ⭐ Stability keywords added for fixed appearance", flush=True)
@@ -207,14 +209,14 @@ class ImageGenerator:
             base_physical = "medium length hair, distinctive facial features, average build"
         
         if short_version:
-            # VERSION COURTE: 1 seule fois
-            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {base_physical}, {gender_desc}, {age_keywords}, {traits_str}"
+            # VERSION COURTE: 1 seule fois + anti-anime
+            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {base_physical}, {gender_desc}, {age_keywords}, {traits_str}, {anti_anime}"
             print(f"[IMAGE] SHORT generic prompt for Pollinations", flush=True)
         else:
-            # VERSION COMPLETE: 3x r?p?titions
+            # VERSION COMPLETE: 3x r?p?titions + anti-anime
             generic_visual_reinforced = f"{base_physical}, EXACT SAME PERSON, {base_physical}, IDENTICAL APPEARANCE, {base_physical}"
             stability_keywords = "same face every time, identical facial structure, same hair style, same features, stable appearance, consistent person"
-            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {generic_visual_reinforced}, {gender_desc}, {age_keywords}, {traits_str}, {stability_keywords}, SAME EXACT PERSON"
+            prompt = f"{age_prefix}, {realism_keywords}, {quality_keywords}, {sexy_keywords}, {generic_visual_reinforced}, {gender_desc}, {age_keywords}, {traits_str}, {stability_keywords}, {anti_anime}, SAME EXACT PERSON"
         
         print(f"[IMAGE COHERENCE] ⚠️ No specific visual traits - using generic detailed description", flush=True)
         print(f"[IMAGE COHERENCE] ⭐ Generic visual traits ULTRA-REINFORCED (3x repetition)", flush=True)
