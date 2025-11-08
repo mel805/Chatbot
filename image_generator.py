@@ -56,8 +56,8 @@ class ImageGenerator:
         for attempt in range(max_retries):
             print(f"[IMAGE] Attempt {attempt + 1}/{max_retries}...", flush=True)
             
-            # Pollinations.ai avec seed aléatoire pour varier les images
-            print(f"[IMAGE] Using Pollinations.ai (FREE, 4K quality)...", flush=True)
+            # 1. Pollinations.ai (rapide, gratuit, 4K)
+            print(f"[IMAGE] Trying Pollinations.ai (FREE, 4K quality)...", flush=True)
             short_prompt = self._build_base_prompt(genre, age_num, description, visual_traits, short_version=True)
             if prompt_addition:
                 short_prompt = f"{short_prompt}, {prompt_addition}"
@@ -71,14 +71,22 @@ class ImageGenerator:
             image_url = await self._generate_pollinations(short_prompt, seed=random_seed)
             
             if image_url:
-                print(f"[IMAGE] SUCCESS with Pollinations.ai!", flush=True)
+                print(f"[IMAGE] ✅ SUCCESS with Pollinations.ai!", flush=True)
+                return image_url
+            
+            # 2. Stable Horde en backup (si Pollinations échoue)
+            print(f"[IMAGE] Pollinations failed, trying Stable Horde (FREE P2P backup)...", flush=True)
+            image_url = await self._generate_stable_horde(full_prompt)
+            
+            if image_url:
+                print(f"[IMAGE] ✅ SUCCESS with Stable Horde backup!", flush=True)
                 return image_url
             
             if attempt < max_retries - 1:
-                print(f"[IMAGE] Attempt {attempt + 1} failed, retrying...", flush=True)
+                print(f"[IMAGE] Attempt {attempt + 1} failed (both Pollinations + Stable Horde), retrying...", flush=True)
                 await asyncio.sleep(2)
         
-        print(f"[IMAGE] All {max_retries} attempts failed", flush=True)
+        print(f"[IMAGE] ❌ All {max_retries} attempts failed (Pollinations + Stable Horde)", flush=True)
         return image_url
     
     def _build_base_prompt(self, genre, age, description, visual_traits="", short_version=False):
@@ -915,11 +923,11 @@ class ImageGenerator:
         print(f"[IMAGE CONTEXT] Short prompt length (before encoding): {len(short_prompt)} chars", flush=True)
         print(f"[IMAGE CONTEXT] Short prompt preview: {short_prompt[:200]}...", flush=True)
         
-        # Générer l'image - SEULEMENT Pollinations avec prompt court
+        # Générer l'image - Pollinations en premier, Stable Horde en backup
         image_url = None
         
-        # Pollinations.ai avec prompt court pour respecter limite Discord
-        print(f"[IMAGE] Using Pollinations.ai (FREE, 4K quality) with SHORT prompt...", flush=True)
+        # 1. Pollinations.ai (rapide, 4K)
+        print(f"[IMAGE] Trying Pollinations.ai (FREE, 4K quality) with SHORT prompt...", flush=True)
         
         # Seed aléatoire pour images variées
         random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
@@ -928,8 +936,21 @@ class ImageGenerator:
         image_url = await self._generate_pollinations(short_prompt, seed=random_seed)
         
         if image_url:
-            print(f"[IMAGE] SUCCESS with Pollinations.ai!", flush=True)
+            print(f"[IMAGE] ✅ SUCCESS with Pollinations.ai!", flush=True)
             return image_url
         
-        print(f"[IMAGE] Pollinations failed", flush=True)
+        # 2. Stable Horde en backup (si Pollinations échoue)
+        print(f"[IMAGE] Pollinations failed, trying Stable Horde (FREE P2P backup)...", flush=True)
+        
+        # Construire prompt complet pour Stable Horde
+        base_prompt_full = self._build_base_prompt(genre, age_num, personality_data.get('description', ''), visual_traits, short_version=False)
+        full_prompt = f"{base_prompt_full}, {context_str_short}" if context_keywords else f"{base_prompt_full}, suggestive, sensual"
+        
+        image_url = await self._generate_stable_horde(full_prompt)
+        
+        if image_url:
+            print(f"[IMAGE] ✅ SUCCESS with Stable Horde backup!", flush=True)
+            return image_url
+        
+        print(f"[IMAGE] ❌ Both Pollinations + Stable Horde failed", flush=True)
         return image_url

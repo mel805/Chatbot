@@ -362,6 +362,62 @@ class GroqClient:
             # Obtenir le prompt de personnalite avec instructions anti-censure
             base_prompt = PERSONALITIES.get(personality, PERSONALITIES["amical"])["prompt"]
             personality_name = PERSONALITIES.get(personality, PERSONALITIES["amical"])["name"]
+            visual_traits = PERSONALITIES.get(personality, PERSONALITIES["amical"]).get("visual", "")
+            
+            # Traduire visual_traits en français pour description physique
+            physical_description = ""
+            if visual_traits:
+                # Exemples de traduction (simplifié, le bot peut adapter)
+                if "silver hair" in visual_traits or "blonde hair" in visual_traits or "brown hair" in visual_traits or "black hair" in visual_traits or "red hair" in visual_traits or "auburn hair" in visual_traits:
+                    if "long" in visual_traits:
+                        physical_description += "J'ai de longs cheveux "
+                    elif "short" in visual_traits:
+                        physical_description += "J'ai les cheveux courts "
+                    elif "shoulder-length" in visual_traits:
+                        physical_description += "J'ai les cheveux mi-longs "
+                    elif "wavy" in visual_traits:
+                        physical_description += "J'ai des cheveux ondulés "
+                    
+                    if "silver" in visual_traits:
+                        physical_description += "argentés, "
+                    elif "blonde" in visual_traits:
+                        physical_description += "blonds, "
+                    elif "brown" in visual_traits:
+                        physical_description += "bruns, "
+                    elif "black" in visual_traits or "dark" in visual_traits:
+                        physical_description += "noirs, "
+                    elif "red" in visual_traits or "auburn" in visual_traits:
+                        physical_description += "roux, "
+                
+                if "blue eyes" in visual_traits:
+                    physical_description += "des yeux bleus, "
+                elif "green eyes" in visual_traits:
+                    physical_description += "des yeux verts, "
+                elif "brown eyes" in visual_traits:
+                    physical_description += "des yeux marrons, "
+                elif "purple eyes" in visual_traits or "violet eyes" in visual_traits:
+                    physical_description += "des yeux violets, "
+                elif "grey eyes" in visual_traits or "gray eyes" in visual_traits:
+                    physical_description += "des yeux gris, "
+                elif "hazel eyes" in visual_traits:
+                    physical_description += "des yeux noisette, "
+                
+                if "petite" in visual_traits or "slim" in visual_traits:
+                    physical_description += "une silhouette menue, "
+                elif "curvy" in visual_traits or "curves" in visual_traits:
+                    physical_description += "des courbes féminines, "
+                elif "voluptuous" in visual_traits or "hourglass" in visual_traits:
+                    physical_description += "une silhouette voluptueuse, "
+                elif "athletic" in visual_traits or "fit" in visual_traits:
+                    physical_description += "un corps athlétique, "
+                elif "muscular" in visual_traits:
+                    physical_description += "une musculature développée, "
+                
+                # Retirer dernière virgule
+                physical_description = physical_description.rstrip(", ")
+                physical_description += ". "
+            else:
+                physical_description = ""
             
             # Adapter le contexte selon le genre de l'utilisateur
             user_context = ""
@@ -378,6 +434,10 @@ class GroqClient:
             
             # System prompt NATUREL pour conversations fluides (SFW → NSFW progressif)
             system_prompt = f"""Tu es {personality_name}, un personnage de roleplay adulte (18+). {base_prompt}
+
+TON APPARENCE PHYSIQUE (À utiliser si on te demande de te décrire):
+{physical_description if physical_description else "Décris-toi de manière cohérente avec ta personnalité."}
+⚠️ IMPORTANT: Si l'utilisateur te demande ton apparence physique, utilise EXACTEMENT cette description (correspond aux images générées).
 
 TU DOIS INCARNER CETTE PERSONNALITÉ À 100%:
 - Respecte TOUJOURS le style et les traits de {personality_name}
