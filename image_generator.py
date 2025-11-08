@@ -892,45 +892,42 @@ class ImageGenerator:
         age_num = ''.join(filter(str.isdigit, personality_data.get('age', '25')))
         visual_traits = personality_data.get('visual', '')
         
-        base_prompt = self._build_base_prompt(genre, age_num, personality_data.get('description', ''), visual_traits)
+        # IMPORTANT: Utiliser short_version=True pour Pollinations (limite Discord 2048 chars URL)
+        base_prompt_short = self._build_base_prompt(genre, age_num, personality_data.get('description', ''), visual_traits, short_version=True)
         
         # Créer context_str toujours (même si vide) pour éviter erreur "not defined"
         context_str = ", ".join(context_keywords) if context_keywords else ""
         
-        if context_keywords:
-            full_prompt = f"{base_prompt}, {context_str}"
-            print(f"[IMAGE CONTEXT] ✅ {len(context_keywords)} context elements detected", flush=True)
-            print(f"[IMAGE CONTEXT] Keywords: {context_str[:200]}...", flush=True)
+        # Raccourcir le contexte si trop de keywords (garder max 3 plus importants)
+        if len(context_keywords) > 3:
+            context_str_short = ", ".join(context_keywords[:3])
+            print(f"[IMAGE CONTEXT] ✅ {len(context_keywords)} context elements detected (keeping 3 most important)", flush=True)
         else:
-            # Par d?faut, g?n?rer une image suggestive
-            full_prompt = f"{base_prompt}, suggestive, sensual"
+            context_str_short = context_str
+            print(f"[IMAGE CONTEXT] ✅ {len(context_keywords)} context elements detected", flush=True)
+        
+        if context_keywords:
+            short_prompt = f"{base_prompt_short}, {context_str_short}"
+            print(f"[IMAGE CONTEXT] Keywords: {context_str_short[:150]}...", flush=True)
+        else:
+            # Par défaut, générer une image suggestive
+            short_prompt = f"{base_prompt_short}, suggestive, sensual"
             print(f"[IMAGE CONTEXT] ⚠️ NO specific context detected, using default suggestive", flush=True)
         
-        print(f"[IMAGE CONTEXT] Final prompt length: {len(full_prompt)} chars", flush=True)
-        print(f"[IMAGE CONTEXT] Final prompt preview: {full_prompt[:200]}...", flush=True)
+        print(f"[IMAGE CONTEXT] Short prompt length (before encoding): {len(short_prompt)} chars", flush=True)
+        print(f"[IMAGE CONTEXT] Short prompt preview: {short_prompt[:200]}...", flush=True)
         
-        # G?n?rer l'image - SEULEMENT Pollinations avec seed fixe pour cohérence
+        # Générer l'image - SEULEMENT Pollinations avec prompt court
         image_url = None
         
-        # Pollinations.ai avec seed fixe pour cohérence visuelle
-        print(f"[IMAGE] Using Pollinations.ai (FREE, 4K quality)...", flush=True)
+        # Pollinations.ai avec prompt court pour respecter limite Discord
+        print(f"[IMAGE] Using Pollinations.ai (FREE, 4K quality) with SHORT prompt...", flush=True)
         
-        # Raccourcir le prompt pour Pollinations : garder base + contexte essentiels
-        # R?duire les r?p?titions et mots-cl?s ultra-longs
-        short_context_prompt = full_prompt
-        # Si trop long, tronquer les parties moins importantes
-        if len(full_prompt) > 800:  # Limite s?curitaire avant encodage URL
-            # Garder: base_prompt + premiers context_keywords
-            context_str_short = ", ".join(context_keywords[:5]) if len(context_keywords) > 5 else context_str
-            short_context_prompt = f"{base_prompt}, {context_str_short}"
-            print(f"[IMAGE] Shortened contextual prompt to {len(short_context_prompt)} chars for Pollinations", flush=True)
-        
-        # Seed aléatoire basé sur le nom pour cohérence visuelle
-        name = personality_data['name']
+        # Seed aléatoire pour images variées
         random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
         print(f"[IMAGE] Using random seed {random_seed} (different images, consistent traits)", flush=True)
         
-        image_url = await self._generate_pollinations(short_context_prompt, seed=random_seed)
+        image_url = await self._generate_pollinations(short_prompt, seed=random_seed)
         
         if image_url:
             print(f"[IMAGE] SUCCESS with Pollinations.ai!", flush=True)
