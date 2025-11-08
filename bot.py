@@ -626,19 +626,19 @@ Par defaut, tu es amicale, drole, interessante, normale. Le NSFW existe SEULEMEN
                         print(f"[DEBUG] Groq raw response: {response_text[:500]}", flush=True)
                         
                         if response.status == 200:
-                        try:
-                            result = await response.json() if not response_text else json.loads(response_text)
-                            print(f"[DEBUG] Response parsed successfully", flush=True)
-                            if result.get('choices') and len(result['choices']) > 0:
-                                content = result['choices'][0]['message']['content'].strip()
-                                print(f"[DEBUG] Content length: {len(content)}", flush=True)
-                                print(f"[DEBUG] Content preview: {content[:100]}", flush=True)
-                                return content
-                            print(f"[ERROR] No choices in response: {result}", flush=True)
-                            return "Desole, je n'ai pas pu generer de reponse."
-                        except Exception as e:
-                            print(f"[ERROR] Failed to parse JSON: {e}", flush=True)
-                            return "Desole, erreur de parsing de la reponse."
+                            try:
+                                result = await response.json() if not response_text else json.loads(response_text)
+                                print(f"[DEBUG] Response parsed successfully", flush=True)
+                                if result.get('choices') and len(result['choices']) > 0:
+                                    content = result['choices'][0]['message']['content'].strip()
+                                    print(f"[DEBUG] Content length: {len(content)}", flush=True)
+                                    print(f"[DEBUG] Content preview: {content[:100]}", flush=True)
+                                    return content
+                                print(f"[ERROR] No choices in response: {result}", flush=True)
+                                return "Desole, je n'ai pas pu generer de reponse."
+                            except Exception as e:
+                                print(f"[ERROR] Failed to parse JSON: {e}", flush=True)
+                                return "Desole, erreur de parsing de la reponse."
                     
                         # Gestion des erreurs HTTP spécifiques
                         elif response.status == 400:
