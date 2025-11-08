@@ -256,9 +256,9 @@ class ImageGenerator:
             prompt_without_nsfw_flags = prompt_without_nsfw_flags.replace("explicit", "")
             prompt_without_nsfw_flags = prompt_without_nsfw_flags.replace("NSFW", "")
             
-            # Simplifier les n?gatifs (trop de n?gatifs peuvent aussi d?clencher les filtres)
-            style_negative = "NOT anime, NOT cartoon, NOT drawing"
-            age_negative = "NOT child, NOT teen, NOT minor, adult only"
+            # MOTS-CLÉS NÉGATIFS RENFORCÉS pour garantir photoréalisme
+            style_negative = "NOT anime, NOT cartoon, NOT drawing, NOT illustration, NOT 3D render, NOT CGI, NOT painting, NOT comic, NOT manga, NOT sketch, realistic photo only, real photograph, actual person"
+            age_negative = "NOT child, NOT teen, NOT minor, adult only, 25+ years"
             
             # Combiner
             full_negative = f"{style_negative}, {age_negative}"
