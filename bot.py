@@ -1373,16 +1373,16 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
     personality_key = channel_personalities.get(channel_id, "femme_coquine")
     personality_data = PERSONALITIES.get(personality_key, PERSONALITIES["femme_coquine"])
     
-    # Prompts NSFW optimis?s
+    # Prompts NSFW optimisés avec RÉALISME PHOTORÉALISTE pour tous les styles
     style_prompts = {
-        "portrait": "close-up portrait, face focus, head and shoulders, beautiful lighting",
-        "casual": "full body, casual everyday outfit, standing, relaxed pose, natural setting",
-        "elegant": "full body, elegant evening dress, formal attire, sophisticated pose, glamorous",
-        "lingerie": "full body shot, wearing revealing lingerie, bedroom, seductive sensual pose, intimate setting, alluring",
-        "swimsuit": "full body, wearing revealing swimsuit, beach, attractive sensual pose",
-        "suggestive": "full body, provocative seductive pose, tempting expression, revealing, sensual body language, alluring",
-        "artistic_nude": "full body, nude figure, artistic aesthetic pose, natural bare skin, sensual curves, tasteful composition",
-        "intimate": "intimate bedroom scene, passionate sensual moment, revealing pose, seductive atmosphere, close romantic setting"
+        "portrait": "photorealistic close-up portrait, realistic photograph, DSLR quality, face focus, head and shoulders, professional lighting, natural skin texture",
+        "casual": "photorealistic full body, realistic photograph, DSLR quality, casual everyday outfit, standing, relaxed pose, natural setting, real person",
+        "elegant": "photorealistic full body, realistic photograph, DSLR quality, elegant evening dress, formal attire, sophisticated pose, glamorous, professional photo shoot",
+        "lingerie": "photorealistic full body shot, realistic photograph, DSLR quality, wearing revealing lingerie, bedroom, seductive sensual pose, intimate setting, alluring, natural skin",
+        "swimsuit": "photorealistic full body, realistic photograph, DSLR quality, wearing revealing swimsuit, beach or pool, attractive sensual pose, natural lighting",
+        "suggestive": "photorealistic full body, realistic photograph, DSLR quality, provocative seductive pose, tempting expression, revealing, sensual body language, alluring, professional photo",
+        "artistic_nude": "photorealistic full body, realistic photograph, DSLR quality, nude figure, natural pose, natural bare skin, sensual curves, tasteful composition, professional nude photography",
+        "intimate": "photorealistic intimate scene, realistic photograph, DSLR quality, bedroom setting, passionate sensual moment, revealing pose, seductive atmosphere, close romantic setting, natural lighting"
     }
     try:
         embed = discord.Embed(title="?? G?n?ration", description=f"Image de **{personality_data['name']}** en cours...\n? 10-30s...", color=personality_data.get('color', 0x3498db))
