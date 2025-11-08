@@ -1428,7 +1428,7 @@ async def generate_image(interaction: discord.Interaction, style: str = "portrai
             print(f"[IMAGE] DIAGNOSTIC: Check logs above to see why generation failed", flush=True)
             embed = discord.Embed(
                 title="❌ Erreur de Génération",
-                description="La génération d'image a échoué.\n\n**Cause probable:**\n• Pollinations.ai temporairement indisponible\n\n**Solutions:**\n• **Réessayez** dans quelques instants\n• Si le problème persiste, contactez un admin",
+                description="La génération d'image a échoué.\n\n**Cause probable:**\n• Service de génération temporairement indisponible\n\n**Solutions:**\n• **Réessayez** dans quelques instants\n• Si le problème persiste, contactez un admin",
                 color=0xe74c3c
             )
             embed.set_footer(text="Image générée automatiquement")
@@ -1519,7 +1519,7 @@ async def generate_contextual_image(interaction: discord.Interaction):
             print(f"[IMAGE] DIAGNOSTIC: Check logs above to see why Pollinations failed", flush=True)
             embed = discord.Embed(
                 title="❌ Erreur de Génération",
-                description="La génération d'image contextuelle a échoué.\n\n**Cause probable:**\n• Pollinations.ai temporairement indisponible\n\n**Solutions:**\n• **Réessayez** dans quelques instants\n• Si le problème persiste, contactez un admin",
+                description="La génération d'image contextuelle a échoué.\n\n**Cause probable:**\n• Service de génération temporairement indisponible\n\n**Solutions:**\n• **Réessayez** dans quelques instants\n• Si le problème persiste, contactez un admin",
                 color=0xe74c3c
             )
             embed.set_footer(text="Image générée automatiquement")
