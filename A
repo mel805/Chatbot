@@ -1,63 +1,85 @@
-✅ ERREUR CORRIGÉE - context_str Non Défini
+✅ PERSONNALITÉS RENFORCÉES + Logs Bouton Image
 
-## 🔴 LE PROBLÈME
+## 🎯 Changements Appliqués
 
+### 1️⃣ **PERSONNALITÉS RENFORCÉES**
+
+**Ajout Section dans System Prompt** :
 ```
-[ERROR] Image button callback: cannot access local variable 'context_str' 
-where it is not associated with a value
+TU DOIS INCARNER CETTE PERSONNALITÉ À 100%:
+- Respecte TOUJOURS le style et les traits de [personnalité]
+- Si flirteuse/séduisante → sois naturellement flirteuse (mais sans forcer NSFW)
+- Si romantique → sois douce et romantique
+- Si coquine → sois taquine et joueuse
+- Si dominante → sois confiante et autoritaire
+- Adapte vocabulaire, ton, émojis à la personnalité
+- RESTE dans le personnage à chaque message
 ```
 
-### Cause
+**Exemples selon Personnalité** :
 
-Le code définissait `context_str` **SEULEMENT** si `context_keywords` n'était pas vide :
+#### Flirteuse/Séduisante
+```
+User: salut, ça va?
+Bot: hey 😏 ouais et toi? t'as l'air en forme aujourd'hui
+```
 
-```python
-# AVANT (BUGUÉ):
-if context_keywords:
-    context_str = ", ".join(context_keywords)  # Défini ICI
-    full_prompt = f"{base_prompt}, {context_str}"
-else:
-    full_prompt = f"{base_prompt}, suggestive, sensual"
+#### Romantique
+```
+User: salut, ça va?
+Bot: hey 💕 oui merci, et toi? j'espère que ta journée se passe bien
+```
 
-# Plus bas...
-if len(full_prompt) > 800:
-    context_str_short = ... context_str ...  # Utilisé ICI
-    # ❌ ERREUR si context_keywords était vide → context_str n'existe pas!
+#### Coquine
+```
+User: salut, ça va?
+Bot: hey 😈 ouais tranquille... tu fais des bêtises?
+```
+
+#### Dominante
+```
+User: salut, ça va?
+Bot: salut. oui, et toi? dis-moi ce que tu fais
 ```
 
 ---
 
-## ✅ LA SOLUTION
+### 2️⃣ **ÉQUILIBRE PERSONNALITÉ + SFW/NSFW**
 
-Définir `context_str` **TOUJOURS**, même si vide :
+**Principes** :
+✅ Personnalité **TOUJOURS respectée** (flirt, romantique, coquine, etc.)
+✅ **MAIS** sans forcer vers NSFW si user ne le fait pas
+✅ Exemple : Personnalité flirteuse = flirt **naturel casual**, pas sexuel d'emblée
+✅ Devient plus intime **SEULEMENT** si user l'initie
 
-```python
-# MAINTENANT (CORRIGÉ):
-context_str = ", ".join(context_keywords) if context_keywords else ""
-
-if context_keywords:
-    full_prompt = f"{base_prompt}, {context_str}"
-else:
-    full_prompt = f"{base_prompt}, suggestive, sensual"
-
-# Plus bas...
-if len(full_prompt) > 800:
-    context_str_short = ... context_str ...  # ✅ context_str existe toujours!
+**Exemple - Personnalité Flirteuse** :
 ```
+User: salut
+Bot: hey 😏 comment ça va?  [flirt léger, pas forcing]
 
-**Résultat** :
-- Si `context_keywords` rempli → `context_str = "robe rouge, sourire, etc."`
-- Si `context_keywords` vide → `context_str = ""`
-- **context_str existe TOUJOURS** → Plus d'erreur !
+User: tu es belle
+Bot: oh merci 😊 t'es gentil  [flirt naturel]
+
+User: j'ai envie de toi
+Bot: mmm viens alors 🔥  [répond à l'initiative user]
+```
 
 ---
 
-## 📊 Comportement
+### 3️⃣ **BOUTON IMAGE CONTEXTUEL**
 
-| Situation | AVANT (Bugué) | MAINTENANT (Corrigé) |
-|-----------|---------------|----------------------|
-| Contexte détecté | ✅ Fonctionne | ✅ Fonctionne |
-| Pas de contexte | ❌ ERREUR | ✅ Fonctionne |
+Le bouton existe déjà et est fonctionnel. 
+
+**Si le bouton ne s'affiche pas** :
+- ✅ Vérifier que c'est un **channel NSFW** (le bouton n'apparaît que dans les channels NSFW)
+- ✅ Vérifier les **logs Render** pour voir si des erreurs apparaissent
+
+**Si le bouton s'affiche mais l'image ne génère pas** :
+- ✅ Regarder les logs Render :
+  - `[IMAGE BUTTON] ✅ Starting contextual image generation`
+  - `[IMAGE BUTTON] Calling generate_contextual_image...`
+  - `[IMAGE BUTTON] Generation result: ...`
+- ✅ Envoie-moi les logs si erreur
 
 ---
 
@@ -67,19 +89,32 @@ if len(full_prompt) > 800:
 
 **Tests** :
 1. ⚙️ **Redémarrer** le bot sur Render
-2. 💬 **Envoyer un message casual** : "salut"
-3. 🖼️ **Cliquer le bouton image** sous la réponse du bot
-4. ✅ **Vérifier** : Plus d'erreur, image générée !
+2. 💬 **Tester personnalités** :
+   - Choisir une personnalité flirteuse
+   - Dire "salut" → Vérifier réponse flirteuse
+   - Choisir une personnalité romantique
+   - Dire "salut" → Vérifier réponse romantique
+3. ✅ **Vérifier** : Personnalité bien marquée dès le début
+4. 🖼️ **Tester bouton image** :
+   - Discuter avec le bot
+   - Cliquer le bouton sous sa réponse
+   - Regarder les logs si erreur
 
 ---
 
-## 🎉 RÉSULTAT
+## 🎉 RÉSULTATS ATTENDUS
 
-✅ **Plus d'erreur** "cannot access local variable"
-✅ **Bouton image contextuelle** fonctionne toujours
-✅ **Génération** même sans contexte spécifique détecté
+✅ **Personnalités bien marquées** (flirt, romantique, coquin, dominant, etc.)
+✅ **Vocabulaire adapté** à chaque personnalité
+✅ **Ton et émojis** cohérents avec la personnalité
+✅ **SFW par défaut** (pas de forcing NSFW même si flirteuse)
+✅ **Progression naturelle** si user devient intime
 
 ---
 
-**STATUS** : ✅ Commit `fix-context-str` - Erreur corrigée
-**PRÊT** : Redémarrer et tester le bouton image ! 🖼️
+**Pour le bouton image** : Envoie-moi les **logs Render** si ça ne marche toujours pas, je pourrai diagnostiquer exactement le problème !
+
+---
+
+**STATUS** : ✅ Commit `renforcement-perso` - Personnalités renforcées
+**PRÊT** : Redémarrer et tester ! 🎭
