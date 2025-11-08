@@ -894,8 +894,10 @@ class ImageGenerator:
         
         base_prompt = self._build_base_prompt(genre, age_num, personality_data.get('description', ''), visual_traits)
         
+        # Créer context_str toujours (même si vide) pour éviter erreur "not defined"
+        context_str = ", ".join(context_keywords) if context_keywords else ""
+        
         if context_keywords:
-            context_str = ", ".join(context_keywords)
             full_prompt = f"{base_prompt}, {context_str}"
             print(f"[IMAGE CONTEXT] ✅ {len(context_keywords)} context elements detected", flush=True)
             print(f"[IMAGE CONTEXT] Keywords: {context_str[:200]}...", flush=True)
