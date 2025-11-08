@@ -49,47 +49,36 @@ class ImageGenerator:
         
         print(f"[IMAGE] Generating image for {name} with prompt: {full_prompt[:100]}...", flush=True)
         
-        # FLOW: Pollinations en priorit? (GRATUIT, NSFW filtr?, qualit? 4K)
+        # FLOW SIMPLIFIÉ: SEULEMENT Pollinations (rapide, gratuit, fiable)
+        # Seed fixe basé sur le nom de la personnalité pour cohérence visuelle
         image_url = None
         
         for attempt in range(max_retries):
             print(f"[IMAGE] Attempt {attempt + 1}/{max_retries}...", flush=True)
             
-            # M?thode 1: Pollinations.ai (GRATUIT, NSFW filtr?, qualit? 4K)
-            # IMPORTANT: Utiliser une version COURTE du prompt pour respecter limite URL Discord (2048 caract?res)
-            print(f"[IMAGE] Trying Pollinations.ai (FREE, NSFW filtered, 4K quality)...", flush=True)
+            # Pollinations.ai avec seed fixe pour cohérence
+            print(f"[IMAGE] Using Pollinations.ai (FREE, 4K quality)...", flush=True)
             short_prompt = self._build_base_prompt(genre, age_num, description, visual_traits, short_version=True)
             if prompt_addition:
                 short_prompt = f"{short_prompt}, {prompt_addition}"
             print(f"[IMAGE] Using SHORT prompt for Pollinations (length: {len(short_prompt)})", flush=True)
-            image_url = await self._generate_pollinations(short_prompt)
+            
+            # Seed fixe basé sur le nom pour cohérence visuelle
+            # Même personnalité = même seed = même apparence
+            fixed_seed = abs(hash(name)) % 1000000000  # Seed entre 0 et 1 milliard
+            print(f"[IMAGE] Using FIXED seed {fixed_seed} for {name} (visual consistency)", flush=True)
+            
+            image_url = await self._generate_pollinations(short_prompt, seed=fixed_seed)
             
             if image_url:
-                print(f"[IMAGE] SUCCESS with Pollinations.ai (FREE)!", flush=True)
+                print(f"[IMAGE] SUCCESS with Pollinations.ai!", flush=True)
                 return image_url
-            
-            # M?thode 2: Stable Horde (GRATUIT backup, NSFW OK)
-            print(f"[IMAGE] Pollinations failed, trying Stable Horde (FREE P2P, NSFW allowed)...", flush=True)
-            image_url = await self._generate_stable_horde(full_prompt)
-            
-            if image_url:
-                print(f"[IMAGE] SUCCESS with Stable Horde (FREE)!", flush=True)
-                return image_url
-            
-            # M?thode 3: Replicate (PAYANT backup si cl? configur?e)
-            if self.replicate_key:
-                print(f"[IMAGE] Free services failed, trying Replicate (PAID)...", flush=True)
-                image_url = await self._generate_replicate(full_prompt)
-                
-                if image_url:
-                    print(f"[IMAGE] SUCCESS with Replicate (PAID)!", flush=True)
-                    return image_url
             
             if attempt < max_retries - 1:
                 print(f"[IMAGE] Attempt {attempt + 1} failed, retrying...", flush=True)
-                await asyncio.sleep(2)  # Petite pause avant retry
+                await asyncio.sleep(2)
         
-        print(f"[IMAGE] All {max_retries} attempts and all services failed", flush=True)
+        print(f"[IMAGE] All {max_retries} attempts failed", flush=True)
         return image_url
     
     def _build_base_prompt(self, genre, age, description, visual_traits="", short_version=False):
@@ -226,14 +215,23 @@ class ImageGenerator:
         
         return prompt
     
-    async def _generate_pollinations(self, prompt):
-        """G?n?re via Pollinations.ai (gratuit, sans cl? API)"""
+    async def _generate_pollinations(self, prompt, seed=None):
+        """G?n?re via Pollinations.ai (gratuit, sans cl? API)
+        
+        Args:
+            prompt: Le prompt de génération
+            seed: Seed fixe optionnel pour cohérence visuelle (même seed = même image)
+        """
         try:
             print(f"[IMAGE] Using Pollinations.ai FREE API", flush=True)
             
-            # G?n?rer un seed VRAIMENT al?atoire pour ?viter images identiques
-            random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
-            print(f"[IMAGE] Using random seed: {random_seed}", flush=True)
+            # Utiliser le seed fourni (fixe) ou générer un seed aléatoire
+            if seed is not None:
+                random_seed = seed
+                print(f"[IMAGE] Using FIXED seed: {random_seed} (for visual consistency)", flush=True)
+            else:
+                random_seed = random.randint(1, 999999999) + int(time.time() * 1000)
+                print(f"[IMAGE] Using random seed: {random_seed}", flush=True)
             
             # CRITIQUE: REFORMULER pour contourner les filtres NSFW de Pollinations
             # Au lieu de "EXPLICIT NSFW", utiliser des descriptions visuelles directes
@@ -637,37 +635,27 @@ class ImageGenerator:
         Returns:
             URL de l'image ou None si erreur
         """
-        # Analyser les derniers messages pour extraire le contexte
+        # Analyser SEULEMENT le dernier message pour contexte précis
         context_keywords = []
         
-        # PRIORIT?: Analyser LE DERNIER MESSAGE de l'utilisateur (pas toute la conversation)
-        # Cela ?vite la sur-sexualisation et g?n?re selon la derni?re demande pr?cise
+        # NOUVEAU: Analyser UNIQUEMENT LE DERNIER MESSAGE utilisateur
+        # Cela évite sur-sexualisation et génère selon demande actuelle précise
         
-        # Extraire le dernier message utilisateur
         last_user_message = ""
         if conversation_history:
-            # Prendre le dernier message (le plus r?cent)
+            # Prendre le dernier message (le plus récent)
             last_msg = conversation_history[-1]
             if isinstance(last_msg, dict):
                 last_user_message = last_msg.get('content', '')
             else:
                 last_user_message = str(last_msg)
         
-        # Analyser aussi les 2-3 derniers messages pour contexte suppl?mentaire
-        recent_texts = []
-        for msg in conversation_history[-3:]:  # 3 derniers messages max
-            if isinstance(msg, dict):
-                recent_texts.append(msg.get('content', ''))
-            else:
-                recent_texts.append(str(msg))
-        recent_conversation = " ".join(recent_texts).lower()
-        
-        # Le dernier message est prioritaire
+        # Utiliser SEULEMENT le dernier message (pas toute la conversation)
+        conversation_text = last_user_message.lower()
         last_user_message_lower = last_user_message.lower()
         
-        print(f"[IMAGE CONTEXT] Analyzing last user message...", flush=True)
-        print(f"[IMAGE CONTEXT] Last message: {last_user_message[:150]}...", flush=True)
-        print(f"[IMAGE CONTEXT] Recent context (3 msgs): {len(recent_conversation)} chars", flush=True)
+        print(f"[IMAGE CONTEXT] Analyzing ONLY last user message (not full conversation)...", flush=True)
+        print(f"[IMAGE CONTEXT] Last message: {last_user_message[:100]}...", flush=True)
         
         # D?TECTER si la demande est EXPLICITE ou INNOCENTE
         explicit_keywords = ["bite", "queue", "sexe", "penis", "cock", "dick", "chatte", "pussy",
@@ -678,11 +666,11 @@ class ImageGenerator:
         
         if is_explicit_request:
             print(f"[IMAGE CONTEXT] ⚠️ EXPLICIT request detected - will generate NSFW", flush=True)
-            # Analyser tout le contexte pour actions explicites
-            conversation_text = recent_conversation
+            # Utiliser le dernier message
+            conversation_text = last_user_message_lower
         else:
             print(f"[IMAGE CONTEXT] ✅ INNOCENT request - will generate SFW/suggestive only", flush=True)
-            # Pour demande innocente, utiliser SEULEMENT le dernier message
+            # Utiliser le dernier message
             conversation_text = last_user_message_lower
         
         # PRIORITE 1: D?tecter les v?tements sp?cifiques mentionn?s
@@ -919,12 +907,11 @@ class ImageGenerator:
         print(f"[IMAGE CONTEXT] Final prompt length: {len(full_prompt)} chars", flush=True)
         print(f"[IMAGE CONTEXT] Final prompt preview: {full_prompt[:200]}...", flush=True)
         
-        # G?n?rer l'image - FLOW: Pollinations en priorit? (avec prompt court pour limite URL)
+        # G?n?rer l'image - SEULEMENT Pollinations avec seed fixe pour cohérence
         image_url = None
         
-        # 1. Pollinations.ai (GRATUIT, NSFW filtr?, qualit? 4K)
-        # IMPORTANT: Cr?er une version COURTE du prompt pour ?viter d?passer 2048 caract?res (limite URL Discord)
-        print(f"[IMAGE] Trying Pollinations.ai (FREE, NSFW filtered, 4K quality)...", flush=True)
+        # Pollinations.ai avec seed fixe pour cohérence visuelle
+        print(f"[IMAGE] Using Pollinations.ai (FREE, 4K quality)...", flush=True)
         
         # Raccourcir le prompt pour Pollinations : garder base + contexte essentiels
         # R?duire les r?p?titions et mots-cl?s ultra-longs
@@ -936,27 +923,16 @@ class ImageGenerator:
             short_context_prompt = f"{base_prompt}, {context_str_short}"
             print(f"[IMAGE] Shortened contextual prompt to {len(short_context_prompt)} chars for Pollinations", flush=True)
         
-        image_url = await self._generate_pollinations(short_context_prompt)
+        # Seed fixe basé sur le nom pour cohérence visuelle
+        name = personality_data['name']
+        fixed_seed = abs(hash(name)) % 1000000000
+        print(f"[IMAGE] Using FIXED seed {fixed_seed} for {name} (visual consistency)", flush=True)
+        
+        image_url = await self._generate_pollinations(short_context_prompt, seed=fixed_seed)
         
         if image_url:
-            print(f"[IMAGE] SUCCESS with Pollinations.ai (FREE)!", flush=True)
+            print(f"[IMAGE] SUCCESS with Pollinations.ai!", flush=True)
             return image_url
         
-        # 2. Stable Horde (GRATUIT backup, NSFW OK)
-        print(f"[IMAGE] Pollinations failed, trying Stable Horde (FREE P2P, NSFW allowed)...", flush=True)
-        image_url = await self._generate_stable_horde(full_prompt)
-        
-        if image_url:
-            print(f"[IMAGE] SUCCESS with Stable Horde (FREE)!", flush=True)
-            return image_url
-        
-        # 3. Replicate (PAYANT backup si cl? configur?e)
-        if self.replicate_key:
-            print(f"[IMAGE] Free services failed, trying Replicate (PAID)...", flush=True)
-            image_url = await self._generate_replicate(full_prompt)
-            
-            if image_url:
-                print(f"[IMAGE] SUCCESS with Replicate (PAID)!", flush=True)
-                return image_url
-        
+        print(f"[IMAGE] Pollinations failed", flush=True)
         return image_url
