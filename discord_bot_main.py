@@ -882,7 +882,85 @@ async def help_command(interaction: discord.Interaction):
         inline=False
     )
     
+    embed.add_field(
+        name="?? G?n?ration d'Images",
+        value="? `/generate_image` - G?n?re une image NSFW\nEx: `/generate_image description:\"Luna en robe rouge\"`",
+        inline=False
+    )
+    
     await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="generate_image", description="G?n?re une image NSFW avec la personnalit? actuelle")
+@app_commands.describe(
+    description="Description de l'image ? g?n?rer (sois descriptif)"
+)
+async def generate_image(interaction: discord.Interaction, description: str):
+    """G?n?re une image NSFW bas?e sur la personnalit? actuelle"""
+    channel_id = interaction.channel_id
+    
+    # V?rifier que le bot est actif
+    if not bot_active_channels.get(channel_id, False):
+        await interaction.response.send_message(
+            "? Le bot est inactif dans ce canal! Utilise `/start` d'abord.",
+            ephemeral=True
+        )
+        return
+    
+    await interaction.response.defer()
+    
+    try:
+        # R?cup?rer la personnalit? actuelle
+        current_personality = channel_personalities.get(channel_id, "femme_coquine")
+        personality_data = PERSONALITIES.get(current_personality, PERSONALITIES["femme_coquine"])
+        personality_name = personality_data.get("name", "Luna")
+        
+        # Construire le prompt pour l'image
+        character_description = f"{personality_name}, {personality_data.get('description', '')}"
+        
+        print(f"[IMAGE] G?n?ration pour {personality_name}: {description[:50]}...")
+        
+        # Envoyer message de progression
+        progress_msg = await interaction.followup.send(
+            f"?? {personality_name} g?n?re ton image... Patiente 10-30 secondes! ?",
+            wait=True
+        )
+        
+        # G?n?rer l'image (essaie Pollinations puis Prodia puis Horde)
+        image_url = await image_generator.generate_image_nsfw(
+            prompt=description,
+            character_desc=character_description,
+            nsfw_level="high"
+        )
+        
+        if image_url:
+            # Cr?er embed avec l'image
+            embed = discord.Embed(
+                title=f"? Image g?n?r?e par {personality_name}",
+                description=f"**Prompt**: {description[:200]}",
+                color=discord.Color.purple()
+            )
+            embed.set_image(url=image_url)
+            embed.set_footer(text=f"Personnalit?: {personality_name}")
+            
+            await progress_msg.edit(content=None, embed=embed)
+            print(f"[IMAGE SUCCESS] URL: {image_url[:80]}...")
+        else:
+            await progress_msg.edit(
+                content=f"? D?sol?, je n'ai pas r?ussi ? g?n?rer l'image. R?essaie!"
+            )
+            print(f"[IMAGE ERROR] Toutes les API ont ?chou?")
+            
+    except Exception as e:
+        print(f"[IMAGE ERROR] Exception: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
+        try:
+            await interaction.followup.send(
+                f"? Une erreur est survenue lors de la g?n?ration de l'image.",
+                ephemeral=True
+            )
+        except:
+            pass
 
 # Gestionnaire d'erreurs pour les commandes slash
 @bot.tree.error
