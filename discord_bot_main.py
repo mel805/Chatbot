@@ -31,9 +31,6 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='/', intents=intents)
 
-# Initialiser le client IA ultra-rapide (Chai < 1s)
-ai_client = EnhancedChatbotAI()
-
 # Historique des conversations par canal
 conversation_history = defaultdict(list)
 MAX_HISTORY = 20  # Nombre de messages ? garder en m?moire par canal
