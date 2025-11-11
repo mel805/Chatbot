@@ -1,0 +1,73 @@
+🎯 BRANCHE OÙ J'AI FAIT TOUTES LES MODIFICATIONS
+=================================================
+
+BRANCHE : cursor/update-discord-bot-chat-api-3e13
+=========
+
+📝 DERNIER COMMIT :
+7e49d9a - docs: Add current state diagnostic guide
+
+📝 COMMIT AVEC LE BOT RESTAURÉ :
+7a48603 - restore: Bot with names in selector (Luna 25ans - Coquine, Sophie 23ans - Soumise, etc.)
+
+📝 FIX DU TOKEN :
+45b55c0 - fix: Check both DISCORD_BOT_TOKEN and DISCORD_TOKEN for compatibility
+
+✅ CE QUI EST SUR CETTE BRANCHE :
+
+Fichier : discord_bot_main.py
+
+Sélecteur avec prénoms (ligne 510-537) :
+- Luna 25ans - Coquine
+- Amélie 27ans - Romantique  
+- Victoria 30ans - Dominatrice
+- Sophie 23ans - Soumise
+- Isabelle 35ans - Fatale
+- Catherine 40ans - Cougar
+- Nathalie 45ans - Experte
+- Damien 28ans - Séducteur
+- Alexandre 32ans - Dominant
+- Julien 26ans - Tendre
+- Lucas 24ans - Soumis
+- Marc 35ans - Expérimenté
+- Philippe 40ans - Dominant exp
+- Richard 45ans - Libertin
+- Alex 26ans - Trans
+- Sam 25ans - Non-binaire
+- Lexa 35ans - Trans exp
+- Nova 40ans - Trans libertine
+- Ash 35ans - NB expérimenté
+- River 40ans - NB libertin
+- Jordan 28ans - Amical
+- Morgan 31ans - Intellectuel
+
+Total : 22 personnalités
+
+========================================
+
+⚠️ RENDER DOIT DÉPLOYER DEPUIS CETTE BRANCHE !
+
+Dans Render Dashboard :
+1. Settings
+2. Build & Deploy
+3. Branch : cursor/update-discord-bot-chat-api-3e13
+
+Si c'est une autre branche, le bot ne fonctionnera PAS !
+
+========================================
+
+✅ POUR TESTER :
+
+1. Vérifier que Render déploie bien depuis :
+   cursor/update-discord-bot-chat-api-3e13
+
+2. Attendre le redéploiement (2-3 min)
+
+3. Dans Discord : /start
+
+4. Vous devriez voir le sélecteur avec :
+   "Luna 25ans - Coquine"
+   "Sophie 23ans - Soumise"
+   etc.
+
+========================================
