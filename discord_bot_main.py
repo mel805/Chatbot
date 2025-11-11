@@ -601,10 +601,20 @@ async def main():
     asyncio.create_task(start_web_server())
     await asyncio.sleep(1)
     
+    # Debug: afficher les variables d'environnement
+    print("[DEBUG] Vérification des variables d'environnement...")
+    print(f"[DEBUG] Variables disponibles contenant 'TOKEN' ou 'DISCORD':")
+    for key in os.environ.keys():
+        if 'TOKEN' in key.upper() or 'DISCORD' in key.upper():
+            value = os.environ[key]
+            print(f"[DEBUG]   - {key}: {value[:20] if value else 'vide'}...")
+    
     TOKEN = os.getenv('DISCORD_BOT_TOKEN')
     
     if not TOKEN:
         print("[X] Token manquant !")
+        print("[DEBUG] Variables d'environnement vérifiées, DISCORD_BOT_TOKEN non trouvé")
+        print("[DEBUG] Vérifiez que la variable est bien définie dans Render avec le nom exact: DISCORD_BOT_TOKEN")
         return
     
     print("[OK] Demarrage bot avec boutons persistants...")
