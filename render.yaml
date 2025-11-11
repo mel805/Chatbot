@@ -1,3 +1,4 @@
+# Force deploy avec diagnostic visible - Updated 2025-11-11
 services:
   - type: web
     name: discord-bot-nsfw
