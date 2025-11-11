@@ -1,0 +1,83 @@
+🚨 ACTION IMMÉDIATE REQUISE 🚨
+================================
+
+Je viens de pousser des changements ULTRA VISIBLES vers GitHub.
+
+✅ CE QUI A ÉTÉ FAIT :
+1. ✅ Ajout de messages TRÈS VISIBLES avec émojis 🔍 🎯
+2. ✅ Ajout de barres "=" de 80 caractères
+3. ✅ Messages "TOKEN MANQUANT" ou "TOKEN TROUVÉ" en gros
+4. ✅ Modification de render.yaml pour forcer la détection
+5. ✅ Tout poussé vers origin/main
+
+📋 RENDER DEVRAIT MAINTENANT AFFICHER :
+
+```
+================================================================================
+🔍 DIAGNOSTIC COMPLET DES VARIABLES D'ENVIRONNEMENT 🔍
+================================================================================
+[DEBUG] ========================================
+[DEBUG] Vérification des variables d'environnement...
+[DEBUG] Nombre total de variables: XX
+[DEBUG] ========================================
+[DEBUG] Variables contenant 'TOKEN' ou 'DISCORD':
+  ... toutes vos variables ...
+[DEBUG] ========================================
+[DEBUG] Toutes les variables d'environnement disponibles:
+  ... liste complète ...
+[DEBUG] ========================================
+[DEBUG] Tentatives de récupération du token:
+  ... 3 méthodes testées ...
+================================================================================
+🎯 RÉSULTAT DU DIAGNOSTIC 🎯
+================================================================================
+
+❌ ❌ ❌ TOKEN MANQUANT ❌ ❌ ❌  (ou)  ✅ ✅ ✅ TOKEN TROUVÉ ✅ ✅ ✅
+```
+
+⚠️ SI VOUS NE VOYEZ TOUJOURS PAS CES MESSAGES :
+
+Render est configuré pour déployer depuis UNE AUTRE BRANCHE.
+
+🔍 VÉRIFICATION OBLIGATOIRE :
+
+1. Allez dans Render Dashboard
+2. Ouvrez votre service Discord Bot
+3. Cliquez sur "Settings"
+4. Scrollez jusqu'à "Build & Deploy"
+5. Cherchez la ligne "Branch:"
+
+QUELLE BRANCHE VOYEZ-VOUS ?
+□ main
+□ cursor/update-discord-bot-chat-api-3e13
+□ Autre : _________________
+
+🎯 SI C'EST "cursor/update-discord-bot-chat-api-3e13" :
+
+JE DOIS POUSSER VERS CETTE BRANCHE !
+Dites-le moi et je corrige en 10 secondes.
+
+🎯 SI C'EST "main" :
+
+Render ne détecte pas les changements automatiquement.
+Faites un "Manual Deploy" → "Clear build cache & deploy"
+
+⏱️ DÉLAI D'ATTENTE :
+
+Après le déploiement, attendez 3-5 minutes pour que tout soit prêt.
+Render doit :
+1. Cloner le repo
+2. Installer les dépendances
+3. Démarrer le bot
+4. Afficher les logs
+
+📸 ENVOYEZ-MOI :
+
+1. La branche configurée dans Settings
+2. Les NOUVEAUX logs après le redéploiement
+3. L'heure du dernier événement dans "Events"
+
+Si vous ne voyez TOUJOURS PAS les barres ========== et les émojis 🔍,
+c'est la preuve absolue que Render déploie depuis une autre source.
+
+🚀 MAINTENANT : Vérifiez la branche dans Settings et dites-moi laquelle !
