@@ -11,8 +11,8 @@ from collections import defaultdict
 import time
 import threading
 
-# Import API NSFW sans censure
-from mancer_api import MancerAPI
+# Import API NSFW sans censure (HuggingFace gratuit)
+from huggingface_nsfw_api import HuggingFaceNSFW
 from chatbot_manager import ChatbotProfile
 
 # Charger les variables d'environnement
@@ -276,27 +276,27 @@ PERSONALITIES = {
 user_last_response = {}
 RATE_LIMIT_SECONDS = 2
 
-class MancerAIClient:
-    """Client utilisant UNIQUEMENT Mancer.tech - API NSFW sans censure"""
+class HuggingFaceAIClient:
+    """Client utilisant HuggingFace Inference API - NSFW gratuit sans censure"""
     
     def __init__(self):
-        self.mancer = MancerAPI()
-        print("[INFO] API NSFW active: Mancer.tech (Mythomax, Nous-Hermes) - 100% non censurée")
+        self.hf = HuggingFaceNSFW()
+        print("[INFO] API NSFW gratuite: HuggingFace (Mythomax, Nous-Hermes) - 100% non censurée")
     
     async def generate_response(self, messages, personality="amical", max_tokens=500):
         """
-        Génère une réponse NSFW sans censure via Mancer.tech
+        Génère une réponse NSFW sans censure via HuggingFace
         Gère automatiquement SFW → NSFW selon le contexte
         """
         try:
-            print(f"[MANCER] Génération pour: {personality}", flush=True)
+            print(f"[HF] Génération pour: {personality}", flush=True)
             
             # Obtenir les infos de la personnalité
             personality_data = PERSONALITIES.get(personality, PERSONALITIES["amical"])
             personality_name = personality_data.get("name", "Assistant")
             personality_prompt = personality_data["prompt"]
             
-            # Créer un profil ChatbotProfile pour Mancer
+            # Créer un profil ChatbotProfile pour HuggingFace
             profile = ChatbotProfile(
                 name=personality_name,
                 personality=personality_prompt,
@@ -321,9 +321,9 @@ class MancerAIClient:
             if not last_user_msg:
                 last_user_msg = "Salut"
             
-            # Appeler Mancer API (essaie 4 modèles non censurés)
-            print(f"[MANCER] Message: {last_user_msg[:50]}...")
-            response = await self.mancer.get_response(
+            # Appeler HuggingFace API (essaie 4 modèles non censurés)
+            print(f"[HF] Message: {last_user_msg[:50]}...")
+            response = await self.hf.get_response(
                 user_message=last_user_msg,
                 user_id=0,  # ID unique par canal si besoin
                 chatbot_profile=profile,
@@ -332,11 +332,11 @@ class MancerAIClient:
             )
             
             if response and len(response.strip()) > 0:
-                print(f"[SUCCESS] Mancer: {response[:80]}...")
+                print(f"[SUCCESS] HuggingFace: {response[:80]}...")
                 return response
             
-            # Si Mancer échoue complètement
-            print(f"[ERROR] Mancer API a échoué")
+            # Si HuggingFace échoue complètement
+            print(f"[ERROR] HuggingFace API a échoué")
             return "Hmm, j'ai un petit souci technique. Réessaie ! 😊"
             
         except Exception as e:
@@ -345,16 +345,16 @@ class MancerAIClient:
             traceback.print_exc()
             return "Désolé, une erreur est survenue. 💫"
 
-ai_client = MancerAIClient()
+ai_client = HuggingFaceAIClient()
 
 @bot.event
 async def on_ready():
     print("="*60, flush=True)
-    print(f"🔥 BOT READY - MANCER API (100% NSFW SANS CENSURE)", flush=True)
+    print(f"🔥 BOT READY - HUGGINGFACE API (100% GRATUIT & NSFW)", flush=True)
     print(f"Bot user: {bot.user}", flush=True)
     print(f"Guilds: {len(bot.guilds)}", flush=True)
-    print(f"AI Backend: Mancer.tech (Mythomax-L2-13B + 3 autres modèles NSFW)", flush=True)
-    print(f"Gestion: SFW → NSFW automatique selon contexte", flush=True)
+    print(f"AI Backend: HuggingFace Inference (Mythomax + Nous-Hermes + 2 autres)", flush=True)
+    print(f"Gestion: SFW → NSFW automatique, 100% gratuit, sans clé", flush=True)
     print(f"Personalities: {len(PERSONALITIES)}", flush=True)
     print("="*60, flush=True)
     
