@@ -649,8 +649,12 @@ async def main():
             print(f"[DEBUG] 3. os.environ['DISCORD_BOT_TOKEN']: ✗ NON TROUVÉ (KeyError)")
     
     print("[DEBUG] ========================================")
+    print("="*80)
+    print("🎯 RÉSULTAT DU DIAGNOSTIC 🎯")
+    print("="*80)
     
     if not TOKEN:
+        print("\n❌ ❌ ❌ TOKEN MANQUANT ❌ ❌ ❌")
         print("[X] Token manquant !")
         print("[ERREUR] DISCORD_BOT_TOKEN n'est pas défini dans l'environnement")
         print("[SOLUTION] Dans Render Dashboard:")
@@ -658,9 +662,12 @@ async def main():
         print("  2. Key: DISCORD_BOT_TOKEN")
         print("  3. Value: [votre token Discord]")
         print("  4. Save Changes → Redéployer")
+        print("="*80 + "\n")
         return
     
+    print(f"\n✅ ✅ ✅ TOKEN TROUVÉ ✅ ✅ ✅")
     print(f"[OK] Token Discord trouvé ({len(TOKEN)} caractères)")
+    print("="*80 + "\n")
     
     print("[OK] Demarrage bot avec boutons persistants...")
     await bot.start(TOKEN)
