@@ -14,13 +14,8 @@ class EnhancedChatbotAI:
     
     def __init__(self, provider: str = "free_nsfw"):
         self.provider = provider
-        self.api_key = self._get_api_key()
-        self.api_url = self._get_api_url()
-        # Historiques separes par utilisateur ET par chatbot
-        self.conversation_history: Dict[str, List[Dict]] = {}
-        # Compteur pour rotation des APIs gratuites
-        self.api_rotation_index = 0
-        # Liste des APIs gratuites sans censure NSFW
+        
+        # Liste des APIs gratuites sans censure NSFW (DOIT être défini AVANT _get_api_url)
         self.free_nsfw_apis = [
             {
                 "name": "HuggingFace-Mistral-Uncensored",
@@ -43,6 +38,14 @@ class EnhancedChatbotAI:
                 "type": "hf"
             }
         ]
+        
+        # Initialisation des autres attributs (après free_nsfw_apis)
+        self.api_key = self._get_api_key()
+        self.api_url = self._get_api_url()
+        # Historiques separes par utilisateur ET par chatbot
+        self.conversation_history: Dict[str, List[Dict]] = {}
+        # Compteur pour rotation des APIs gratuites
+        self.api_rotation_index = 0
         
     def _get_api_key(self) -> Optional[str]:
         """Recupere la cle API selon le fournisseur"""
