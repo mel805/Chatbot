@@ -603,6 +603,9 @@ async def main():
     await asyncio.sleep(1)
     
     # Debug: afficher TOUTES les variables d'environnement
+    print("\n" + "="*80)
+    print("🔍 DIAGNOSTIC COMPLET DES VARIABLES D'ENVIRONNEMENT 🔍")
+    print("="*80)
     print("[DEBUG] ========================================")
     print("[DEBUG] Vérification des variables d'environnement...")
     print(f"[DEBUG] Nombre total de variables: {len(os.environ)}")
