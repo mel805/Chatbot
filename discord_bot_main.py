@@ -18,6 +18,7 @@ from chatbot_manager import ChatbotManager, ChatbotProfile
 from enhanced_chatbot_ai import EnhancedChatbotAI
 from thread_manager import ThreadManager
 from public_chatbots import PUBLIC_CHATBOTS, CATEGORIES
+from image_generator import ImageGeneratorNSFW
 
 # Charger .env SEULEMENT s'il existe (local), sinon utiliser les vars d'environnement Render
 load_dotenv(override=False)  # Ne pas override les variables système existantes
@@ -26,6 +27,7 @@ load_dotenv(override=False)  # Ne pas override les variables système existantes
 chatbot_manager = ChatbotManager()
 chatbot_ai = EnhancedChatbotAI()
 thread_manager = ThreadManager()
+image_generator = ImageGeneratorNSFW()
 
 # Configuration du bot
 intents = discord.Intents.default()
@@ -83,6 +85,68 @@ class MainMenuView(discord.ui.View):
                 )
             except:
                 print("[ERREUR] Impossible d'envoyer message d'erreur")
+    
+    @discord.ui.button(label="Générer Image", style=discord.ButtonStyle.red, emoji="🎨", custom_id="main_image")
+    async def image_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Générer une image NSFW"""
+        await interaction.response.defer(ephemeral=False, thinking=True)
+        
+        try:
+            # Vérifier canal NSFW
+            if not check_nsfw_channel(interaction):
+                await interaction.followup.send(
+                    "⚠️ Utilisez un canal NSFW pour générer des images !",
+                    ephemeral=True
+                )
+                return
+            
+            # Récupérer le chatbot actif pour contextualiser l'image
+            user_id = interaction.user.id
+            active_chatbot_id = chatbot_manager.get_active_chatbot_id(user_id)
+            
+            if not active_chatbot_id:
+                await interaction.followup.send(
+                    "ℹ️ Aucun personnage sélectionné. Génération d'une image générique...",
+                    ephemeral=True
+                )
+                character_desc = ""
+                prompt = "a beautiful woman, photorealistic, 8k"
+            else:
+                profile = chatbot_manager.get_chatbot(user_id, active_chatbot_id)
+                character_desc = profile.description if profile else ""
+                prompt = f"{profile.name}, {character_desc[:100]}, detailed, high quality"
+            
+            # Générer l'image
+            await interaction.followup.send(f"🎨 Génération en cours de : **{prompt[:100]}**...")
+            
+            image_url = await image_generator.generate(
+                prompt=prompt,
+                character_desc=character_desc
+            )
+            
+            if image_url:
+                embed = discord.Embed(
+                    title="🎨 Image générée !",
+                    description=f"Prompt: {prompt[:200]}",
+                    color=discord.Color.purple()
+                )
+                embed.set_image(url=image_url)
+                embed.set_footer(text=f"Généré pour {interaction.user.name}")
+                
+                await interaction.channel.send(embed=embed)
+            else:
+                await interaction.followup.send(
+                    "❌ Échec de génération. Réessayez !",
+                    ephemeral=True
+                )
+        
+        except Exception as e:
+            print(f"[ERREUR] image_btn: {e}")
+            traceback.print_exc()
+            await interaction.followup.send(
+                f"❌ Erreur: {str(e)}",
+                ephemeral=True
+            )
     
     @discord.ui.button(label="Discuter", style=discord.ButtonStyle.green, custom_id="main_chat")
     async def chat_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -550,6 +614,67 @@ async def stop_cmd(interaction: discord.Interaction):
     thread_manager.close_thread(thread_info["thread_id"])
     
     await interaction.response.send_message("[OK] Conversation terminee !", ephemeral=True)
+
+
+@bot.tree.command(name="generate_image", description="Générer une image NSFW personnalisée")
+async def generate_image_command(
+    interaction: discord.Interaction,
+    prompt: str
+):
+    """Commande pour générer une image avec prompt personnalisé"""
+    
+    # Vérifier canal NSFW
+    if not check_nsfw_channel(interaction):
+        await interaction.response.send_message(
+            "⚠️ Utilisez un canal NSFW pour générer des images !",
+            ephemeral=True
+        )
+        return
+    
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        # Récupérer le chatbot actif pour contextualiser
+        user_id = interaction.user.id
+        active_chatbot_id = chatbot_manager.get_active_chatbot_id(user_id)
+        
+        character_desc = ""
+        if active_chatbot_id:
+            profile = chatbot_manager.get_chatbot(user_id, active_chatbot_id)
+            if profile:
+                character_desc = profile.description
+        
+        # Générer l'image
+        await interaction.followup.send(f"🎨 Génération en cours : **{prompt[:100]}**...")
+        
+        image_url = await image_generator.generate(
+            prompt=prompt,
+            character_desc=character_desc
+        )
+        
+        if image_url:
+            embed = discord.Embed(
+                title="🎨 Image générée !",
+                description=f"**Prompt:** {prompt}",
+                color=discord.Color.purple()
+            )
+            embed.set_image(url=image_url)
+            embed.set_footer(text=f"Généré pour {interaction.user.name}")
+            
+            await interaction.channel.send(embed=embed)
+        else:
+            await interaction.followup.send(
+                "❌ Échec de génération. Réessayez avec un autre prompt !",
+                ephemeral=True
+            )
+    
+    except Exception as e:
+        print(f"[ERREUR] generate_image_command: {e}")
+        traceback.print_exc()
+        await interaction.followup.send(
+            f"❌ Erreur: {str(e)}",
+            ephemeral=True
+        )
 
 
 # ========== HTTP SERVER ==========
