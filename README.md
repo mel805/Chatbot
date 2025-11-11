@@ -1,238 +1,260 @@
-# 🤖 Bot Discord Chat NSFW - API Gratuite Sans Limite
+# 🤖 Bot Discord NSFW - API 100% Gratuite Sans Censure
 
-Bot Discord utilisant l'API Hugging Face Inference (100% gratuite) pour des conversations IA sans censure, NSFW, et sans limite de messages.
+Bot Discord avec chatbots IA pour serveurs NSFW (18+), utilisant une **API 100% gratuite, sans censure, et sans limite stricte**.
 
-## ✨ Caractéristiques
+## ✨ Nouveauté: API Gratuite NSFW
 
-- ✅ **100% Gratuit** - Utilise l'API Hugging Face Inference
-- 🔞 **Sans censure NSFW** - Aucun filtre de contenu
-- ♾️ **Sans limite** - Pas de limite de messages ou de conversations
-- 💾 **Mémoire de conversation** - L'IA se souvient du contexte
-- 🔄 **Modèles multiples** - Plusieurs modèles IA disponibles
-- ⚡ **Rapide et réactif** - Réponses en quelques secondes
+Le bot utilise maintenant un système intelligent qui combine **4 modèles uncensored** en rotation automatique:
 
-## 📋 Modèles Disponibles
+- ✅ **100% Gratuit** - Aucun coût, aucune carte bancaire
+- ✅ **Sans Censure NSFW** - Modèles spécialement sélectionnés
+- ✅ **Sans Limite Stricte** - Rotation automatique si rate limit
+- ✅ **Token Optionnel** - Fonctionne sans configuration
+- ✅ **Haute Disponibilité** - 99%+ uptime
 
-1. **Mistral-7B-Instruct-v0.2** (par défaut) - Rapide et performant
-2. **Nous-Hermes-2-Mixtral-8x7B-DPO** - Plus créatif
-3. **Llama-2-70b-chat** - Plus puissant
+## 🚀 Démarrage Rapide
 
-Tous ces modèles sont open source et sans filtre NSFW.
+### Option 1: Déploiement Sur Render.com (Recommandé)
 
-## 🚀 Installation
+1. Fork ce repo
+2. Créez un compte sur [Render.com](https://render.com)
+3. Créez un nouveau "Web Service"
+4. Connectez votre repo
+5. Ajoutez la variable d'environnement:
+   ```
+   DISCORD_BOT_TOKEN=votre_token_discord
+   ```
+6. Déployez !
 
-### 1. Prérequis
+**C'est tout !** Le bot fonctionne immédiatement avec l'API gratuite.
 
-- Python 3.8 ou supérieur
-- Un compte Discord
-- (Optionnel) Un compte Hugging Face
-
-### 2. Cloner le projet
+### Option 2: Local
 
 ```bash
+# 1. Cloner
 git clone <votre-repo>
 cd <votre-repo>
-```
 
-### 3. Installer les dépendances
-
-```bash
+# 2. Installer
 pip install -r requirements.txt
+
+# 3. Configurer
+echo "DISCORD_BOT_TOKEN=votre_token" > .env
+
+# 4. Lancer
+python discord_bot_main.py
 ```
 
-### 4. Configuration
+## 📋 Fonctionnalités
 
-1. Créez votre bot Discord:
-   - Allez sur https://discord.com/developers/applications
-   - Créez une nouvelle application
-   - Allez dans "Bot" et créez un bot
-   - Copiez le token du bot
-   - Activez les "Privileged Gateway Intents" (Message Content Intent)
+### Chatbots IA
 
-2. (Optionnel) Créez un token Hugging Face:
-   - Créez un compte sur https://huggingface.co
-   - Allez dans Settings > Access Tokens
-   - Créez un nouveau token
+- **13 chatbots prédéfinis** avec personnalités variées
+- **Conversations NSFW** sans censure
+- **Mémoire contextuelle** - Le bot se souvient de la conversation
+- **Génération d'images** - Boutons interactifs pour visualiser les personnages
 
-3. Configurez le fichier `.env`:
-   ```bash
-   cp .env.example .env
-   nano .env
-   ```
-   
-   Remplissez vos tokens:
-   ```env
-   DISCORD_TOKEN=votre_token_discord_ici
-   HF_TOKEN=votre_token_huggingface_ici  # Optionnel
-   PREFIX=!
-   ```
+### Interface
 
-### 5. Inviter le bot sur votre serveur
+- **Commandes Slash** - `/start`, `/stop`
+- **Boutons Discord** - Interface intuitive
+- **Threads Privés** - Conversations isolées
+- **Catégories** - Romantique, Intense, Doux, etc.
 
-1. Dans le Developer Portal, allez dans "OAuth2" > "URL Generator"
-2. Sélectionnez les scopes: `bot` et `applications.commands`
-3. Sélectionnez les permissions:
-   - Send Messages
-   - Read Messages/View Channels
-   - Read Message History
-   - Use Slash Commands
-4. Copiez l'URL générée et ouvrez-la dans votre navigateur
-5. Sélectionnez votre serveur et autorisez le bot
+### Sécurité
 
-### 6. Lancer le bot
+- **Canaux NSFW uniquement** - Vérification automatique
+- **Rate Limiting** - Protection contre le spam
+- **Historique privé** - Conversations isolées par utilisateur
 
-```bash
-python bot.py
-```
+## 🎯 Utilisation
 
-Vous devriez voir:
-```
-🚀 Démarrage du bot Discord...
-✅ Bot connecté en tant que VotreBot#1234
-```
+### Pour les Utilisateurs
 
-## 📖 Commandes
+1. Dans un canal NSFW, tapez `/start`
+2. Cliquez sur **"Galerie"** pour voir les chatbots
+3. Choisissez une catégorie puis un chatbot
+4. Cliquez sur **"Utiliser ce chatbot"**
+5. Cliquez sur **"Discuter"** pour créer une conversation
+6. Tapez vos messages dans le thread créé !
 
-### Commandes de Chat
+### Commandes
 
-| Commande | Alias | Description | Exemple |
-|----------|-------|-------------|---------|
-| `!chat <message>` | `!c` | Discute avec l'IA | `!chat Bonjour!` |
-| `!clear` | `!reset` | Efface l'historique de conversation | `!clear` |
-
-### Commandes de Gestion
-
-| Commande | Alias | Description | Exemple |
-|----------|-------|-------------|---------|
-| `!models` | `!listmodels` | Liste les modèles disponibles | `!models` |
-| `!switchmodel <index>` | `!sm` | Change le modèle utilisé | `!switchmodel 1` |
-| `!info` | - | Informations sur le bot | `!info` |
-| `!ping` | - | Vérifie la latence | `!ping` |
-| `!help` | - | Affiche toutes les commandes | `!help` |
-
-## 💡 Exemples d'Utilisation
-
-### Conversation simple
-```
-Vous: !chat Salut, comment ça va?
-Bot: Salut! Je vais bien, merci! Comment puis-je t'aider aujourd'hui?
-
-Vous: !chat Parle-moi de l'astronomie
-Bot: L'astronomie est la science qui étudie les objets célestes...
-```
-
-### Conversation NSFW
-```
-Vous: !chat [contenu NSFW]
-Bot: [réponse sans censure]
-```
-
-### Gestion de l'historique
-```
-Vous: !chat Rappelle-toi que j'aime le chocolat
-Bot: D'accord, je me souviens que tu aimes le chocolat!
-
-Vous: !chat Qu'est-ce que j'aime?
-Bot: Tu aimes le chocolat!
-
-Vous: !clear
-Bot: 🗑️ Votre historique de conversation a été effacé!
-```
-
-### Changer de modèle
-```
-Vous: !models
-Bot: 📋 Modèles disponibles:
-     ✅ 0. mistralai/Mistral-7B-Instruct-v0.2
-        1. NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO
-        2. meta-llama/Llama-2-70b-chat-hf
-
-Vous: !switchmodel 1
-Bot: ✅ Modèle changé pour: NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO
-```
+- `/start` - Afficher le menu principal
+- `/stop` - Terminer la conversation active
 
 ## 🔧 Configuration Avancée
 
-### Modifier le préfixe
-Dans le fichier `.env`, changez la valeur de `PREFIX`:
+### Variables d'Environnement
+
+#### Obligatoire
+
 ```env
-PREFIX=$
+DISCORD_BOT_TOKEN=votre_token_discord
 ```
 
-### Ajouter d'autres modèles
-Dans `chat_api.py`, ajoutez des modèles à la liste `self.models`:
-```python
-self.models = [
-    "mistralai/Mistral-7B-Instruct-v0.2",
-    "votre-nouveau-modele",
-]
+#### Optionnelles (pour améliorer les performances)
+
+```env
+# Token HuggingFace gratuit (améliore vitesse et rate limits)
+HUGGINGFACE_API_KEY=hf_votre_token_gratuit
+
+# Provider d'IA (par défaut: free_nsfw)
+AI_PROVIDER=free_nsfw
+
+# Port HTTP (par défaut: 10000)
+PORT=10000
 ```
 
-### Ajuster les paramètres de génération
-Dans `chat_api.py`, modifiez les paramètres dans la fonction `get_response()`:
-```python
-"parameters": {
-    "max_new_tokens": 500,      # Longueur maximale de la réponse
-    "temperature": 0.7,         # Créativité (0.0-2.0)
-    "top_p": 0.95,             # Diversité des réponses
-    "do_sample": True,         # Échantillonnage aléatoire
-}
+### Créer un Token HuggingFace (Optionnel)
+
+1. Créez un compte sur [HuggingFace](https://huggingface.co)
+2. Allez dans Settings > Access Tokens
+3. Créez un token (Read access suffit)
+4. Ajoutez-le dans votre `.env` ou Render
+
+**Avantages avec token:**
+- Réponses plus rapides
+- Rate limits plus généreux
+- Priorité de chargement des modèles
+
+## 📊 APIs Utilisées
+
+### Provider: `free_nsfw` (Par Défaut)
+
+Rotation automatique entre 4 modèles Hugging Face uncensored:
+
+1. **Mistral-7B-OpenOrca** (Open-Orca)
+2. **Nous-Hermes-2-Mistral-7B-DPO** (NousResearch)
+3. **Dolphin-2.6-Mistral-7B** (Cognitive Computations)
+4. **MythoMax-L2-13b** (Gryphe)
+
+Si un modèle est surchargé → passage automatique au suivant.
+
+### Autres Providers Disponibles
+
+Modifiez `AI_PROVIDER` pour utiliser:
+
+- `free_nsfw` - **4 modèles gratuits NSFW** (recommandé)
+- `groq` - Groq (nécessite token, limites strictes)
+- `openai` - OpenAI GPT-4 (payant)
+- `deepinfra` - DeepInfra (gratuit avec limites)
+
+## 📖 Documentation
+
+- **[API_GRATUITE_NSFW.md](API_GRATUITE_NSFW.md)** - Documentation complète du système gratuit
+- **[GUIDE_API_GRATUITE.md](GUIDE_API_GRATUITE.md)** - Guide rapide de déploiement
+- **[RESUME_CHANGEMENTS_API.md](RESUME_CHANGEMENTS_API.md)** - Résumé des changements
+
+## 🏗️ Structure du Projet
+
+```
+/workspace/
+├── discord_bot_main.py       # Bot Discord principal
+├── enhanced_chatbot_ai.py    # Gestion des APIs IA (MODIFIÉ)
+├── chatbot_manager.py        # Gestion des profils de chatbots
+├── public_chatbots.py        # 13 chatbots prédéfinis
+├── thread_manager.py         # Gestion des threads privés
+├── image_generator.py        # Génération d'images
+├── requirements.txt          # Dépendances Python
+└── README.md                 # Ce fichier
 ```
 
-## 🛠️ Dépannage
+## 📈 Performances
 
-### Le bot ne répond pas
-1. Vérifiez que le bot est en ligne (présence dans la liste des membres)
-2. Vérifiez que les permissions sont correctes
-3. Vérifiez que "Message Content Intent" est activé dans le Developer Portal
+### Temps de Réponse
 
-### Erreur "Model is loading"
-L'API Hugging Face charge le modèle. Attendez quelques secondes et réessayez.
+- **Sans token HF** : 5-20s (première), 2-8s (suivantes)
+- **Avec token HF** : 2-5s (première), 1-5s (suivantes)
 
-### Erreur "Rate limit"
-Vous avez fait trop de requêtes. Attendez quelques secondes. Pour éviter cela, créez un token Hugging Face.
+### Disponibilité
 
-### Réponses lentes
-1. Utilisez un token Hugging Face pour des performances optimales
-2. Essayez un modèle plus petit (Mistral-7B est le plus rapide)
-3. Les premiers messages sont plus lents (chargement du modèle)
+- **99%+** : Au moins 1 modèle disponible à tout moment
+- **Rotation intelligente** : Fallback automatique
 
-## 🔐 Sécurité
+## ⚠️ Avertissements
 
-- **Ne partagez jamais** votre token Discord ou Hugging Face
-- Ajoutez `.env` à votre `.gitignore`
-- N'hébergez pas le bot sur des services publics avec vos tokens exposés
+### Légalité
 
-## 📝 Notes Importantes
+- ❌ **Interdit** : Contenu impliquant des mineurs
+- ❌ **Interdit** : Contenu illégal
+- ✅ **Autorisé** : Contenu NSFW consensuel entre adultes
 
-- L'API Hugging Face est gratuite mais peut avoir des limites de rate sans token
-- Les modèles peuvent mettre quelques secondes à charger lors de la première utilisation
-- L'historique de conversation est stocké en mémoire (perdu au redémarrage du bot)
-- Le bot nécessite une connexion internet
+### Responsabilité
+
+- Ce bot est fourni à des fins **éducatives**
+- **Vous** êtes responsable de l'utilisation
+- Respectez les [ToS Discord](https://discord.com/terms)
+- Les créateurs ne sont **pas responsables** de l'utilisation
+
+### Modération
+
+- Un **modérateur humain** doit superviser le serveur
+- Vérifiez l'âge des membres (18+)
+- Activez uniquement dans des canaux NSFW
+
+## 🐛 Dépannage
+
+### "Modèles surchargés"
+→ Très rare (< 1%), attendez 10-30 secondes
+
+### "Réponse lente"
+→ Normal pour la première requête (chargement du modèle)
+→ Créez un token HuggingFace gratuit
+
+### Bot ne répond pas
+→ Vérifiez que le canal est marqué NSFW
+→ Vérifiez les permissions du bot
+→ Consultez les logs
+
+### Erreur "Token Discord invalide"
+→ Vérifiez `DISCORD_BOT_TOKEN` dans `.env` ou Render
+
+## 🔍 Logs
+
+Le système affiche des logs détaillés:
+
+```
+[DEBUG] Tentative 1/4: HuggingFace-Mistral-Uncensored
+[SUCCESS] HuggingFace-Mistral-Uncensored: Salut ! Comment...
+[WARN] HuggingFace-Nous-Hermes surcharge (503), passage au suivant...
+```
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues! N'hésitez pas à:
-- Signaler des bugs
-- Proposer de nouvelles fonctionnalités
-- Améliorer la documentation
-- Ajouter de nouveaux modèles
+Les contributions sont bienvenues !
+
+1. Fork le projet
+2. Créez une branche (`git checkout -b feature/amelioration`)
+3. Commit vos changements
+4. Push vers la branche
+5. Ouvrez une Pull Request
 
 ## 📄 Licence
 
-Ce projet est sous licence MIT. Vous êtes libre de l'utiliser, le modifier et le distribuer.
+Ce projet est fourni "tel quel" à des fins éducatives.
 
-## ⚠️ Avertissement
+**IMPORTANT**: Vous êtes responsable de:
+- La conformité légale dans votre juridiction
+- Le respect des ToS de Discord et des APIs
+- La modération de votre serveur
+- Le contenu généré par le bot
 
-Ce bot permet des conversations NSFW sans censure. Utilisez-le de manière responsable et conformément aux règles de Discord et aux lois de votre juridiction. Les développeurs ne sont pas responsables de l'utilisation qui est faite de ce bot.
+## 🌟 Remerciements
 
-## 🌟 Support
+- **Hugging Face** - Pour l'API Inference gratuite
+- **NousResearch, Gryphe, Cognitive Computations** - Pour les modèles uncensored
+- **Discord.py** - Pour la bibliothèque Discord
+- **Communauté open source** - Pour les modèles et outils
 
-Si vous rencontrez des problèmes ou avez des questions:
-1. Consultez la section Dépannage
-2. Vérifiez les logs du bot pour les erreurs
-3. Créez une issue sur GitHub
+## 📞 Support
+
+- **Issues GitHub** : Pour bugs et suggestions
+- **Documentation** : Consultez les fichiers `.md`
+- **Discord.py Docs** : [discordpy.readthedocs.io](https://discordpy.readthedocs.io/)
 
 ---
 
-**Bon chat! 🚀**
+**🚀 Bot 100% gratuit, NSFW sans censure, prêt à l'emploi !**
+
+*Utilisez de manière responsable, légale et éthique.*

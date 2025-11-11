@@ -1,0 +1,618 @@
+"""
+Bot Discord NSFW avec Boutons Persistants Fonctionnels
+Version 3.4 - Boutons corriges et testes
+"""
+
+import discord
+from discord import app_commands
+from discord.ext import commands
+import os
+import asyncio
+from aiohttp import web
+from dotenv import load_dotenv
+import copy
+import traceback
+
+# Importer les modules existants
+from chatbot_manager import ChatbotManager, ChatbotProfile
+from enhanced_chatbot_ai import EnhancedChatbotAI
+from thread_manager import ThreadManager
+from public_chatbots import PUBLIC_CHATBOTS, CATEGORIES
+
+load_dotenv()
+
+# Initialiser les gestionnaires
+chatbot_manager = ChatbotManager()
+chatbot_ai = EnhancedChatbotAI()
+thread_manager = ThreadManager()
+
+# Configuration du bot
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+intents.messages = True
+
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+
+# ========== HELPER FUNCTIONS ==========
+
+def check_nsfw_channel(interaction: discord.Interaction) -> bool:
+    """Verifie si le canal est NSFW"""
+    if isinstance(interaction.channel, discord.DMChannel):
+        return False
+    return interaction.channel.is_nsfw()
+
+
+# ========== VUES PERSISTANTES ==========
+
+class MainMenuView(discord.ui.View):
+    """Menu principal - Vue temporaire (pas persistante)"""
+    
+    def __init__(self):
+        super().__init__(timeout=300)  # 5 minutes au lieu de None
+    
+    @discord.ui.button(label="Galerie", style=discord.ButtonStyle.primary, custom_id="main_gallery")
+    async def gallery_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Afficher la galerie complete"""
+        try:
+            print(f"[DEBUG] Bouton Galerie clique par {interaction.user}")
+            
+            embed = discord.Embed(
+                title="Galerie des Chatbots",
+                description="Choisissez une categorie :",
+                color=discord.Color.blue()
+            )
+            
+            print("[DEBUG] Creation CategoryMenuView...")
+            view = CategoryMenuView()
+            print("[DEBUG] Envoi du message...")
+            
+            # EDITER le message original au lieu d'envoyer un nouveau
+            await interaction.response.edit_message(embed=embed, view=view)
+            print("[DEBUG] Message edite avec succes!")
+            
+        except Exception as e:
+            print(f"[ERREUR] gallery_btn: {e}")
+            traceback.print_exc()
+            try:
+                await interaction.response.send_message(
+                    f"[X] Erreur: {str(e)}\nReessayez avec /start",
+                    ephemeral=True
+                )
+            except:
+                print("[ERREUR] Impossible d'envoyer message d'erreur")
+    
+    @discord.ui.button(label="Discuter", style=discord.ButtonStyle.green, custom_id="main_chat")
+    async def chat_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Creer conversation"""
+        # DEFER IMMEDIATEMENT (Discord timeout = 3 secondes !)
+        await interaction.response.defer(ephemeral=True)
+        
+        try:
+            print(f"[DEBUG] === DEBUT CREATION THREAD ===")
+            user_id = interaction.user.id
+            print(f"[DEBUG] User ID: {user_id}")
+            
+            # Utiliser get_active_chatbot_id() pour avoir l'ID (string)
+            active_chatbot_id = chatbot_manager.get_active_chatbot_id(user_id)
+            print(f"[DEBUG] Active chatbot ID: {active_chatbot_id}")
+            
+            if not active_chatbot_id:
+                await interaction.followup.send(
+                    "[X] Choisissez d'abord un chatbot avec Galerie !",
+                    ephemeral=True
+                )
+                return
+            
+            # Verifier thread existant
+            existing_thread = thread_manager.get_user_thread(user_id)
+            if existing_thread:
+                thread = interaction.guild.get_thread(existing_thread["thread_id"])
+                if thread:
+                    await interaction.followup.send(
+                        f"[OK] Conversation deja active : {thread.mention}",
+                        ephemeral=True
+                    )
+                    return
+            
+            # Recuperer le profil
+            print(f"[DEBUG] Recuperation profil avec ID: {active_chatbot_id}")
+            profile = chatbot_manager.get_chatbot(user_id, active_chatbot_id)
+            print(f"[DEBUG] Profile recupere: {profile}")
+            
+            if profile:
+                print(f"[DEBUG] Profile name: {profile.name}")
+            else:
+                print(f"[DEBUG] Profile est None!")
+            
+            if not profile:
+                print(f"[ERREUR] Profil non trouve pour user_id={user_id}, chatbot_id={active_chatbot_id}")
+                await interaction.followup.send(
+                    f"[X] Erreur: Chatbot non trouve (ID: {active_chatbot_id})\nReessayez avec Galerie !",
+                    ephemeral=True
+                )
+                return
+            
+            thread = await interaction.channel.create_thread(
+                name=f"?? {profile.name}",
+                type=discord.ChannelType.private_thread,
+                auto_archive_duration=1440
+            )
+            
+            await thread.add_user(interaction.user)
+            
+            # create_thread attend 4 parametres : user_id, thread_id, chatbot_name, chatbot_id
+            print(f"[DEBUG] Creation entree thread manager...")
+            thread_manager.create_thread(user_id, thread.id, profile.name, active_chatbot_id)
+            print(f"[DEBUG] Thread manager OK - chatbot_id: {active_chatbot_id}")
+            
+            # Debut direct de la conversation
+            first_message = await chatbot_ai.get_response(
+                "Salut", user_id, profile, active_chatbot_id, interaction.user.display_name
+            )
+            await thread.send(first_message)
+            
+            await interaction.followup.send(
+                f"[OK] Conversation creee ! -> {thread.mention}\nTapez directement !",
+                ephemeral=True
+            )
+            print(f"[DEBUG] === THREAD CREE AVEC SUCCES ===")
+            
+        except Exception as e:
+            print(f"[ERREUR] chat_btn: {e}")
+            traceback.print_exc()
+            try:
+                await interaction.followup.send(f"[X] Erreur: {str(e)[:100]}", ephemeral=True)
+            except:
+                pass
+    
+    @discord.ui.button(label="Aide", style=discord.ButtonStyle.gray, custom_id="main_help")
+    async def help_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Afficher l'aide"""
+        embed = discord.Embed(
+            title="Comment Utiliser",
+            description="**Interface a boutons simple !**",
+            color=discord.Color.blue()
+        )
+        
+        embed.add_field(
+            name="1. Galerie",
+            value="Cliquez **Galerie** pour voir les chatbots",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="2. Choisir",
+            value="Selectionnez categorie puis chatbot",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="3. Discuter",
+            value="Cliquez **Discuter** pour creer thread",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="4. Taper",
+            value="Dans le thread, tapez directement !",
+            inline=False
+        )
+        
+        # EDITER le message original
+        await interaction.response.edit_message(embed=embed, view=self)
+
+
+class CategoryMenuView(discord.ui.View):
+    """Menu de selection de categorie"""
+    
+    def __init__(self):
+        super().__init__(timeout=600)
+        
+        print("[DEBUG] Init CategoryMenuView")
+        
+        # Menu deroulant SANS emojis (probleme d'encodage)
+        options = [
+            discord.SelectOption(label="Romantique", value="romantique", description="Emma, Lucas, Alex"),
+            discord.SelectOption(label="Intense", value="intense", description="Sophia, Damien, Isabelle"),
+            discord.SelectOption(label="Doux", value="doux", description="Lily, Maya, Lucas"),
+            discord.SelectOption(label="Dominant", value="dominant", description="Damien, Sophia"),
+            discord.SelectOption(label="Soumis", value="soumis", description="Lily, Yuki"),
+            discord.SelectOption(label="Fantaisie", value="fantaisie", description="Luna, Aria, Eden"),
+            discord.SelectOption(label="Masculin", value="masculin", description="Alex, Damien, Lucas, Sam"),
+            discord.SelectOption(label="Feminin", value="feminin", description="Emma, Sophia, Lily..."),
+            discord.SelectOption(label="Non-binaire", value="non_binaire", description="Eden, Sam"),
+        ]
+        
+        select = discord.ui.Select(
+            placeholder="Choisissez une categorie...",
+            options=options,
+            custom_id="category_select_menu"
+        )
+        select.callback = self.category_callback
+        self.add_item(select)
+        
+        print(f"[DEBUG] Select ajoute avec {len(options)} options")
+    
+    async def category_callback(self, interaction: discord.Interaction):
+        """Callback pour la selection de categorie"""
+        try:
+            print(f"[DEBUG] category_callback appele")
+            category = interaction.data["values"][0]
+            print(f"[DEBUG] Categorie choisie: {category}")
+            
+            chatbot_ids = CATEGORIES.get(category, [])
+            print(f"[DEBUG] {len(chatbot_ids)} chatbots trouves")
+            
+            if not chatbot_ids:
+                await interaction.response.send_message("[X] Aucun chatbot ici", ephemeral=True)
+                return
+            
+            embed = discord.Embed(
+                title=f"Chatbots - {category.capitalize()}",
+                description="Cliquez sur un chatbot :",
+                color=discord.Color.purple()
+            )
+            
+            view = ChatbotButtonsView(chatbot_ids, category)
+            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+            print("[DEBUG] Message avec boutons chatbots envoye")
+            
+        except Exception as e:
+            print(f"[ERREUR] category_callback: {e}")
+            traceback.print_exc()
+            try:
+                await interaction.response.send_message(f"[X] Erreur: {str(e)}", ephemeral=True)
+            except:
+                pass
+
+
+class ChatbotButtonsView(discord.ui.View):
+    """Boutons pour chaque chatbot"""
+    
+    def __init__(self, chatbot_ids: list, category: str):
+        super().__init__(timeout=600)
+        
+        print(f"[DEBUG] Init ChatbotButtonsView avec {len(chatbot_ids)} chatbots")
+        
+        # Limiter a 10 chatbots max
+        for idx, chatbot_id in enumerate(chatbot_ids[:10]):
+            profile = PUBLIC_CHATBOTS[chatbot_id]
+            button = discord.ui.Button(
+                label=profile.name,
+                style=discord.ButtonStyle.secondary,
+                custom_id=f"bot_{chatbot_id}_{idx}",
+                row=idx // 5
+            )
+            button.callback = self.make_chatbot_callback(chatbot_id, profile)
+            self.add_item(button)
+            print(f"[DEBUG] Bouton ajoute: {profile.name}")
+    
+    def make_chatbot_callback(self, chatbot_id: str, profile: ChatbotProfile):
+        """Creer callback pour un chatbot"""
+        async def callback(interaction: discord.Interaction):
+            try:
+                print(f"[DEBUG] Chatbot selectionne: {profile.name}")
+                
+                embed = discord.Embed(
+                    title=f"{profile.name}",
+                    description=profile.personality[:300],
+                    color=discord.Color.gold()
+                )
+                
+                embed.add_field(name="Genre", value=profile.gender, inline=True)
+                embed.add_field(name="Age", value=f"{profile.age} ans", inline=True)
+                embed.add_field(name="Type", value=profile.relationship_type, inline=True)
+                
+                if profile.appearance:
+                    embed.add_field(name="Apparence", value=profile.appearance[:150], inline=False)
+                
+                view = UseChatbotView(chatbot_id, profile)
+                await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+                
+            except Exception as e:
+                print(f"[ERREUR] chatbot callback: {e}")
+                traceback.print_exc()
+                try:
+                    await interaction.response.send_message("[X] Erreur", ephemeral=True)
+                except:
+                    pass
+        
+        return callback
+
+
+class UseChatbotView(discord.ui.View):
+    """Bouton pour utiliser un chatbot"""
+    
+    def __init__(self, chatbot_id: str, profile: ChatbotProfile):
+        super().__init__(timeout=600)
+        self.chatbot_id = chatbot_id
+        self.profile = profile
+    
+    @discord.ui.button(label="Utiliser ce chatbot", style=discord.ButtonStyle.success, custom_id="use_this_bot")
+    async def use_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Activer ce chatbot"""
+        try:
+            print(f"[DEBUG] === DEBUT ACTIVATION ===")
+            print(f"[DEBUG] Chatbot: {self.profile.name}")
+            print(f"[DEBUG] Chatbot ID: {self.chatbot_id}")
+            print(f"[DEBUG] User ID: {interaction.user.id}")
+            
+            user_id = interaction.user.id
+            public_chatbot_id = f"public_{self.chatbot_id}"
+            print(f"[DEBUG] Public chatbot ID: {public_chatbot_id}")
+            
+            # Copier le profil
+            print(f"[DEBUG] Copie du profil...")
+            try:
+                user_profile = copy.deepcopy(self.profile)
+                # Ajouter l'attribut is_public manquant
+                user_profile.is_public = True
+                print(f"[DEBUG] Profil copie OK (is_public ajoute)")
+            except Exception as e:
+                print(f"[ERREUR] Copie profil: {e}")
+                raise
+            
+            # Verifier existence
+            print(f"[DEBUG] Verification existence...")
+            try:
+                exists = chatbot_manager.chatbot_exists(user_id, public_chatbot_id)
+                print(f"[DEBUG] Existe deja: {exists}")
+            except Exception as e:
+                print(f"[ERREUR] Verification existence: {e}")
+                raise
+            
+            # Creer ou activer
+            if exists:
+                print(f"[DEBUG] Activation chatbot existant...")
+                try:
+                    chatbot_manager.set_active_chatbot(user_id, public_chatbot_id)
+                    print(f"[DEBUG] Chatbot active OK")
+                except Exception as e:
+                    print(f"[ERREUR] Activation: {e}")
+                    raise
+            else:
+                print(f"[DEBUG] Creation nouveau chatbot...")
+                try:
+                    chatbot_manager.create_chatbot(user_id, public_chatbot_id, user_profile)
+                    print(f"[DEBUG] Chatbot cree OK")
+                    chatbot_manager.set_active_chatbot(user_id, public_chatbot_id)
+                    print(f"[DEBUG] Chatbot active OK")
+                except Exception as e:
+                    print(f"[ERREUR] Creation/Activation: {e}")
+                    raise
+            
+            # Message de succes
+            print(f"[DEBUG] Creation embed...")
+            embed = discord.Embed(
+                title=f"[OK] {self.profile.name} est actif !",
+                description=f"**{self.profile.name}** est pret a discuter !",
+                color=discord.Color.green()
+            )
+            
+            embed.add_field(
+                name="Prochaine etape",
+                value="Tapez /start et cliquez **Discuter** !",
+                inline=False
+            )
+            
+            print(f"[DEBUG] Envoi message...")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            print(f"[DEBUG] === ACTIVATION REUSSIE ===")
+            
+        except Exception as e:
+            print(f"[ERREUR] use_btn GENERALE: {e}")
+            traceback.print_exc()
+            try:
+                error_msg = f"[X] Erreur activation: {str(e)[:100]}"
+                await interaction.response.send_message(error_msg, ephemeral=True)
+            except:
+                print(f"[ERREUR] Impossible d'envoyer message d'erreur")
+                pass
+
+
+# ========== EVENEMENTS ==========
+
+@bot.event
+async def on_ready():
+    """Bot pret"""
+    print(f"[OK] Bot connecte : {bot.user}")
+    print(f"[OK] Serveurs : {len(bot.guilds)}")
+    
+    # Note: Plus besoin d'enregistrer la vue car elle n'est plus persistante
+    # bot.add_view(MainMenuView()) - RETIRE
+    print("[OK] Vues configurees (non-persistantes)")
+    
+    # Sync commandes
+    try:
+        synced = await bot.tree.sync()
+        print(f"[OK] {len(synced)} commandes synchronisees")
+    except Exception as e:
+        print(f"[ERREUR] Sync commandes : {e}")
+    
+    print("[OK] Bot pret !")
+
+
+@bot.event
+async def on_message(message):
+    """Gerer les messages dans les threads"""
+    if message.author.bot:
+        return
+    
+    await bot.process_commands(message)
+    
+    # Gerer threads prives
+    if isinstance(message.channel, discord.Thread):
+        print(f"[DEBUG] Message dans thread {message.channel.id} par {message.author}")
+        
+        try:
+            if thread_manager.is_active_thread(message.channel.id):
+                print(f"[DEBUG] Thread actif detecte")
+                thread_info = thread_manager.get_thread_by_id(message.channel.id)
+                print(f"[DEBUG] Thread info: {thread_info}")
+                
+                if thread_info and thread_info["owner_id"] == message.author.id:
+                    print(f"[DEBUG] Owner verifie OK")
+                    user_id = message.author.id
+                    chatbot_id = thread_info["chatbot_id"]
+                    print(f"[DEBUG] Chatbot ID: {chatbot_id}")
+                    
+                    profile = chatbot_manager.get_chatbot(user_id, chatbot_id)
+                    print(f"[DEBUG] Profile: {profile}")
+                    
+                    if profile:
+                        print(f"[DEBUG] Profile trouve, envoi a l'IA...")
+                        async with message.channel.typing():
+                            try:
+                                response = await chatbot_ai.get_response(
+                                    message.content, user_id, profile, chatbot_id, message.author.display_name
+                                )
+                                print(f"[DEBUG] Reponse IA recue: {response[:100]}...")
+                            except Exception as e:
+                                print(f"[ERREUR] Erreur API IA: {e}")
+                                traceback.print_exc()
+                                response = f"Desole, j'ai un probleme technique... Reessaye dans un instant ! ??"
+                        
+                        chatbot_manager.increment_message_count(user_id, chatbot_id)
+                        thread_manager.increment_message_count(message.channel.id)
+                        
+                        await message.channel.send(response)
+                        print(f"[DEBUG] Reponse envoyee!")
+                    else:
+                        print(f"[ERREUR] Profile non trouve pour user {user_id}, chatbot {chatbot_id}")
+                else:
+                    print(f"[DEBUG] Owner non verifie ou thread_info null")
+            else:
+                print(f"[DEBUG] Thread non actif")
+        except Exception as e:
+            print(f"[ERREUR] on_message exception: {e}")
+            traceback.print_exc()
+
+
+# ========== COMMANDES ==========
+
+@bot.tree.command(name="start", description="Menu principal")
+async def start_cmd(interaction: discord.Interaction):
+    """Afficher le menu principal avec boutons"""
+    
+    if not check_nsfw_channel(interaction):
+        await interaction.response.send_message(
+            "[X] Commande NSFW uniquement !",
+            ephemeral=True
+        )
+        return
+    
+    # Creer une nouvelle instance de vue a chaque fois (pas de persistance)
+    view = MainMenuView()
+    view.timeout = 300  # 5 minutes au lieu de None
+    
+    embed = discord.Embed(
+        title="Bot Chatbot NSFW",
+        description=(
+            "**Menu Principal - Interface a Boutons**\n\n"
+            "**Galerie** - Voir les 13 chatbots\n"
+            "**Discuter** - Creer conversation\n"
+            "**Aide** - Guide"
+        ),
+        color=discord.Color.blue()
+    )
+    
+    embed.set_footer(text="Cliquez sur les boutons !")
+    
+    await interaction.response.send_message(embed=embed, view=view)
+    print(f"[DEBUG] Menu principal envoye a {interaction.user}")
+
+
+@bot.tree.command(name="stop", description="Terminer conversation")
+async def stop_cmd(interaction: discord.Interaction):
+    """Terminer la conversation"""
+    
+    if not check_nsfw_channel(interaction):
+        await interaction.response.send_message("[X] NSFW uniquement !", ephemeral=True)
+        return
+    
+    user_id = interaction.user.id
+    thread_info = thread_manager.get_user_thread(user_id)
+    
+    if not thread_info:
+        await interaction.response.send_message("[X] Pas de conversation active", ephemeral=True)
+        return
+    
+    thread = interaction.guild.get_thread(thread_info["thread_id"])
+    
+    if thread:
+        msg_count = thread_info["message_count"]
+        await thread.send(f"Termine ! {msg_count} messages echanges.")
+        await thread.edit(archived=True, locked=True)
+    
+    thread_manager.close_thread(thread_info["thread_id"])
+    
+    await interaction.response.send_message("[OK] Conversation terminee !", ephemeral=True)
+
+
+# ========== HTTP SERVER ==========
+
+async def health_check(request):
+    return web.Response(text="OK", status=200)
+
+async def root(request):
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Bot Discord NSFW - V3.4</title>
+        <style>
+            body { font-family: Arial; max-width: 800px; margin: 50px auto; padding: 20px; background: #f0f0f0; }
+            .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            h1 { color: #5865F2; }
+            .status { color: #43B581; font-size: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Bot Discord NSFW - Boutons Fonctionnels</h1>
+            <p class="status">[OK] Bot en ligne</p>
+            <h2>Version 3.4 - Boutons corriges et testes</h2>
+            <p>Interface a boutons avec debug complet</p>
+        </div>
+    </body>
+    </html>
+    """
+    return web.Response(text=html, content_type='text/html')
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get('/', root)
+    app.router.add_get('/health', health_check)
+    
+    port = int(os.getenv('PORT', 10000))
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    
+    print(f"[OK] HTTP server sur port {port}")
+
+
+# ========== MAIN ==========
+
+async def main():
+    asyncio.create_task(start_web_server())
+    await asyncio.sleep(1)
+    
+    TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+    
+    if not TOKEN:
+        print("[X] Token manquant !")
+        return
+    
+    print("[OK] Demarrage bot avec boutons persistants...")
+    await bot.start(TOKEN)
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n[OK] Bot arrete")
