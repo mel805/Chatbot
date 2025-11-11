@@ -19,7 +19,8 @@ from enhanced_chatbot_ai import EnhancedChatbotAI
 from thread_manager import ThreadManager
 from public_chatbots import PUBLIC_CHATBOTS, CATEGORIES
 
-load_dotenv()
+# Charger .env SEULEMENT s'il existe (local), sinon utiliser les vars d'environnement Render
+load_dotenv(override=False)  # Ne pas override les variables système existantes
 
 # Initialiser les gestionnaires
 chatbot_manager = ChatbotManager()
@@ -601,21 +602,65 @@ async def main():
     asyncio.create_task(start_web_server())
     await asyncio.sleep(1)
     
-    # Debug: afficher les variables d'environnement
+    # Debug: afficher TOUTES les variables d'environnement
+    print("[DEBUG] ========================================")
     print("[DEBUG] Vérification des variables d'environnement...")
-    print(f"[DEBUG] Variables disponibles contenant 'TOKEN' ou 'DISCORD':")
+    print(f"[DEBUG] Nombre total de variables: {len(os.environ)}")
+    print("[DEBUG] ========================================")
+    
+    print(f"[DEBUG] Variables contenant 'TOKEN' ou 'DISCORD':")
+    found_discord = False
     for key in os.environ.keys():
         if 'TOKEN' in key.upper() or 'DISCORD' in key.upper():
             value = os.environ[key]
-            print(f"[DEBUG]   - {key}: {value[:20] if value else 'vide'}...")
+            print(f"[DEBUG]   ✓ {key}: {value[:20] if value else '[VIDE]'}...")
+            found_discord = True
+    
+    if not found_discord:
+        print("[DEBUG]   ✗ AUCUNE variable contenant TOKEN ou DISCORD trouvée !")
+    
+    print("[DEBUG] ========================================")
+    print("[DEBUG] Toutes les variables d'environnement disponibles:")
+    for key in sorted(os.environ.keys()):
+        value = os.environ[key]
+        # Masquer les valeurs sensibles mais montrer qu'elles existent
+        if any(secret in key.upper() for secret in ['TOKEN', 'KEY', 'SECRET', 'PASSWORD']):
+            print(f"[DEBUG]   - {key}: [MASQUÉ - {len(value)} caractères]")
+        else:
+            print(f"[DEBUG]   - {key}: {value[:50]}...")
+    print("[DEBUG] ========================================")
+    
+    # Essayer plusieurs méthodes pour obtenir le token
+    print("[DEBUG] Tentatives de récupération du token:")
     
     TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+    print(f"[DEBUG] 1. os.getenv('DISCORD_BOT_TOKEN'): {'✓ TROUVÉ' if TOKEN else '✗ NON TROUVÉ'}")
+    
+    if not TOKEN:
+        TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
+        print(f"[DEBUG] 2. os.environ.get('DISCORD_BOT_TOKEN'): {'✓ TROUVÉ' if TOKEN else '✗ NON TROUVÉ'}")
+    
+    if not TOKEN:
+        # Essayer de lire directement depuis environ
+        try:
+            TOKEN = os.environ['DISCORD_BOT_TOKEN']
+            print(f"[DEBUG] 3. os.environ['DISCORD_BOT_TOKEN']: ✓ TROUVÉ")
+        except KeyError:
+            print(f"[DEBUG] 3. os.environ['DISCORD_BOT_TOKEN']: ✗ NON TROUVÉ (KeyError)")
+    
+    print("[DEBUG] ========================================")
     
     if not TOKEN:
         print("[X] Token manquant !")
-        print("[DEBUG] Variables d'environnement vérifiées, DISCORD_BOT_TOKEN non trouvé")
-        print("[DEBUG] Vérifiez que la variable est bien définie dans Render avec le nom exact: DISCORD_BOT_TOKEN")
+        print("[ERREUR] DISCORD_BOT_TOKEN n'est pas défini dans l'environnement")
+        print("[SOLUTION] Dans Render Dashboard:")
+        print("  1. Environment → Add Environment Variable")
+        print("  2. Key: DISCORD_BOT_TOKEN")
+        print("  3. Value: [votre token Discord]")
+        print("  4. Save Changes → Redéployer")
         return
+    
+    print(f"[OK] Token Discord trouvé ({len(TOKEN)} caractères)")
     
     print("[OK] Demarrage bot avec boutons persistants...")
     await bot.start(TOKEN)
