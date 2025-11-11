@@ -1,0 +1,168 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║  🔍 DEBUG COMPLET - TOUTES LES VARIABLES D'ENVIRONNEMENT         ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+🎯 CE QUI A ÉTÉ FAIT
+═══════════════════════════════════════════════════════════════════
+
+J'ai ajouté un DEBUG ULTRA-COMPLET au code qui va maintenant afficher :
+
+1. ✅ Le nombre TOTAL de variables d'environnement
+2. ✅ TOUTES les variables contenant TOKEN ou DISCORD
+3. ✅ TOUTES les variables d'environnement (noms + longueur)
+4. ✅ 3 méthodes différentes pour tenter de lire DISCORD_BOT_TOKEN
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏰ QUE FAIRE MAINTENANT
+═══════════════════════════════════════════════════════════════════
+
+1. ⏳ ATTENDRE 2-3 MINUTES
+   → Render est en train de redéployer avec le nouveau code de debug
+
+2. 📋 REGARDER LES LOGS RENDER
+   → Vous verrez maintenant BEAUCOUP plus d'informations
+
+3. 📤 COPIER LES LOGS COMPLETS
+   → Copiez TOUT depuis [DEBUG] jusqu'à [X] Token manquant
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 CE QUE VOUS VERREZ DANS LES LOGS
+═══════════════════════════════════════════════════════════════════
+
+Après le redéploiement, les logs vont afficher :
+
+[DEBUG] ========================================
+[DEBUG] Vérification des variables d'environnement...
+[DEBUG] Nombre total de variables: XX
+[DEBUG] ========================================
+
+[DEBUG] Variables contenant 'TOKEN' ou 'DISCORD':
+[DEBUG]   ✓ DISCORD_BOT_TOKEN: MTxxxxxxxxx...
+         OU
+[DEBUG]   ✗ AUCUNE variable contenant TOKEN ou DISCORD trouvée !
+
+[DEBUG] ========================================
+[DEBUG] Toutes les variables d'environnement disponibles:
+[DEBUG]   - PATH: /usr/local/bin...
+[DEBUG]   - PORT: 10000...
+[DEBUG]   - DISCORD_BOT_TOKEN: [MASQUÉ - XX caractères]
+[DEBUG]   - ... (toutes les autres)
+[DEBUG] ========================================
+
+[DEBUG] Tentatives de récupération du token:
+[DEBUG] 1. os.getenv('DISCORD_BOT_TOKEN'): ✓ TROUVÉ ou ✗ NON TROUVÉ
+[DEBUG] 2. os.environ.get('DISCORD_BOT_TOKEN'): ✓ TROUVÉ ou ✗ NON TROUVÉ
+[DEBUG] 3. os.environ['DISCORD_BOT_TOKEN']: ✓ TROUVÉ ou ✗ NON TROUVÉ
+[DEBUG] ========================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 DIAGNOSTIC SELON LES LOGS
+═══════════════════════════════════════════════════════════════════
+
+CAS 1 : Vous voyez DISCORD_BOT_TOKEN dans la liste
+────────────────────────────────────────────────────────────────
+[DEBUG]   ✓ DISCORD_BOT_TOKEN: MTxxxxxxxxx...
+[DEBUG]   - DISCORD_BOT_TOKEN: [MASQUÉ - 59 caractères]
+
+→ ✅ Le token EST dans Render
+→ Le bot DEVRAIT démarrer
+→ Si ça dit toujours "Token manquant", il y a un bug dans le code
+
+CAS 2 : Vous NE voyez PAS DISCORD_BOT_TOKEN
+────────────────────────────────────────────────────────────────
+[DEBUG]   ✗ AUCUNE variable contenant TOKEN ou DISCORD trouvée !
+
+→ ❌ Le token N'EST PAS dans Render
+→ La variable n'est pas définie ou mal nommée
+→ Voir solution ci-dessous
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ SOLUTION SI LE TOKEN N'APPARAÎT PAS
+═══════════════════════════════════════════════════════════════════
+
+ÉTAPE 1 : Vérifier dans Render Dashboard
+────────────────────────────────────────────────────────────────
+1. Render.com → Votre service
+2. Menu gauche → Environment
+3. Regardez la liste des variables
+
+VOUS DEVEZ VOIR :
+    DISCORD_BOT_TOKEN     ••••••••••     [Edit] [Delete]
+
+SI VOUS NE VOYEZ PAS CETTE LIGNE :
+    → La variable n'est PAS définie
+    → Continuez à l'Étape 2
+
+ÉTAPE 2 : Ajouter la Variable
+────────────────────────────────────────────────────────────────
+1. Cliquez "Add Environment Variable"
+2. Key:   DISCORD_BOT_TOKEN
+        ↑ Copier-coller exactement depuis ici
+3. Value: [votre nouveau token Discord]
+4. Save Changes
+
+ÉTAPE 3 : Vérifier l'Orthographe
+────────────────────────────────────────────────────────────────
+Le Key doit être EXACTEMENT :
+
+    DISCORD_BOT_TOKEN
+
+PAS :
+    ❌ DISCORD_TOKEN
+    ❌ BOT_TOKEN
+    ❌ Discord_Bot_Token (majuscules !)
+    ❌ DISCORD_BOT_TOKEN  (espace à la fin)
+    ❌  DISCORD_BOT_TOKEN (espace au début)
+
+ÉTAPE 4 : Vérifier le Token
+────────────────────────────────────────────────────────────────
+Le token doit être en 3 parties séparées par des points :
+
+    MTxxxxxxxx.Gxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Pas d'espaces avant ou après !
+
+ÉTAPE 5 : Forcer le Redéploiement
+────────────────────────────────────────────────────────────────
+1. Manual Deploy → Deploy latest commit
+2. Attendre 2-3 minutes
+3. Vérifier les nouveaux logs
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📞 ENVOYEZ-MOI LES LOGS
+═══════════════════════════════════════════════════════════════════
+
+Une fois que Render a redéployé (2-3 min), copiez-moi :
+
+DEPUIS :
+    [DEBUG] ========================================
+    [DEBUG] Vérification des variables...
+
+JUSQU'À :
+    [X] Token manquant !
+
+Avec ces logs je pourrai voir EXACTEMENT où est le problème.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 POINTS CLÉS À VÉRIFIER
+═══════════════════════════════════════════════════════════════════
+
+✓ Token Discord réinitialisé (l'ancien est compromis)
+✓ Nouveau token copié
+✓ Variable dans Render nommée DISCORD_BOT_TOKEN (exact)
+✓ Pas d'espaces dans le Key ou Value
+✓ Save Changes cliqué
+✓ Service redéployé (Manual Deploy si nécessaire)
+✓ Logs avec [DEBUG] consultés
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏰ Attendez 2-3 minutes le redéploiement puis envoyez les logs ! 🔍
