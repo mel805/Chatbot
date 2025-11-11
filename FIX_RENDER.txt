@@ -1,0 +1,134 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║  🔧 FIX RENDER - COMMANDE DE DÉMARRAGE CORRIGÉE                 ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+❌ PROBLÈME
+═══════════════════════════════════════════════════════════════════
+Erreur sur Render :
+    can't open file '/opt/render/project/src/bot.py': No such file
+
+Cause :
+    Le fichier bot.py n'existe plus (obsolète)
+    Le nouveau fichier est discord_bot_main.py
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ SOLUTION APPLIQUÉE
+═══════════════════════════════════════════════════════════════════
+
+FICHIERS CRÉÉS :
+
+    ✅ Procfile            → Commande: python discord_bot_main.py
+    ✅ render.yaml         → Configuration complète Render
+    ✅ start.sh            → Script de démarrage alternatif
+    ✅ RENDER_CONFIG.md    → Guide de configuration détaillé
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 DÉPLOIEMENT
+═══════════════════════════════════════════════════════════════════
+
+ÉTAPE 1 : Commit et Push
+───────────────────────────────────────────────────────────────────
+Les fichiers sont déjà staged. Vous devez juste :
+
+    git commit -m "fix: Update Render config + API gratuite NSFW"
+    git push origin cursor/update-discord-bot-chat-api-3e13
+
+
+ÉTAPE 2 : Render va Redéployer Automatiquement
+───────────────────────────────────────────────────────────────────
+Render détectera :
+    • Le nouveau Procfile
+    • Le fichier render.yaml
+    • La nouvelle commande de démarrage
+
+
+ÉTAPE 3 : Vérifier les Logs
+───────────────────────────────────────────────────────────────────
+Après le déploiement, dans Render Dashboard → Logs :
+
+    ✅ [OK] Bot connecté : VotreBot#1234
+    ✅ [OK] Serveurs : X
+    ✅ [OK] Bot pret !
+    ✅ [OK] HTTP server sur port 10000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚙️ CONFIGURATION MANUELLE (Si Nécessaire)
+═══════════════════════════════════════════════════════════════════
+
+Si Render ne détecte pas automatiquement render.yaml :
+
+1. Aller dans Render Dashboard
+2. Cliquer sur votre service
+3. Settings → Build & Deploy
+4. Start Command → Changer en :
+   
+   python discord_bot_main.py
+
+5. Save Changes
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 VARIABLES D'ENVIRONNEMENT RENDER
+═══════════════════════════════════════════════════════════════════
+
+OBLIGATOIRE :
+    DISCORD_BOT_TOKEN = votre_token_discord
+
+OPTIONNEL (pour optimiser) :
+    HUGGINGFACE_API_KEY = hf_token_gratuit
+    AI_PROVIDER = free_nsfw
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 CONTENU DES FICHIERS CRÉÉS
+═══════════════════════════════════════════════════════════════════
+
+Procfile :
+    web: python discord_bot_main.py
+
+render.yaml :
+    services:
+      - type: web
+        name: discord-bot-nsfw
+        env: python
+        buildCommand: pip install -r requirements.txt
+        startCommand: python discord_bot_main.py
+        envVars:
+          - key: AI_PROVIDER
+            value: free_nsfw
+
+start.sh :
+    #!/bin/bash
+    echo "🚀 Démarrage bot avec API gratuite..."
+    python discord_bot_main.py
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ RÉSULTAT
+═══════════════════════════════════════════════════════════════════
+
+Après le push et le redéploiement :
+
+    ✅ Render utilisera discord_bot_main.py (pas bot.py)
+    ✅ Bot démarrera avec l'API gratuite NSFW
+    ✅ Aucune erreur "file not found"
+    ✅ Bot en ligne sur Discord
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 DOCUMENTATION
+═══════════════════════════════════════════════════════════════════
+
+Pour plus de détails :
+    → RENDER_CONFIG.md (guide complet configuration Render)
+    → README.md (guide général du bot)
+    → API_GRATUITE_NSFW.md (documentation API gratuite)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 Le bot est maintenant prêt à déployer sur Render ! 🎉
