@@ -15,8 +15,8 @@ import threading
 # load_dotenv() charge le fichier .env en local, mais sur Render les variables sont d?j? dans l'environnement
 load_dotenv()  # Optionnel, ne fait rien si .env n'existe pas
 
-# Configuration
-DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+# Configuration - Cherche les deux noms possibles
+DISCORD_TOKEN = os.getenv('DISCORD_BOT_TOKEN') or os.getenv('DISCORD_TOKEN')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 AI_MODEL = os.getenv('AI_MODEL', 'llama-3.3-70b-versatile')
 
