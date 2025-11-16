@@ -120,12 +120,36 @@ class MainMenuView(discord.ui.View):
                 character_desc = profile.description if profile else ""
                 prompt = f"{profile.name}, {character_desc[:100]}, detailed, high quality"
             
-            # Générer l'image
-            await interaction.followup.send(f"🎨 Génération en cours de : **{prompt[:100]}**...")
+            # Obtenir infos du serveur et du membre
+            server_name = interaction.guild.name if interaction.guild else "Discord"
+            username = interaction.user.display_name
+            
+            # Déterminer le type NSFW selon le chatbot actif
+            nsfw_type = "artistic"  # Par défaut
+            if profile:
+                # Adapter le type selon la personnalité du chatbot
+                personality_lower = profile.personality.lower()
+                if "romantique" in personality_lower or "doux" in personality_lower:
+                    nsfw_type = "romantic"
+                elif "intense" in personality_lower or "dominant" in personality_lower:
+                    nsfw_type = "intense"
+                elif "fantaisie" in personality_lower or "magique" in personality_lower:
+                    nsfw_type = "fantasy"
+                elif "sensuel" in personality_lower:
+                    nsfw_type = "softcore"
+            
+            # Générer l'image avec personnalisation
+            await interaction.followup.send(
+                f"🎨 Génération unique pour **{username}** sur **{server_name}**...\n"
+                f"Style: {nsfw_type.capitalize()}"
+            )
             
             image_url = await image_generator.generate(
                 prompt=prompt,
-                character_desc=character_desc
+                character_desc=character_desc,
+                server_name=server_name,
+                username=username,
+                nsfw_type=nsfw_type
             )
             
             if image_url:
@@ -135,7 +159,22 @@ class MainMenuView(discord.ui.View):
                     color=discord.Color.purple()
                 )
                 embed.set_image(url=image_url)
-                embed.set_footer(text=f"Généré pour {interaction.user.name}")
+                embed.set_footer(text=f"✨ Généré uniquement pour {username} sur {server_name}")
+                embed.add_field(
+                    name="🎭 Style",
+                    value=nsfw_type.capitalize(),
+                    inline=True
+                )
+                embed.add_field(
+                    name="👤 Membre",
+                    value=username,
+                    inline=True
+                )
+                embed.add_field(
+                    name="🏠 Serveur",
+                    value=server_name,
+                    inline=True
+                )
                 
                 await interaction.channel.send(embed=embed)
             else:
@@ -670,12 +709,33 @@ async def generate_image_command(
             if profile:
                 character_desc = profile.description
         
-        # Générer l'image
-        await interaction.followup.send(f"🎨 Génération en cours : **{prompt[:100]}**...")
+        # Obtenir infos du serveur et du membre
+        server_name = interaction.guild.name if interaction.guild else "Discord"
+        username = interaction.user.display_name
+        
+        # Déterminer le type NSFW selon le chatbot ou le prompt
+        nsfw_type = "artistic"  # Par défaut
+        if character_desc:
+            personality_lower = character_desc.lower()
+            if "romantic" in personality_lower or "love" in personality_lower:
+                nsfw_type = "romantic"
+            elif "intense" in personality_lower or "hard" in personality_lower:
+                nsfw_type = "intense"
+            elif "fantasy" in personality_lower or "magic" in personality_lower:
+                nsfw_type = "fantasy"
+        
+        # Générer l'image avec personnalisation unique
+        await interaction.followup.send(
+            f"🎨 Génération unique pour **{username}** sur **{server_name}**...\n"
+            f"Prompt: **{prompt[:80]}**... | Style: {nsfw_type.capitalize()}"
+        )
         
         image_url = await image_generator.generate(
             prompt=prompt,
-            character_desc=character_desc
+            character_desc=character_desc,
+            server_name=server_name,
+            username=username,
+            nsfw_type=nsfw_type
         )
         
         if image_url:
@@ -685,7 +745,22 @@ async def generate_image_command(
                 color=discord.Color.purple()
             )
             embed.set_image(url=image_url)
-            embed.set_footer(text=f"Généré pour {interaction.user.name}")
+            embed.set_footer(text=f"✨ Image unique pour {username} sur {server_name}")
+            embed.add_field(
+                name="🎭 Style NSFW",
+                value=nsfw_type.capitalize(),
+                inline=True
+            )
+            embed.add_field(
+                name="👤 Créé par",
+                value=username,
+                inline=True
+            )
+            embed.add_field(
+                name="🏠 Serveur",
+                value=server_name,
+                inline=True
+            )
             
             await interaction.channel.send(embed=embed)
         else:
@@ -751,6 +826,109 @@ async def rank_command(interaction: discord.Interaction, member: discord.Member 
         traceback.print_exc()
         await interaction.followup.send(
             f"❌ Erreur lors de la génération de la carte: {str(e)}",
+            ephemeral=True
+        )
+
+
+@bot.tree.command(name="generate_unique", description="Générer une image NSFW vraiment unique avec style personnalisé")
+async def generate_unique_command(
+    interaction: discord.Interaction,
+    prompt: str,
+    style: str = "artistic"
+):
+    """Commande pour générer une image avec style NSFW choisi"""
+    
+    # Vérifier canal NSFW
+    if not check_nsfw_channel(interaction):
+        await interaction.response.send_message(
+            "⚠️ Utilisez un canal NSFW pour générer des images !",
+            ephemeral=True
+        )
+        return
+    
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        # Valider le style
+        valid_styles = ["softcore", "romantic", "intense", "fantasy", "artistic"]
+        nsfw_type = style.lower() if style.lower() in valid_styles else "artistic"
+        
+        # Obtenir infos contextuelles
+        server_name = interaction.guild.name if interaction.guild else "Discord"
+        username = interaction.user.display_name
+        
+        # Récupérer le chatbot actif pour contexte
+        user_id = interaction.user.id
+        active_chatbot_id = chatbot_manager.get_active_chatbot_id(user_id)
+        
+        character_desc = ""
+        if active_chatbot_id:
+            profile = chatbot_manager.get_chatbot(user_id, active_chatbot_id)
+            if profile:
+                character_desc = profile.description
+        
+        # Message de génération
+        await interaction.followup.send(
+            f"🎨 **Génération UNIQUE en cours...**\n"
+            f"📍 Serveur: **{server_name}**\n"
+            f"👤 Membre: **{username}**\n"
+            f"🎭 Style: **{nsfw_type.capitalize()}**\n"
+            f"💭 Prompt: *{prompt[:100]}*..."
+        )
+        
+        # Générer l'image unique
+        image_url = await image_generator.generate(
+            prompt=prompt,
+            character_desc=character_desc,
+            server_name=server_name,
+            username=username,
+            nsfw_type=nsfw_type,
+            prefer_speed=True
+        )
+        
+        if image_url:
+            embed = discord.Embed(
+                title="🎨 Image Unique Générée !",
+                description=(
+                    f"**Prompt:** {prompt}\n\n"
+                    f"Cette image est **100% unique**, générée spécialement pour "
+                    f"**{username}** sur le serveur **{server_name}** avec un style **{nsfw_type}** !"
+                ),
+                color=discord.Color.purple()
+            )
+            embed.set_image(url=image_url)
+            
+            # Infos détaillées
+            embed.add_field(
+                name="🎭 Style NSFW",
+                value=nsfw_type.capitalize(),
+                inline=True
+            )
+            embed.add_field(
+                name="👤 Créé pour",
+                value=username,
+                inline=True
+            )
+            embed.add_field(
+                name="🏠 Serveur",
+                value=server_name,
+                inline=True
+            )
+            
+            embed.set_footer(text=f"✨ Chaque génération est vraiment unique | Seed basé sur {server_name}+{username}+timestamp")
+            
+            await interaction.channel.send(embed=embed)
+        else:
+            await interaction.followup.send(
+                "❌ Échec de génération. Réessayez avec un autre prompt !",
+                ephemeral=True
+            )
+    
+    except Exception as e:
+        print(f"[ERREUR] generate_unique_command: {e}")
+        traceback.print_exc()
+        await interaction.followup.send(
+            f"❌ Erreur: {str(e)}",
             ephemeral=True
         )
 

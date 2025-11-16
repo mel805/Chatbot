@@ -12,10 +12,43 @@ from io import BytesIO
 import time
 
 class ImageGeneratorNSFW:
-    """Générateur d'images NSFW gratuit et rapide"""
+    """Générateur d'images NSFW gratuit et rapide avec personnalisation unique"""
     
     def __init__(self, provider: str = "multi"):
         self.provider = provider
+        
+        # Catégories NSFW avec styles associés
+        self.nsfw_categories = {
+            "softcore": ["sensual", "elegant", "artistic nude", "glamour photography", "boudoir"],
+            "romantic": ["intimate moment", "passionate embrace", "romantic atmosphere", "candlelit"],
+            "intense": ["explicit scene", "provocative pose", "seductive", "erotic art"],
+            "fantasy": ["magical setting", "fantasy character", "mythical creature", "dreamlike"],
+            "artistic": ["fine art photography", "classical painting style", "renaissance art", "artistic nude"]
+        }
+        
+        # Styles visuels variés
+        self.visual_styles = [
+            "cinematic lighting", "studio photography", "natural light",
+            "dramatic shadows", "soft focus", "bokeh background",
+            "high contrast", "vintage film", "digital art",
+            "oil painting style", "watercolor art", "anime style",
+            "realistic 3D render", "hyperrealistic", "photorealistic"
+        ]
+        
+        # Ambiances
+        self.moods = [
+            "sensual", "mysterious", "playful", "elegant",
+            "passionate", "dreamy", "intense", "romantic",
+            "seductive", "artistic", "glamorous", "intimate"
+        ]
+        
+        # Settings/Lieux
+        self.settings = [
+            "luxury bedroom", "modern apartment", "beach sunset",
+            "forest clearing", "cozy cabin", "elegant hotel room",
+            "private pool", "rooftop terrace", "art studio",
+            "japanese onsen", "tropical paradise", "penthouse suite"
+        ]
         
         # APIs gratuites pour images NSFW
         self.image_apis = [
@@ -68,17 +101,82 @@ class ImageGeneratorNSFW:
         self.prodia_key = os.getenv('PRODIA_API_KEY', '0000000000')  # Key gratuite publique
         self.horde_key = os.getenv('HORDE_API_KEY', '0000000000')    # Anonymous
     
-    def _enhance_prompt_nsfw(self, prompt: str, character_desc: str = "") -> str:
-        """Améliore le prompt pour NSFW de qualité"""
+    def _get_random_elements(self, seed: Optional[int] = None):
+        """Obtient des éléments aléatoires pour la variation"""
+        import random
+        if seed:
+            random.seed(seed)
+        
+        return {
+            "style": random.choice(self.visual_styles),
+            "mood": random.choice(self.moods),
+            "setting": random.choice(self.settings)
+        }
+    
+    def _enhance_prompt_nsfw(
+        self, 
+        prompt: str, 
+        character_desc: str = "",
+        server_name: str = "",
+        username: str = "",
+        nsfw_type: str = "artistic",
+        add_variation: bool = True
+    ) -> str:
+        """Améliore le prompt pour NSFW de qualité avec personnalisation unique"""
+        import random
+        import hashlib
+        
+        # Créer un seed unique basé sur serveur + user + timestamp
+        seed_string = f"{server_name}_{username}_{int(time.time())}"
+        seed = int(hashlib.md5(seed_string.encode()).hexdigest(), 16) % (10**8)
+        
+        # Obtenir des éléments aléatoires basés sur le seed
+        elements = self._get_random_elements(seed)
+        
+        # Choisir un style NSFW selon la catégorie
+        category_styles = self.nsfw_categories.get(nsfw_type, self.nsfw_categories["artistic"])
+        nsfw_style = random.choice(category_styles)
         
         # Ajouter des qualifiers de qualité
-        quality_tags = "masterpiece, best quality, highly detailed, 8k, photorealistic"
+        quality_tags = "masterpiece, best quality, highly detailed, 8k, professional photography"
         
-        # Construire le prompt complet
-        full_prompt = f"{prompt}, {character_desc}, {quality_tags}"
+        # Construire le prompt personnalisé
+        prompt_parts = []
+        
+        # Base prompt
+        if prompt:
+            prompt_parts.append(prompt)
+        
+        # Description du personnage
+        if character_desc:
+            prompt_parts.append(character_desc[:100])
+        
+        # Style NSFW
+        prompt_parts.append(nsfw_style)
+        
+        # Éléments de variation si demandés
+        if add_variation:
+            prompt_parts.append(elements["mood"])
+            prompt_parts.append(f"in {elements['setting']}")
+            prompt_parts.append(elements["style"])
+        
+        # Tags de qualité
+        prompt_parts.append(quality_tags)
+        
+        # Personnalisation serveur (subtile)
+        if server_name:
+            # Utiliser le nom du serveur comme "thème" subtil
+            server_theme = f"themed after {server_name}"
+            prompt_parts.append(server_theme)
+        
+        # Construire le prompt final
+        full_prompt = ", ".join(filter(None, prompt_parts))
         
         # Nettoyer
         full_prompt = full_prompt.strip(", ")
+        
+        print(f"[DEBUG] Prompt unique généré - Seed: {seed}, Style: {nsfw_style}")
+        print(f"[DEBUG] Éléments: {elements['mood']} | {elements['setting']} | {elements['style']}")
         
         return full_prompt
     
@@ -94,12 +192,17 @@ class ImageGeneratorNSFW:
         self,
         prompt: str,
         character_desc: str = "",
-        negative_prompt: str = ""
+        negative_prompt: str = "",
+        server_name: str = "",
+        username: str = "",
+        nsfw_type: str = "artistic"
     ) -> Optional[str]:
         """Génère une image avec Prodia (rapide, gratuit, NSFW)"""
         
         try:
-            enhanced_prompt = self._enhance_prompt_nsfw(prompt, character_desc)
+            enhanced_prompt = self._enhance_prompt_nsfw(
+                prompt, character_desc, server_name, username, nsfw_type
+            )
             
             if not negative_prompt:
                 negative_prompt = self._get_negative_prompt_nsfw()
@@ -180,12 +283,17 @@ class ImageGeneratorNSFW:
         self,
         prompt: str,
         character_desc: str = "",
-        negative_prompt: str = ""
+        negative_prompt: str = "",
+        server_name: str = "",
+        username: str = "",
+        nsfw_type: str = "artistic"
     ) -> Optional[str]:
         """Génère avec Stable Horde (gratuit, communautaire, NSFW)"""
         
         try:
-            enhanced_prompt = self._enhance_prompt_nsfw(prompt, character_desc)
+            enhanced_prompt = self._enhance_prompt_nsfw(
+                prompt, character_desc, server_name, username, nsfw_type
+            )
             
             if not negative_prompt:
                 negative_prompt = self._get_negative_prompt_nsfw()
@@ -274,12 +382,17 @@ class ImageGeneratorNSFW:
     async def generate_pollinations(
         self,
         prompt: str,
-        character_desc: str = ""
+        character_desc: str = "",
+        server_name: str = "",
+        username: str = "",
+        nsfw_type: str = "artistic"
     ) -> Optional[str]:
         """Génère avec Pollinations (très rapide, NSFW possible)"""
         
         try:
-            enhanced_prompt = self._enhance_prompt_nsfw(prompt, character_desc)
+            enhanced_prompt = self._enhance_prompt_nsfw(
+                prompt, character_desc, server_name, username, nsfw_type
+            )
             
             # Encoder le prompt pour URL
             import urllib.parse
@@ -300,28 +413,38 @@ class ImageGeneratorNSFW:
         prompt: str,
         character_desc: str = "",
         negative_prompt: str = "",
+        server_name: str = "",
+        username: str = "",
+        nsfw_type: str = "artistic",
         prefer_speed: bool = True
     ) -> Optional[str]:
-        """Méthode principale - Essaie les APIs par ordre de priorité"""
+        """Méthode principale - Génère une image unique basée sur serveur + user"""
         
-        print(f"[DEBUG] Génération image NSFW...")
+        print(f"[DEBUG] Génération image NSFW unique...")
+        print(f"[DEBUG] Serveur: {server_name} | User: {username} | Type: {nsfw_type}")
         
         if prefer_speed:
             # Essayer Pollinations en premier (instant)
             print("[DEBUG] Essai Pollinations (instant)...")
-            result = await self.generate_pollinations(prompt, character_desc)
+            result = await self.generate_pollinations(
+                prompt, character_desc, server_name, username, nsfw_type
+            )
             if result:
                 return result
         
         # Essayer Prodia (rapide, qualité)
         print("[DEBUG] Essai Prodia (10-20s)...")
-        result = await self.generate_prodia(prompt, character_desc, negative_prompt)
+        result = await self.generate_prodia(
+            prompt, character_desc, negative_prompt, server_name, username, nsfw_type
+        )
         if result:
             return result
         
         # Fallback sur Horde (plus lent mais fiable)
         print("[DEBUG] Fallback Stable Horde (30-60s)...")
-        result = await self.generate_horde(prompt, character_desc, negative_prompt)
+        result = await self.generate_horde(
+            prompt, character_desc, negative_prompt, server_name, username, nsfw_type
+        )
         if result:
             return result
         
