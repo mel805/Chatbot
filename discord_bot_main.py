@@ -19,6 +19,8 @@ from enhanced_chatbot_ai import EnhancedChatbotAI
 from thread_manager import ThreadManager
 from public_chatbots import PUBLIC_CHATBOTS, CATEGORIES
 from image_generator import ImageGeneratorNSFW
+from level_system import LevelSystem
+from level_card_generator import LevelCardGenerator
 
 # Charger .env SEULEMENT s'il existe (local), sinon utiliser les vars d'environnement Render
 load_dotenv(override=False)  # Ne pas override les variables système existantes
@@ -28,6 +30,8 @@ chatbot_manager = ChatbotManager()
 chatbot_ai = EnhancedChatbotAI()
 thread_manager = ThreadManager()
 image_generator = ImageGeneratorNSFW()
+level_system = LevelSystem()
+card_generator = LevelCardGenerator()
 
 # Configuration du bot
 intents = discord.Intents.default()
@@ -507,6 +511,28 @@ async def on_message(message):
     
     await bot.process_commands(message)
     
+    # Ajouter XP pour chaque message (sauf les DM)
+    if not isinstance(message.channel, discord.DMChannel):
+        try:
+            level_up, old_level, new_level = level_system.add_xp(message.author.id)
+            
+            # Si level up, envoyer un message de félicitations
+            if level_up:
+                embed = discord.Embed(
+                    title="🎉 Level Up!",
+                    description=f"Félicitations {message.author.mention} !\nTu es maintenant **niveau {new_level}** !",
+                    color=discord.Color.gold()
+                )
+                embed.add_field(
+                    name="💡 Astuce",
+                    value="Utilise `/rank` pour voir ta carte de level !",
+                    inline=False
+                )
+                await message.channel.send(embed=embed, delete_after=10)
+                print(f"[LEVEL UP] {message.author} : {old_level} -> {new_level}")
+        except Exception as e:
+            print(f"[ERREUR] Ajout XP: {e}")
+    
     # Gerer threads prives
     if isinstance(message.channel, discord.Thread):
         print(f"[DEBUG] Message dans thread {message.channel.id} par {message.author}")
@@ -670,6 +696,146 @@ async def generate_image_command(
     
     except Exception as e:
         print(f"[ERREUR] generate_image_command: {e}")
+        traceback.print_exc()
+        await interaction.followup.send(
+            f"❌ Erreur: {str(e)}",
+            ephemeral=True
+        )
+
+
+@bot.tree.command(name="rank", description="Voir ta carte de level unique")
+async def rank_command(interaction: discord.Interaction, member: discord.Member = None):
+    """Affiche la carte de level d'un membre"""
+    
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        # Si aucun membre spécifié, utiliser l'auteur de la commande
+        target_member = member or interaction.user
+        
+        # Récupérer les infos de niveau
+        level_info = level_system.get_level_info(target_member.id)
+        rank = level_system.get_user_rank(target_member.id)
+        
+        print(f"[DEBUG] Génération carte pour {target_member.name}...")
+        
+        # Générer la carte
+        card_image = await card_generator.generate_card(
+            username=target_member.name,
+            discriminator=target_member.discriminator,
+            avatar_url=str(target_member.display_avatar.url),
+            level=level_info["level"],
+            xp=level_info["xp_progress"],
+            xp_needed=level_info["xp_needed"],
+            rank=rank,
+            total_messages=level_info["total_messages"],
+            user_id=target_member.id
+        )
+        
+        # Créer le fichier Discord
+        file = discord.File(card_image, filename=f"rank_{target_member.id}.png")
+        
+        # Embed avec la carte
+        embed = discord.Embed(
+            title=f"📊 Carte de Level - {target_member.name}",
+            color=discord.Color.purple()
+        )
+        embed.set_image(url=f"attachment://rank_{target_member.id}.png")
+        embed.set_footer(text="✨ Chaque carte a un design unique !")
+        
+        await interaction.followup.send(embed=embed, file=file)
+        print(f"[SUCCESS] Carte envoyée pour {target_member.name}")
+        
+    except Exception as e:
+        print(f"[ERREUR] rank_command: {e}")
+        traceback.print_exc()
+        await interaction.followup.send(
+            f"❌ Erreur lors de la génération de la carte: {str(e)}",
+            ephemeral=True
+        )
+
+
+@bot.tree.command(name="leaderboard", description="Voir le classement des niveaux")
+async def leaderboard_command(interaction: discord.Interaction, top: int = 10):
+    """Affiche le classement des meilleurs joueurs"""
+    
+    await interaction.response.defer()
+    
+    try:
+        # Limiter à 25 max
+        top = min(max(top, 1), 25)
+        
+        # Récupérer le leaderboard
+        leaderboard = level_system.get_leaderboard(limit=top)
+        
+        if not leaderboard:
+            await interaction.followup.send(
+                "📊 Aucune donnée de classement disponible !",
+                ephemeral=True
+            )
+            return
+        
+        # Créer l'embed
+        embed = discord.Embed(
+            title=f"🏆 Classement - Top {top}",
+            description="Les membres les plus actifs du serveur !",
+            color=discord.Color.gold()
+        )
+        
+        # Ajouter les utilisateurs
+        leaderboard_text = ""
+        for idx, (user_id_str, user_data) in enumerate(leaderboard, 1):
+            user_id = int(user_id_str)
+            
+            # Essayer de récupérer le membre
+            try:
+                member = await interaction.guild.fetch_member(user_id)
+                name = member.display_name
+            except:
+                name = f"Utilisateur {user_id}"
+            
+            level = level_system.calculate_level(user_data["xp"])
+            xp = user_data["xp"]
+            messages = user_data["total_messages"]
+            
+            # Emojis pour le top 3
+            medal = ""
+            if idx == 1:
+                medal = "🥇 "
+            elif idx == 2:
+                medal = "🥈 "
+            elif idx == 3:
+                medal = "🥉 "
+            
+            leaderboard_text += (
+                f"{medal}**#{idx} - {name}**\n"
+                f"├ Niveau: {level} | XP: {xp:,}\n"
+                f"└ Messages: {messages:,}\n\n"
+            )
+        
+        embed.description = leaderboard_text
+        
+        # Ajouter la position de l'utilisateur s'il n'est pas dans le top
+        user_rank = level_system.get_user_rank(interaction.user.id)
+        if user_rank > top:
+            user_info = level_system.get_level_info(interaction.user.id)
+            embed.add_field(
+                name="📍 Ta position",
+                value=(
+                    f"Rang: #{user_rank}\n"
+                    f"Niveau: {user_info['level']} | XP: {user_info['xp']:,}\n"
+                    f"Messages: {user_info['total_messages']:,}"
+                ),
+                inline=False
+            )
+        
+        embed.set_footer(text="💡 Utilise /rank pour voir ta carte unique !")
+        
+        await interaction.followup.send(embed=embed)
+        print(f"[SUCCESS] Leaderboard envoyé (top {top})")
+        
+    except Exception as e:
+        print(f"[ERREUR] leaderboard_command: {e}")
         traceback.print_exc()
         await interaction.followup.send(
             f"❌ Erreur: {str(e)}",
