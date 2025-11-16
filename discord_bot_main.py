@@ -20,7 +20,7 @@ from thread_manager import ThreadManager
 from public_chatbots import PUBLIC_CHATBOTS, CATEGORIES
 from image_generator import ImageGeneratorNSFW
 from level_system import LevelSystem
-from level_card_generator_nsfw import LevelCardGeneratorNSFW
+from level_card_nsfw_simple import LevelCardGeneratorSimple
 
 # Charger .env SEULEMENT s'il existe (local), sinon utiliser les vars d'environnement Render
 load_dotenv(override=False)  # Ne pas override les variables système existantes
@@ -31,7 +31,7 @@ chatbot_ai = EnhancedChatbotAI()
 thread_manager = ThreadManager()
 image_generator = ImageGeneratorNSFW()
 level_system = LevelSystem()
-card_generator = LevelCardGeneratorNSFW()
+card_generator = LevelCardGeneratorSimple()
 
 # Configuration du bot
 intents = discord.Intents.default()
@@ -820,7 +820,7 @@ async def rank_command(interaction: discord.Interaction, member: discord.Member 
             color=discord.Color.purple()
         )
         embed.set_image(url=f"attachment://rank_{target_member.id}.png")
-        embed.set_footer(text="✨ Carte unique avec IMAGE NSFW générée en arrière-plan !")
+        embed.set_footer(text="✨ Carte unique avec gradient personnalisé !")
         
         await interaction.followup.send(embed=embed, file=file)
         print(f"[SUCCESS] Carte envoyée pour {target_member.name}")
@@ -835,10 +835,24 @@ async def rank_command(interaction: discord.Interaction, member: discord.Member 
 
 
 @bot.tree.command(name="generate_unique", description="Générer une image NSFW vraiment unique avec style personnalisé")
+@app_commands.describe(
+    prompt="Description de l'image à générer",
+    style="Style NSFW à utiliser"
+)
+@app_commands.choices(style=[
+    app_commands.Choice(name="Softcore - Sensuel, lingerie", value="softcore"),
+    app_commands.Choice(name="Romantic - Romantique, intime", value="romantic"),
+    app_commands.Choice(name="Intense - Explicite, hardcore", value="intense"),
+    app_commands.Choice(name="Fantasy - Fantastique, magique", value="fantasy"),
+    app_commands.Choice(name="Artistic - Art classique", value="artistic"),
+    app_commands.Choice(name="Fetish - BDSM, latex, bondage", value="fetish"),
+    app_commands.Choice(name="Group - Threesome, orgy", value="group"),
+    app_commands.Choice(name="Extreme - Anal, DP, extrême", value="extreme")
+])
 async def generate_unique_command(
     interaction: discord.Interaction,
     prompt: str,
-    style: str = "artistic"
+    style: app_commands.Choice[str] = None
 ):
     """Commande pour générer une image avec style NSFW choisi"""
     
@@ -853,9 +867,8 @@ async def generate_unique_command(
     await interaction.response.defer(thinking=True)
     
     try:
-        # Valider le style
-        valid_styles = ["softcore", "romantic", "intense", "fantasy", "artistic", "fetish", "group", "extreme"]
-        nsfw_type = style.lower() if style.lower() in valid_styles else "artistic"
+        # Récupérer le style
+        nsfw_type = style.value if style else "artistic"
         
         # Obtenir infos contextuelles
         server_name = interaction.guild.name if interaction.guild else "Discord"
