@@ -20,7 +20,7 @@ from thread_manager import ThreadManager
 from public_chatbots import PUBLIC_CHATBOTS, CATEGORIES
 from image_generator import ImageGeneratorNSFW
 from level_system import LevelSystem
-from level_card_generator import LevelCardGenerator
+from level_card_generator_nsfw import LevelCardGeneratorNSFW
 
 # Charger .env SEULEMENT s'il existe (local), sinon utiliser les vars d'environnement Render
 load_dotenv(override=False)  # Ne pas override les variables système existantes
@@ -31,7 +31,7 @@ chatbot_ai = EnhancedChatbotAI()
 thread_manager = ThreadManager()
 image_generator = ImageGeneratorNSFW()
 level_system = LevelSystem()
-card_generator = LevelCardGenerator()
+card_generator = LevelCardGeneratorNSFW()
 
 # Configuration du bot
 intents = discord.Intents.default()
@@ -176,7 +176,7 @@ class MainMenuView(discord.ui.View):
                     inline=True
                 )
                 
-                await interaction.channel.send(embed=embed)
+                await interaction.followup.send(embed=embed)
             else:
                 await interaction.followup.send(
                     "❌ Échec de génération. Réessayez !",
@@ -762,7 +762,7 @@ async def generate_image_command(
                 inline=True
             )
             
-            await interaction.channel.send(embed=embed)
+            await interaction.followup.send(embed=embed)
         else:
             await interaction.followup.send(
                 "❌ Échec de génération. Réessayez avec un autre prompt !",
@@ -794,7 +794,10 @@ async def rank_command(interaction: discord.Interaction, member: discord.Member 
         
         print(f"[DEBUG] Génération carte pour {target_member.name}...")
         
-        # Générer la carte
+        # Obtenir le nom du serveur pour la génération unique
+        server_name = interaction.guild.name if interaction.guild else "Discord"
+        
+        # Générer la carte avec image NSFW en arrière-plan
         card_image = await card_generator.generate_card(
             username=target_member.name,
             discriminator=target_member.discriminator,
@@ -804,7 +807,8 @@ async def rank_command(interaction: discord.Interaction, member: discord.Member 
             xp_needed=level_info["xp_needed"],
             rank=rank,
             total_messages=level_info["total_messages"],
-            user_id=target_member.id
+            user_id=target_member.id,
+            server_name=server_name
         )
         
         # Créer le fichier Discord
@@ -816,7 +820,7 @@ async def rank_command(interaction: discord.Interaction, member: discord.Member 
             color=discord.Color.purple()
         )
         embed.set_image(url=f"attachment://rank_{target_member.id}.png")
-        embed.set_footer(text="✨ Chaque carte a un design unique !")
+        embed.set_footer(text="✨ Carte unique avec IMAGE NSFW générée en arrière-plan !")
         
         await interaction.followup.send(embed=embed, file=file)
         print(f"[SUCCESS] Carte envoyée pour {target_member.name}")
@@ -917,7 +921,7 @@ async def generate_unique_command(
             
             embed.set_footer(text=f"✨ Chaque génération est vraiment unique | Seed basé sur {server_name}+{username}+timestamp")
             
-            await interaction.channel.send(embed=embed)
+            await interaction.followup.send(embed=embed)
         else:
             await interaction.followup.send(
                 "❌ Échec de génération. Réessayez avec un autre prompt !",
