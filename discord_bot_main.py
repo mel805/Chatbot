@@ -12,6 +12,8 @@ from aiohttp import web
 from dotenv import load_dotenv
 import copy
 import traceback
+import aiohttp
+import io
 
 # Importer les modules existants
 from chatbot_manager import ChatbotManager, ChatbotProfile
@@ -20,7 +22,7 @@ from thread_manager import ThreadManager
 from public_chatbots import PUBLIC_CHATBOTS, CATEGORIES
 from image_generator import ImageGeneratorSimple
 from level_system import LevelSystem
-from level_card_simple_black import LevelCardBlack
+from level_card_with_nsfw_bg import LevelCardWithNSFW
 
 # Charger .env SEULEMENT s'il existe (local), sinon utiliser les vars d'environnement Render
 load_dotenv(override=False)  # Ne pas override les variables système existantes
@@ -31,7 +33,7 @@ chatbot_ai = EnhancedChatbotAI()
 thread_manager = ThreadManager()
 image_generator = ImageGeneratorSimple()
 level_system = LevelSystem()
-card_generator = LevelCardBlack()
+card_generator = LevelCardWithNSFW()
 
 # Configuration du bot
 intents = discord.Intents.default()
@@ -43,6 +45,27 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 
 # ========== HELPER FUNCTIONS ==========
+
+async def download_image_as_file(url: str, filename: str = "image.png") -> discord.File:
+    """
+    Télécharge une image depuis une URL et retourne un discord.File
+    """
+    try:
+        print(f"[DEBUG] Téléchargement image: {url[:100]}...")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                if resp.status == 200:
+                    img_data = await resp.read()
+                    img_bytes = io.BytesIO(img_data)
+                    img_bytes.seek(0)
+                    print(f"[SUCCESS] Image téléchargée: {len(img_data)} bytes")
+                    return discord.File(img_bytes, filename=filename)
+                else:
+                    print(f"[ERROR] Status HTTP {resp.status}")
+                    return None
+    except Exception as e:
+        print(f"[ERROR] Téléchargement image: {e}")
+        return None
 
 def check_nsfw_channel(interaction: discord.Interaction) -> bool:
     """Verifie si le canal est NSFW"""
@@ -153,30 +176,42 @@ class MainMenuView(discord.ui.View):
             )
             
             if image_url:
-                embed = discord.Embed(
-                    title="🎨 Image générée !",
-                    description=f"Prompt: {prompt[:200]}",
-                    color=discord.Color.purple()
-                )
-                embed.set_image(url=image_url)
-                embed.set_footer(text=f"✨ Généré uniquement pour {username} sur {server_name}")
-                embed.add_field(
-                    name="🎭 Style",
-                    value=nsfw_type.capitalize(),
-                    inline=True
-                )
-                embed.add_field(
-                    name="👤 Membre",
-                    value=username,
-                    inline=True
-                )
-                embed.add_field(
-                    name="🏠 Serveur",
-                    value=server_name,
-                    inline=True
+                # Télécharger l'image et l'envoyer comme fichier
+                image_file = await download_image_as_file(
+                    image_url, 
+                    filename=f"chatbot_{username}.png"
                 )
                 
-                await interaction.followup.send(embed=embed)
+                if image_file:
+                    embed = discord.Embed(
+                        title="🎨 Image générée !",
+                        description=f"Prompt: {prompt[:200]}",
+                        color=discord.Color.purple()
+                    )
+                    embed.set_image(url=f"attachment://chatbot_{username}.png")
+                    embed.set_footer(text=f"✨ Généré uniquement pour {username} sur {server_name}")
+                    embed.add_field(
+                        name="🎭 Style",
+                        value=nsfw_type.capitalize(),
+                        inline=True
+                    )
+                    embed.add_field(
+                        name="👤 Membre",
+                        value=username,
+                        inline=True
+                    )
+                    embed.add_field(
+                        name="🏠 Serveur",
+                        value=server_name,
+                        inline=True
+                    )
+                    
+                    await interaction.followup.send(embed=embed, file=image_file)
+                else:
+                    await interaction.followup.send(
+                        f"✅ **Image générée !**\n{image_url}\n\n"
+                        f"_(L'aperçu intégré n'est pas disponible, cliquez sur le lien)_"
+                    )
             else:
                 await interaction.followup.send(
                     "❌ Échec de génération. Réessayez !",
@@ -739,30 +774,42 @@ async def generate_image_command(
         )
         
         if image_url:
-            embed = discord.Embed(
-                title="🎨 Image générée !",
-                description=f"**Prompt:** {prompt}",
-                color=discord.Color.purple()
-            )
-            embed.set_image(url=image_url)
-            embed.set_footer(text=f"✨ Image unique pour {username} sur {server_name}")
-            embed.add_field(
-                name="🎭 Style NSFW",
-                value=nsfw_type.capitalize(),
-                inline=True
-            )
-            embed.add_field(
-                name="👤 Créé par",
-                value=username,
-                inline=True
-            )
-            embed.add_field(
-                name="🏠 Serveur",
-                value=server_name,
-                inline=True
+            # Télécharger l'image et l'envoyer comme fichier
+            image_file = await download_image_as_file(
+                image_url, 
+                filename=f"generated_{username}.png"
             )
             
-            await interaction.followup.send(embed=embed)
+            if image_file:
+                embed = discord.Embed(
+                    title="🎨 Image générée !",
+                    description=f"**Prompt:** {prompt}",
+                    color=discord.Color.purple()
+                )
+                embed.set_image(url=f"attachment://generated_{username}.png")
+                embed.set_footer(text=f"✨ Image unique pour {username} sur {server_name}")
+                embed.add_field(
+                    name="🎭 Style NSFW",
+                    value=nsfw_type.capitalize(),
+                    inline=True
+                )
+                embed.add_field(
+                    name="👤 Créé par",
+                    value=username,
+                    inline=True
+                )
+                embed.add_field(
+                    name="🏠 Serveur",
+                    value=server_name,
+                    inline=True
+                )
+                
+                await interaction.followup.send(embed=embed, file=image_file)
+            else:
+                await interaction.followup.send(
+                    f"✅ **Image générée !**\n{image_url}\n\n"
+                    f"_(L'aperçu intégré n'est pas disponible, cliquez sur le lien)_"
+                )
         else:
             await interaction.followup.send(
                 "❌ Échec de génération. Réessayez avec un autre prompt !",
@@ -820,7 +867,7 @@ async def rank_command(interaction: discord.Interaction, member: discord.Member 
             color=discord.Color.purple()
         )
         embed.set_image(url=f"attachment://rank_{target_member.id}.png")
-        embed.set_footer(text="✨ Carte unique avec fond noir élégant !")
+        embed.set_footer(text=f"✨ Carte avec IMAGE NSFW générée pour {target_member.display_name} sur {interaction.guild.name} !")
         
         await interaction.followup.send(embed=embed, file=file)
         print(f"[SUCCESS] Carte envoyée pour {target_member.name}")
@@ -904,37 +951,52 @@ async def generate_unique_command(
         )
         
         if image_url:
-            embed = discord.Embed(
-                title="🎨 Image Unique Générée !",
-                description=(
-                    f"**Prompt:** {prompt}\n\n"
-                    f"Cette image est **100% unique**, générée spécialement pour "
-                    f"**{username}** sur le serveur **{server_name}** avec un style **{nsfw_type}** !"
-                ),
-                color=discord.Color.purple()
-            )
-            embed.set_image(url=image_url)
-            
-            # Infos détaillées
-            embed.add_field(
-                name="🎭 Style NSFW",
-                value=nsfw_type.capitalize(),
-                inline=True
-            )
-            embed.add_field(
-                name="👤 Créé pour",
-                value=username,
-                inline=True
-            )
-            embed.add_field(
-                name="🏠 Serveur",
-                value=server_name,
-                inline=True
+            # Télécharger l'image et l'envoyer comme fichier
+            print(f"[DEBUG] Téléchargement de l'image générée...")
+            image_file = await download_image_as_file(
+                image_url, 
+                filename=f"unique_{username}_{nsfw_type}.png"
             )
             
-            embed.set_footer(text=f"✨ Chaque génération est vraiment unique | Seed basé sur {server_name}+{username}+timestamp")
-            
-            await interaction.followup.send(embed=embed)
+            if image_file:
+                embed = discord.Embed(
+                    title="🎨 Image Unique Générée !",
+                    description=(
+                        f"**Prompt:** {prompt}\n\n"
+                        f"Cette image est **100% unique**, générée spécialement pour "
+                        f"**{username}** sur le serveur **{server_name}** avec un style **{nsfw_type}** !"
+                    ),
+                    color=discord.Color.purple()
+                )
+                embed.set_image(url=f"attachment://unique_{username}_{nsfw_type}.png")
+                
+                # Infos détaillées
+                embed.add_field(
+                    name="🎭 Style NSFW",
+                    value=nsfw_type.capitalize(),
+                    inline=True
+                )
+                embed.add_field(
+                    name="👤 Créé pour",
+                    value=username,
+                    inline=True
+                )
+                embed.add_field(
+                    name="🏠 Serveur",
+                    value=server_name,
+                    inline=True
+                )
+                
+                embed.set_footer(text=f"✨ Chaque génération est vraiment unique | Seed basé sur {server_name}+{username}+timestamp")
+                
+                await interaction.followup.send(embed=embed, file=image_file)
+                print(f"[SUCCESS] Image envoyée avec succès")
+            else:
+                # Fallback: envoyer juste l'URL
+                await interaction.followup.send(
+                    f"✅ **Image générée !**\n{image_url}\n\n"
+                    f"_(L'aperçu intégré n'est pas disponible, cliquez sur le lien)_"
+                )
         else:
             await interaction.followup.send(
                 "❌ Échec de génération. Réessayez avec un autre prompt !",
