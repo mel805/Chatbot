@@ -18,9 +18,9 @@ from chatbot_manager import ChatbotManager, ChatbotProfile
 from enhanced_chatbot_ai import EnhancedChatbotAI
 from thread_manager import ThreadManager
 from public_chatbots import PUBLIC_CHATBOTS, CATEGORIES
-from image_generator import ImageGeneratorNSFW
+from image_generator import ImageGeneratorSimple
 from level_system import LevelSystem
-from level_card_nsfw_optimized import LevelCardNSFW
+from level_card_simple_black import LevelCardBlack
 
 # Charger .env SEULEMENT s'il existe (local), sinon utiliser les vars d'environnement Render
 load_dotenv(override=False)  # Ne pas override les variables système existantes
@@ -29,9 +29,9 @@ load_dotenv(override=False)  # Ne pas override les variables système existantes
 chatbot_manager = ChatbotManager()
 chatbot_ai = EnhancedChatbotAI()
 thread_manager = ThreadManager()
-image_generator = ImageGeneratorNSFW()
+image_generator = ImageGeneratorSimple()
 level_system = LevelSystem()
-card_generator = LevelCardNSFW()
+card_generator = LevelCardBlack()
 
 # Configuration du bot
 intents = discord.Intents.default()
@@ -820,7 +820,7 @@ async def rank_command(interaction: discord.Interaction, member: discord.Member 
             color=discord.Color.purple()
         )
         embed.set_image(url=f"attachment://rank_{target_member.id}.png")
-        embed.set_footer(text="✨ Carte unique avec IMAGE NSFW générée en arrière-plan !")
+        embed.set_footer(text="✨ Carte unique avec fond noir élégant !")
         
         await interaction.followup.send(embed=embed, file=file)
         print(f"[SUCCESS] Carte envoyée pour {target_member.name}")
