@@ -850,7 +850,7 @@ async def generate_unique_command(
     
     try:
         # Valider le style
-        valid_styles = ["softcore", "romantic", "intense", "fantasy", "artistic"]
+        valid_styles = ["softcore", "romantic", "intense", "fantasy", "artistic", "fetish", "group", "extreme"]
         nsfw_type = style.lower() if style.lower() in valid_styles else "artistic"
         
         # Obtenir infos contextuelles
